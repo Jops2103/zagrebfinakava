@@ -487,11 +487,25 @@ function updateChangeCapsuleField(){
   }
 }
 
-// Keep the hero CTA as a direct link to the machine offer, as intended.
-const heroChooseMachine = document.getElementById('hero-choose-machine');
-if (heroChooseMachine) {
-  heroChooseMachine.setAttribute('href', '#ponuda');
-}
+// Require customer status before section-navigation links begin an order-related journey.
+// Once the visitor chooses new/existing customer, these links work normally.
+(function requireCustomerStatusBeforeNavigation(){
+  const customerStatus = document.getElementById('user-status');
+  const enquirySection = document.getElementById('narudzba');
+  if (!customerStatus || !enquirySection) return;
+
+  document.addEventListener('click', event => {
+    const link = event.target.closest('a[href^="#"]');
+    if (!link) return;
+    const targetId = link.getAttribute('href').slice(1);
+    const gatedSections = new Set(['ponuda', 'vodic', 'kapsule', 'kako-radi', 'narudzba']);
+    if (!gatedSections.has(targetId) || customerStatus.value) return;
+
+    event.preventDefault();
+    enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.setTimeout(() => customerStatus.focus({ preventScroll: true }), 350);
+  });
+})();
 
 document.querySelectorAll('.model-select').forEach(button => {
   button.addEventListener('click', () => {
