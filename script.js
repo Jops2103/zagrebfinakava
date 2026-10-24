@@ -468,6 +468,25 @@ function updateSelectedCapsuleField() {
   }
 }
 
+function updateChangeCapsuleField(){
+  const capsuleVarieties = document.getElementById('change-capsule-varieties');
+  const quantity = document.getElementById('change-quantity');
+  const capsuleNote = document.getElementById('change-capsule-note');
+  if (!capsuleVarieties) return;
+  const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
+  capsuleVarieties.value = selectedBoxes
+    ? Array.from(selectedCapsules, ([name, qty]) => qty > 1 ? name + ' × ' + qty : name).join(', ')
+    : '';
+  const targetBoxes = Number(quantity && quantity.value) / 100;
+  if (capsuleNote && targetBoxes > 0) {
+    capsuleNote.textContent = selectedBoxes < targetBoxes
+      ? 'Odabrano ' + (selectedBoxes * 100) + ' od ' + (targetBoxes * 100) + ' kapsula. Odaberite još ' + ((targetBoxes - selectedBoxes) * 100) + ' kapsula u galeriji.'
+      : 'Odabir kapsula je popunjen za željenu mjesečnu količinu.';
+  } else if (capsuleNote) {
+    capsuleNote.textContent = 'Obavezno: odaberite vrste kapsula u galeriji dok ne dosegnete odabranu mjesečnu količinu. Svaki klik dodaje jednu kutiju od 100 kapsula.';
+  }
+}
+
 document.querySelectorAll('.model-select').forEach(button => {
   button.addEventListener('click', () => {
     const customerStatus = document.getElementById('user-status');
@@ -1014,21 +1033,6 @@ if (capsuleFromDetail && capsuleField && topicField) {
   const capsuleNote = document.getElementById('change-capsule-note');
   const chooseCapsules = document.getElementById('change-choose-capsules');
   if (!form || !model || !quantity) return;
-  function updateChangeCapsuleField(){
-    if (!capsuleVarieties) return;
-    const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
-    capsuleVarieties.value = selectedBoxes
-      ? Array.from(selectedCapsules, ([name, qty]) => qty > 1 ? name + ' × ' + qty : name).join(', ')
-      : '';
-    const targetBoxes = Number(quantity.value) / 100;
-    if (capsuleNote && targetBoxes > 0) {
-      capsuleNote.textContent = selectedBoxes < targetBoxes
-        ? 'Odabrano ' + (selectedBoxes * 100) + ' od ' + (targetBoxes * 100) + ' kapsula. Odaberite još ' + ((targetBoxes - selectedBoxes) * 100) + ' kapsula u galeriji.'
-        : 'Odabir kapsula je popunjen za željenu mjesečnu količinu.';
-    } else if (capsuleNote) {
-      capsuleNote.textContent = 'Obavezno: odaberite vrste kapsula u galeriji dok ne dosegnete odabranu mjesečnu količinu. Svaki klik dodaje jednu kutiju od 100 kapsula.';
-    }
-  }
   if (chooseCapsules) {
     chooseCapsules.addEventListener('click', () => {
       const customerStatus = document.getElementById('user-status');
