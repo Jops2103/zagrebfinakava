@@ -647,11 +647,13 @@ document.querySelectorAll('.capsule-select').forEach(button => {
       selectedCapsules.set(variety, (selectedCapsules.get(variety) || 0) + 1);
       saveCapsuleSelections();
       updateChangeCapsuleField();
-      if (changeStatus) changeStatus.textContent = '';
-      if (selectedBoxes + 1 >= targetBoxes) {
-        const changeSection = document.getElementById('promjena-kolicine');
-        if (changeSection) window.setTimeout(() => changeSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
+      if (changeStatus) {
+        changeStatus.textContent = selectedBoxes + 1 >= targetBoxes
+          ? 'Odabir kapsula je popunjen. Provjerite podatke i pošaljite zahtjev u obrascu.'
+          : 'Kapsula je dodana. U obrascu možete provjeriti odabir ili odabrati još kapsula.';
       }
+      const changeSection = document.getElementById('promjena-kolicine');
+      if (changeSection) window.setTimeout(() => changeSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
       return;
     }
     if (!capsuleField) return;
@@ -670,11 +672,18 @@ document.querySelectorAll('.capsule-select').forEach(button => {
     selectedCapsules.set(variety, (selectedCapsules.get(variety) || 0) + 1);
     saveCapsuleSelections();
     updateSelectedCapsuleField();
-    if (status) status.textContent = '';
-    if (!isCapsuleOnlyOrder() && minimum > 0 && selectedBoxes + 1 === minimum) {
-      const enquirySection = document.getElementById('narudzba');
-      if (enquirySection) window.setTimeout(() => enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
+    if (status) {
+      const totalAfterSelection = selectedBoxes + 1;
+      const requiredBoxes = isCapsuleOnlyOrder() ? 0 : minimum;
+      status.textContent = requiredBoxes > 0 && totalAfterSelection < requiredBoxes
+        ? `Kapsula je dodana. Odabrano je ${totalAfterSelection * 100} od ${requiredBoxes * 100} potrebnih kapsula. U obrascu odaberite „Odaberi vrste kapsula” za nastavak.`
+        : 'Odabir kapsula je ažuriran. Provjerite podatke i pošaljite upit u obrascu.';
     }
+    // Every capsule choice returns the visitor to the inquiry form, where the
+    // current selection and remaining required quantity are visible. The form's
+    // "Odaberi vrste kapsula" button returns them to the gallery for more choices.
+    const enquirySection = document.getElementById('narudzba');
+    if (enquirySection) window.setTimeout(() => enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
   });
 });
 
