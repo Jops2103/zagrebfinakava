@@ -470,6 +470,21 @@ function updateSelectedCapsuleField() {
 
 document.querySelectorAll('.model-select').forEach(button => {
   button.addEventListener('click', () => {
+    const customerStatus = document.getElementById('user-status');
+    const enquirySection = document.getElementById('narudzba');
+    // Before any selections are made, require the visitor to identify as a new
+    // or existing customer first. After choosing "Novi korisnik", this button
+    // can be clicked again to select the machine normally.
+    if (customerStatus && !customerStatus.value) {
+      if (enquirySection) enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.setTimeout(() => customerStatus.focus({ preventScroll: true }), 350);
+      return;
+    }
+    if (customerStatus && customerStatus.value === 'postojeci') {
+      if (enquirySection) enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.setTimeout(() => customerStatus.focus({ preventScroll: true }), 350);
+      return;
+    }
     // Finder and machine-card buttons share this handler. Match the canonical form
     // option by model family so longer display names (e.g. "LB 1200 Classy & Milk")
     // still select the corresponding inquiry-form option ("Lavazza LB 1200").
@@ -503,6 +518,21 @@ document.querySelectorAll('.model-select').forEach(button => {
 
 document.querySelectorAll('.capsule-select').forEach(button => {
   button.addEventListener('click', () => {
+    const customerStatus = document.getElementById('user-status');
+    const enquirySection = document.getElementById('narudzba');
+    // If a visitor has not yet chosen their customer status, send them to that
+    // required first step instead of adding a capsule before the inquiry flow.
+    if (customerStatus && !customerStatus.value) {
+      if (enquirySection) enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.setTimeout(() => customerStatus.focus({ preventScroll: true }), 350);
+      return;
+    }
+    // Existing customers use the quantity-change form, not new-order capsule selection.
+    if (customerStatus && customerStatus.value === 'postojeci') {
+      if (enquirySection) enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.setTimeout(() => customerStatus.focus({ preventScroll: true }), 350);
+      return;
+    }
     if (!capsuleField) return;
     const variety = button.dataset.capsule;
     const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
