@@ -487,24 +487,46 @@ function updateChangeCapsuleField(){
   }
 }
 
-// Require customer status before section-navigation links begin an order-related journey.
-// Once the visitor chooses new/existing customer, these links work normally.
+// Require customer status before starting any order-related journey.
+// Navigation links and ordering buttons share the same first step as "Odaberi aparat".
 (function requireCustomerStatusBeforeNavigation(){
   const customerStatus = document.getElementById('user-status');
   const enquirySection = document.getElementById('narudzba');
   if (!customerStatus || !enquirySection) return;
 
+  const gatedSections = new Set(['ponuda', 'vodic', 'kapsule', 'kako-radi', 'narudzba']);
+  const gatedActions = [
+    '.model-select',
+    '.capsule-select',
+    '#choose-capsules-button',
+    '#change-choose-capsules',
+    '#extra-capsules-done',
+    '[data-finder-next]',
+    '#finder-show-result',
+    '.finder-result-button'
+  ].join(',');
+
+  function requireStatus(event){
+    if (customerStatus.value) return false;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.setTimeout(() => customerStatus.focus({ preventScroll: true }), 350);
+    return true;
+  }
+
+  // Capture clicks so an action cannot update selections before the status is chosen.
   document.addEventListener('click', event => {
+    const action = event.target.closest(gatedActions);
+    if (action) {
+      requireStatus(event);
+      return;
+    }
     const link = event.target.closest('a[href^="#"]');
     if (!link) return;
     const targetId = link.getAttribute('href').slice(1);
-    const gatedSections = new Set(['ponuda', 'vodic', 'kapsule', 'kako-radi', 'narudzba']);
-    if (!gatedSections.has(targetId) || customerStatus.value) return;
-
-    event.preventDefault();
-    enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    window.setTimeout(() => customerStatus.focus({ preventScroll: true }), 350);
-  });
+    if (gatedSections.has(targetId)) requireStatus(event);
+  }, true);
 })();
 
 document.querySelectorAll('.model-select').forEach(button => {
