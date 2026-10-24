@@ -966,13 +966,7 @@ function updateChangeCapsuleField(){
   const capsuleNote = document.getElementById('change-capsule-note');
   const chooseCapsules = document.getElementById('change-choose-capsules');
   if (!form || !model || !quantity) return;
-  if (chooseCapsules) {
-    chooseCapsules.addEventListener('click', () => {
-      document.body.dataset.customerChangeMode = 'true';
-      const gallery = document.getElementById('kapsule');
-      if (gallery) gallery.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  }
+
   const minimums = {
     'Lavazza LB 300 mini': 200,
     'Lavazza LB 1200 Classy & Milk': 300
