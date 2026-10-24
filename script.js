@@ -503,7 +503,10 @@ function updateChangeCapsuleField(){
     '#extra-capsules-done',
     '[data-finder-next]',
     '#finder-show-result',
-    '.finder-result-button'
+    '.finder-result-button',
+    '#vodic button',
+    '#vodic input',
+    '#vodic label'
   ].join(',');
 
   function requireStatus(event){
