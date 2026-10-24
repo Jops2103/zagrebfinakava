@@ -537,6 +537,16 @@ document.querySelectorAll('.model-select').forEach(button => {
 
 document.querySelectorAll('.capsule-select').forEach(button => {
   button.addEventListener('click', () => {
+    // Briefly darken the button as click feedback, then restore its normal appearance.
+    button.classList.remove('capsule-select-feedback');
+    if (button._capsuleFeedbackTimer) window.clearTimeout(button._capsuleFeedbackTimer);
+    void button.offsetWidth;
+    button.classList.add('capsule-select-feedback');
+    button._capsuleFeedbackTimer = window.setTimeout(() => {
+      button.classList.remove('capsule-select-feedback');
+      button._capsuleFeedbackTimer = null;
+    }, 450);
+
     const customerStatus = document.getElementById('user-status');
     const enquirySection = document.getElementById('narudzba');
     // If a visitor has not yet chosen their customer status, send them to that
