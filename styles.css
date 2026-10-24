@@ -4221,3 +4221,23 @@ body {
   grid-column: 1 / -1;
   margin-bottom: 4px;
 }
+
+
+/* Brief capsule-button click feedback: darken, then return to the original blue. */
+@keyframes capsuleSelectFeedback {
+  0%, 45% { background-color: #002f80; border-color: #002f80; }
+  100% { background-color: #003da5; border-color: #003da5; }
+}
+#kapsule .capsule-select-feedback {
+  animation: capsuleSelectFeedback 450ms ease-out both;
+}
+@media (hover: none), (pointer: coarse) {
+  #kapsule .capsule-select:hover {
+    background-color: #003da5;
+    border-color: #003da5;
+    color: #fff;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #kapsule .capsule-select-feedback { animation-duration: 1ms; }
+}
