@@ -975,7 +975,7 @@ if (capsuleFromDetail && capsuleField && topicField) {
     }
     quantity.add(new Option('Odaberite novu količinu', ''));
     for (let amount = minimum; amount <= minimum + 1000; amount += 100) {
-      quantity.add(new Option(amount + ' kapsula mjesečno (' + amount / 100 + (amount === 100 ? ' kutija)' : ' kutija)'), String(amount));
+      quantity.add(new Option(amount + ' kapsula mjesečno (' + amount / 100 + (amount === 100 ? ' kutija)' : ' kutija)'), String(amount)));
     }
     quantity.disabled = false;
     if (note) note.textContent = 'Minimalno ' + minimum + ' kapsula mjesečno za odabrani aparat. Odabir je u koracima od 100 kapsula.';
