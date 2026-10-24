@@ -487,28 +487,10 @@ function updateChangeCapsuleField(){
   }
 }
 
-// The hero "Odaberi aparat" link must not bypass the required customer-status step.
+// Keep the hero CTA as a direct link to the machine offer, as intended.
 const heroChooseMachine = document.getElementById('hero-choose-machine');
 if (heroChooseMachine) {
-  heroChooseMachine.addEventListener('click', event => {
-    const customerStatus = document.getElementById('user-status');
-    if (!customerStatus) return;
-    event.preventDefault();
-    const enquirySection = document.getElementById('narudzba');
-    const changeSection = document.getElementById('promjena-kolicine');
-    if (!customerStatus.value) {
-      if (enquirySection) enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      window.setTimeout(() => customerStatus.focus({ preventScroll: true }), 400);
-      return;
-    }
-    if (customerStatus.value === 'postojeci') {
-      if (enquirySection) enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      if (changeSection) window.setTimeout(() => changeSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
-      return;
-    }
-    const machineSection = document.getElementById('ponuda');
-    if (machineSection) machineSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
+  heroChooseMachine.setAttribute('href', '#ponuda');
 }
 
 document.querySelectorAll('.model-select').forEach(button => {
@@ -598,6 +580,14 @@ document.querySelectorAll('.capsule-select').forEach(button => {
       if (enquirySection) enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
       window.setTimeout(() => customerStatus.focus({ preventScroll: true }), 350);
       return;
+    }
+    // New customers can order capsules without first selecting a machine.
+    // The form includes a dedicated topic so the selection is captured correctly.
+    if (customerStatus && customerStatus.value === 'novi' && topicField &&
+        (!capsuleModelField || !capsuleModelField.value || capsuleModelField.value === 'Nisam još odabrao/la') &&
+        (!topicField.value || topicField.value === 'Imam pitanje')) {
+      topicField.value = 'Želim naručiti kapsule';
+      topicField.dispatchEvent(new Event('change', { bubbles: true }));
     }
     const variety = button.dataset.capsule;
     const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
