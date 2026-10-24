@@ -468,8 +468,42 @@ function updateSelectedCapsuleField() {
   }
 }
 
+function updateChangeCapsuleField(){
+  const capsuleVarieties = document.getElementById('change-capsule-varieties');
+  const quantity = document.getElementById('change-quantity');
+  const capsuleNote = document.getElementById('change-capsule-note');
+  if (!capsuleVarieties) return;
+  const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
+  capsuleVarieties.value = selectedBoxes
+    ? Array.from(selectedCapsules, ([name, qty]) => qty > 1 ? name + ' × ' + qty : name).join(', ')
+    : '';
+  const targetBoxes = Number(quantity && quantity.value) / 100;
+  if (capsuleNote && targetBoxes > 0) {
+    capsuleNote.textContent = selectedBoxes < targetBoxes
+      ? 'Odabrano ' + (selectedBoxes * 100) + ' od ' + (targetBoxes * 100) + ' kapsula. Odaberite još ' + ((targetBoxes - selectedBoxes) * 100) + ' kapsula u galeriji.'
+      : 'Odabir kapsula je popunjen za željenu mjesečnu količinu.';
+  } else if (capsuleNote) {
+    capsuleNote.textContent = 'Obavezno: odaberite vrste kapsula u galeriji dok ne dosegnete odabranu mjesečnu količinu. Svaki klik dodaje jednu kutiju od 100 kapsula.';
+  }
+}
+
 document.querySelectorAll('.model-select').forEach(button => {
   button.addEventListener('click', () => {
+    const customerStatus = document.getElementById('user-status');
+    const enquirySection = document.getElementById('narudzba');
+    // Before any selections are made, require the visitor to identify as a new
+    // or existing customer first. After choosing "Novi korisnik", this button
+    // can be clicked again to select the machine normally.
+    if (customerStatus && !customerStatus.value) {
+      if (enquirySection) enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.setTimeout(() => customerStatus.focus({ preventScroll: true }), 350);
+      return;
+    }
+    if (customerStatus && customerStatus.value === 'postojeci') {
+      if (enquirySection) enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.setTimeout(() => customerStatus.focus({ preventScroll: true }), 350);
+      return;
+    }
     // Finder and machine-card buttons share this handler. Match the canonical form
     // option by model family so longer display names (e.g. "LB 1200 Classy & Milk")
     // still select the corresponding inquiry-form option ("Lavazza LB 1200").
@@ -503,9 +537,45 @@ document.querySelectorAll('.model-select').forEach(button => {
 
 document.querySelectorAll('.capsule-select').forEach(button => {
   button.addEventListener('click', () => {
-    if (!capsuleField) return;
+    const customerStatus = document.getElementById('user-status');
+    const enquirySection = document.getElementById('narudzba');
+    // If a visitor has not yet chosen their customer status, send them to that
+    // required first step instead of adding a capsule before the inquiry flow.
+    if (customerStatus && !customerStatus.value) {
+      if (enquirySection) enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.setTimeout(() => customerStatus.focus({ preventScroll: true }), 350);
+      return;
+    }
     const variety = button.dataset.capsule;
     const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
+    // Existing customers choose capsule varieties against their requested monthly quantity.
+    if (customerStatus && customerStatus.value === 'postojeci') {
+      const changeQuantity = document.getElementById('change-quantity');
+      const changeStatus = document.getElementById('customer-change-status');
+      const targetBoxes = Number(changeQuantity && changeQuantity.value) / 100;
+      if (!Number.isFinite(targetBoxes) || targetBoxes < 1) {
+        if (changeStatus) changeStatus.textContent = 'Najprije odaberite aparat i novu mjesečnu količinu u obrascu.';
+        if (enquirySection) enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.setTimeout(() => changeQuantity && changeQuantity.focus({ preventScroll: true }), 350);
+        return;
+      }
+      if (selectedBoxes >= targetBoxes) {
+        if (changeStatus) changeStatus.textContent = 'Već ste odabrali vrste za svih ' + (targetBoxes * 100) + ' kapsula mjesečno.';
+        const changeSection = document.getElementById('promjena-kolicine');
+        if (changeSection) changeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+      selectedCapsules.set(variety, (selectedCapsules.get(variety) || 0) + 1);
+      saveCapsuleSelections();
+      updateChangeCapsuleField();
+      if (changeStatus) changeStatus.textContent = '';
+      if (selectedBoxes + 1 >= targetBoxes) {
+        const changeSection = document.getElementById('promjena-kolicine');
+        if (changeSection) window.setTimeout(() => changeSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
+      }
+      return;
+    }
+    if (!capsuleField) return;
     const minimum = isCapsuleOnlyOrder() ? 0 : capsulePackageLimit();
     const addingExtras = !isCapsuleOnlyOrder() && wantsAdditionalCapsules() && selectedBoxes >= minimum;
 
@@ -959,7 +1029,18 @@ if (capsuleFromDetail && capsuleField && topicField) {
   const quantity = document.getElementById('change-quantity');
   const note = document.getElementById('change-quantity-note');
   const status = document.getElementById('customer-change-status');
+  const capsuleVarieties = document.getElementById('change-capsule-varieties');
+  const capsuleNote = document.getElementById('change-capsule-note');
+  const chooseCapsules = document.getElementById('change-choose-capsules');
   if (!form || !model || !quantity) return;
+  if (chooseCapsules) {
+    chooseCapsules.addEventListener('click', () => {
+      const customerStatus = document.getElementById('user-status');
+      if (customerStatus) customerStatus.value = 'postojeci';
+      const gallery = document.getElementById('kapsule');
+      if (gallery) gallery.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
   const minimums = {
     'Lavazza LB 300 mini': 200,
     'Lavazza LB 1200 Classy & Milk': 300
@@ -980,14 +1061,35 @@ if (capsuleFromDetail && capsuleField && topicField) {
     quantity.disabled = false;
     if (note) note.textContent = 'Minimalno ' + minimum + ' kapsula mjesečno za odabrani aparat. Odabir je u koracima od 100 kapsula.';
   }
-  model.addEventListener('change', configure);
+  model.addEventListener('change', () => {
+    configure();
+    selectedCapsules.clear();
+    saveCapsuleSelections();
+    updateChangeCapsuleField();
+    if (status) status.textContent = '';
+  });
+  quantity.addEventListener('change', () => {
+    selectedCapsules.clear();
+    saveCapsuleSelections();
+    updateChangeCapsuleField();
+    if (status) status.textContent = '';
+  });
+  updateChangeCapsuleField();
   form.addEventListener('submit', event => {
     const minimum = minimums[model.value];
     const amount = Number(quantity.value);
+    const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
     if (!minimum || !Number.isFinite(amount) || amount < minimum || amount % 100 !== 0) {
       event.preventDefault();
       if (status) status.textContent = 'Odaberite aparat i valjanu mjesečnu količinu prije slanja zahtjeva.';
       quantity.focus();
+      return;
+    }
+    if (selectedBoxes !== amount / 100 || !capsuleVarieties || !capsuleVarieties.value.trim()) {
+      event.preventDefault();
+      updateChangeCapsuleField();
+      if (status) status.textContent = 'Obavezno odaberite vrste kapsula za cijelu željenu mjesečnu količinu.';
+      if (capsuleVarieties) capsuleVarieties.focus();
       return;
     }
     if (status) status.textContent = 'Zahtjev se šalje…';
