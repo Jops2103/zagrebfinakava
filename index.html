@@ -250,7 +250,7 @@
     </div>
   </section>
 
-  <section class="section customer-change-section" id="promjena-kolicine">
+  <section class="section customer-change-section" id="promjena-kolicine" hidden>
     <div class="section-heading">
       <p class="eyebrow">ZA POSTOJEĆE KORISNIKE</p>
       <h2>Promijenite mjesečnu <span>količinu kapsula</span></h2>
@@ -277,6 +277,16 @@
   <section class="section order-section" id="narudzba"><div class="section-heading"><p class="eyebrow">KONTAKT I UPIT</p><h2>Pošaljite <span>upit</span></h2><p>Ispunite obrazac kako bismo vas mogli kontaktirati i potvrditi detalje ponude.</p></div>
     <p id="success-message" class="success-message" role="status" hidden>Poruka uspješno proslijeđena!</p>
     <form id="order-form" action="https://formsubmit.co/zagrebfinakava@proton.me" method="POST">
+      <div class="field full user-status-field">
+        <label for="user-status"><strong>Jeste li novi ili postojeći korisnik? *</strong></label>
+        <select id="user-status" name="Status korisnika" required>
+          <option value="">Odaberite</option>
+          <option value="novi">Novi korisnik — želim poslati novi upit</option>
+          <option value="postojeci">Postojeći korisnik — želim promijeniti mjesečnu količinu kapsula</option>
+        </select>
+        <span class="form-note">Ako ste već naš korisnik, otvorit će se poseban obrazac za promjenu količine kapsula.</span>
+      </div>
+      <div id="new-customer-fields" class="order-form-fields" hidden>
       <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" class="honeypot" style="position:absolute;left:-5000px">
       <input type="hidden" name="_subject" value="Novi upit — Zagreb Fina Kava">
       <input type="hidden" name="_template" value="table">
@@ -314,6 +324,7 @@
       <p class="form-note full privacy-reference">Pročitajte <a href="privatnost.html">Izjavu o privatnosti i korištenju osobnih podataka ZFK-a</a>.</p>
       <p class="form-note full">Upit se šalje putem servisa za obrasce. Pri prvom korištenju možda će biti potrebno potvrditi adresu primatelja putem e-maila.</p>
       <div class="full form-actions"><button class="btn primary" type="submit">Pošalji upit <span>↗</span></button><p id="status" class="status" role="status"></p></div>
+          </div>
     </form>
     <div class="email-order-note">
       <p>Kontakt i putem e-maila:</p>

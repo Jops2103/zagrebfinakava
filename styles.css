@@ -4204,3 +4204,20 @@ body {
 .customer-change-form .form-actions{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
 .customer-change-form .form-actions .btn{background:#003da5;border-color:#003da5;color:#fff}
 @media(max-width:700px){.customer-change-form{grid-template-columns:minmax(0,1fr);padding:18px;gap:14px}.customer-change-form .field.full,.customer-change-form .full{grid-column:1}.customer-change-form input:not([type=checkbox]),.customer-change-form select,.customer-change-form textarea{font-size:16px;min-height:46px}}
+
+
+/* Keep customer-specific forms collapsed until the visitor chooses their customer status. */
+#promjena-kolicine[hidden],
+#new-customer-fields[hidden] {
+  display: none !important;
+}
+#order-form .order-form-fields {
+  display: contents;
+}
+#order-form .order-form-fields[hidden] {
+  display: none !important;
+}
+#order-form .user-status-field {
+  grid-column: 1 / -1;
+  margin-bottom: 4px;
+}

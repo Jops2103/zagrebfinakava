@@ -1000,3 +1000,41 @@ if (capsuleFromDetail && capsuleField && topicField) {
     window.history.replaceState({}, document.title, window.location.pathname + (query ? '?' + query : '') + window.location.hash);
   }
 })();
+
+
+/* Show the regular inquiry fields only for new customers; reveal the separate change form for existing customers. */
+(function setupCustomerTypeSwitch(){
+  const selector = document.getElementById('user-status');
+  const newFields = document.getElementById('new-customer-fields');
+  const changeSection = document.getElementById('promjena-kolicine');
+  if (!selector || !newFields || !changeSection) return;
+  const setEnabled = (container, enabled) => {
+    container.querySelectorAll('input, select, textarea, button').forEach(control => {
+      if (control.type === 'hidden' || control.name === '_honey' || control.name === '_subject' || control.name === '_template' || control.name === '_next') {
+        control.disabled = !enabled;
+      } else {
+        control.disabled = !enabled;
+      }
+    });
+  };
+  function update(){
+    const existing = selector.value === 'postojeci';
+    const newCustomer = selector.value === 'novi';
+    newFields.hidden = !newCustomer;
+    changeSection.hidden = !existing;
+    setEnabled(newFields, newCustomer);
+    if (existing) {
+      const changeForm = document.getElementById('customer-change-form');
+      if (changeForm) {
+        changeForm.querySelectorAll('input, select, textarea, button').forEach(control => { control.disabled = false; });
+      }
+    }
+  }
+  selector.addEventListener('change', () => {
+    update();
+    if (selector.value === 'postojeci') {
+      changeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+  update();
+})();
