@@ -4188,3 +4188,11 @@ body {
 .finder-model-choice .btn{width:100%;min-height:46px}
 .finder-result-button[hidden]{display:none!important}
 @media(max-width:760px){.finder-consumption-preview,.finder-result-models{grid-template-columns:1fr}.finder-people-counter{gap:16px}.finder-counter-button{width:44px;height:44px}}
+
+
+/* Welcome prompt: distinguish new visitors from existing customers. */
+.customer-gateway{margin:25px 0 14px;max-width:520px;padding:18px 20px;border:1px solid #c9c7c1;border-radius:4px;background:rgba(255,255,255,.48)}
+.customer-gateway-question{margin:0 0 13px;font-size:14px;font-weight:800;color:#222}
+.customer-gateway-actions{display:flex;gap:10px;flex-wrap:wrap}
+.customer-gateway-actions .btn{min-height:46px}
+@media(max-width:700px){.customer-gateway{padding:16px;margin-top:20px}.customer-gateway-actions{display:grid;grid-template-columns:1fr}.customer-gateway-actions .btn{width:100%}}
