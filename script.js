@@ -487,28 +487,10 @@ function updateChangeCapsuleField(){
   }
 }
 
-// The hero "Odaberi aparat" link must not bypass the required customer-status step.
+// Keep the hero CTA as a direct link to the machine offer, as intended.
 const heroChooseMachine = document.getElementById('hero-choose-machine');
 if (heroChooseMachine) {
-  heroChooseMachine.addEventListener('click', event => {
-    const customerStatus = document.getElementById('user-status');
-    if (!customerStatus) return;
-    event.preventDefault();
-    const enquirySection = document.getElementById('narudzba');
-    const changeSection = document.getElementById('promjena-kolicine');
-    if (!customerStatus.value) {
-      if (enquirySection) enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      window.setTimeout(() => customerStatus.focus({ preventScroll: true }), 400);
-      return;
-    }
-    if (customerStatus.value === 'postojeci') {
-      if (enquirySection) enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      if (changeSection) window.setTimeout(() => changeSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
-      return;
-    }
-    const machineSection = document.getElementById('ponuda');
-    if (machineSection) machineSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
+  heroChooseMachine.setAttribute('href', '#ponuda');
 }
 
 document.querySelectorAll('.model-select').forEach(button => {
