@@ -1030,6 +1030,11 @@ if (capsuleFromDetail && capsuleField && topicField) {
       }
     }
   }
-  selector.addEventListener('change', update);
+  selector.addEventListener('change', () => {
+    update();
+    if (selector.value === 'postojeci') {
+      changeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
   update();
 })();
