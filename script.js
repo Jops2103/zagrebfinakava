@@ -581,6 +581,14 @@ document.querySelectorAll('.capsule-select').forEach(button => {
       window.setTimeout(() => customerStatus.focus({ preventScroll: true }), 350);
       return;
     }
+    // New customers can order capsules without first selecting a machine.
+    // The form includes a dedicated topic so the selection is captured correctly.
+    if (customerStatus && customerStatus.value === 'novi' && topicField &&
+        (!capsuleModelField || !capsuleModelField.value || capsuleModelField.value === 'Nisam još odabrao/la') &&
+        (!topicField.value || topicField.value === 'Imam pitanje')) {
+      topicField.value = 'Želim naručiti kapsule';
+      topicField.dispatchEvent(new Event('change', { bubbles: true }));
+    }
     const variety = button.dataset.capsule;
     const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
     // Existing customers choose capsule varieties against their requested monthly quantity.
