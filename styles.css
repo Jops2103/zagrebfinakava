@@ -2899,10 +2899,16 @@ main > section{
 
 /* Place the uploaded merged-machines image below the complete hero introduction. */
 .hero{grid-template-columns:minmax(0,1fr)!important;min-height:0!important;gap:0!important;padding-right:clamp(24px,9vw,140px)!important;}
-.hero-copy{width:100%;max-width:900px;margin-inline:auto;}
+.hero-copy{width:100%;max-width:1100px;margin:0 auto;text-align:left;}
+.hero-copy .lead,.hero-copy .hero-price-note,.hero-copy .hero-location-note{max-width:100%;text-align:left;}
+.hero-copy .lead{font-size:17px;line-height:1.8;margin:0 0 14px;}
+.hero-copy .hero-price-note{font-size:16px;line-height:1.8;margin:10px 0;}
+.hero-copy .hero-location-note{font-size:15px;line-height:1.8;margin:10px 0 12px;}
+.hero-copy .actions{justify-content:flex-start;margin:24px 0 14px;}
+.hero-copy .actions .btn{font-size:13px;padding:14px 20px;}
 .hero-machines-below{width:min(100%,1100px);margin:26px auto 0;grid-column:1/-1;min-width:0;}
 .hero-machines-below img{display:block;width:100%;height:auto;max-height:610px;object-fit:contain;object-position:center;}
-@media(max-width:700px){.hero{padding:32px 18px 22px!important}.hero-machines-below{width:100%;margin-top:18px}.hero-machines-below img{width:100%;height:auto;object-fit:contain}}
+@media(max-width:700px){.hero{padding:32px 18px 22px!important}.hero-copy{width:100%;max-width:none;margin:0;text-align:left}.hero-copy .lead{font-size:16px;line-height:1.75}.hero-copy .hero-price-note{font-size:15px;line-height:1.75}.hero-copy .hero-location-note{font-size:14px;line-height:1.75}.hero-copy .actions{justify-content:flex-start}.hero-copy .actions .btn{font-size:12px;padding:13px 15px}.hero-machines-below{width:100%;margin-top:18px}.hero-machines-below img{width:100%;height:auto;object-fit:contain}}
 
 
 /* Two-model offer: LB 300 and LB 1200 only. */
