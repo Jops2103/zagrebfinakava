@@ -4225,11 +4225,11 @@ body {
 
 /* Brief capsule-button click feedback: darken, then return to the original blue. */
 @keyframes capsuleSelectFeedback {
-  0%, 45% { background-color: #002f80; border-color: #002f80; }
+  0%, 55% { background-color: #002f80; border-color: #002f80; }
   100% { background-color: #003da5; border-color: #003da5; }
 }
 #kapsule .capsule-select-feedback {
-  animation: capsuleSelectFeedback 450ms ease-out both;
+  animation: capsuleSelectFeedback 1000ms ease-out both;
 }
 @media (hover: none), (pointer: coarse) {
   #kapsule .capsule-select:hover {
@@ -4240,4 +4240,12 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   #kapsule .capsule-select-feedback { animation-duration: 1ms; }
+}
+
+
+/* Hover must never leave capsule buttons dark after the temporary click feedback ends. */
+#kapsule .capsule-select:hover:not(.capsule-select-feedback) {
+  background: #003da5;
+  border-color: #003da5;
+  color: #fff;
 }
