@@ -500,8 +500,27 @@ document.querySelectorAll('.model-select').forEach(button => {
       return;
     }
     if (customerStatus && customerStatus.value === 'postojeci') {
+      // Existing customers continue in their dedicated form. A machine choice
+      // from the gallery preselects that machine, then takes them to quantity.
+      const modelName = button.dataset.model || '';
+      const existingModelField = document.getElementById('change-model');
+      const modelPattern = /LB\\s*300/i.test(modelName)
+        ? /LB\\s*300/i
+        : /LB\\s*1200/i.test(modelName)
+          ? /LB\\s*1200/i
+          : null;
+      const existingOption = existingModelField && modelPattern
+        ? Array.from(existingModelField.options).find(item => modelPattern.test(item.value))
+        : null;
+      if (existingOption) {
+        existingModelField.value = existingOption.value;
+        existingModelField.dispatchEvent(new Event('change', { bubbles: true }));
+      }
       if (enquirySection) enquirySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      window.setTimeout(() => customerStatus.focus({ preventScroll: true }), 350);
+      const changeSection = document.getElementById('promjena-kolicine');
+      if (changeSection) changeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const changeQuantity = document.getElementById('change-quantity');
+      window.setTimeout(() => changeQuantity && changeQuantity.focus({ preventScroll: true }), 350);
       return;
     }
     // Finder and machine-card buttons share this handler. Match the canonical form
