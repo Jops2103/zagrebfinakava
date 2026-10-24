@@ -591,6 +591,25 @@ if (capsuleFromDetail && capsuleField && topicField) {
   }
 }
 
+
+
+// First screen: new visitors browse normally; existing customers go directly to the inquiry form.
+(function setupCustomerGateway(){
+  const routes = document.querySelectorAll('[data-customer-route]');
+  const topic = document.getElementById('topic');
+  const heading = document.getElementById('order-heading');
+  const intro = document.getElementById('order-intro');
+  routes.forEach(link => link.addEventListener('click', () => {
+    if (link.dataset.customerRoute !== 'existing') return;
+    if (topic) {
+      topic.value = 'Imam pitanje o ponudi';
+      topic.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    if (heading) heading.innerHTML = 'Upit za <span>postojećeg korisnika</span>';
+    if (intro) intro.textContent = 'Ostavite svoje kontaktne podatke i napišite nam kako vam možemo pomoći. Odabir aparata i kapsula nije obavezan za ovaj upit.';
+  }));
+})();
+
 /* Interactive appliance finder with capsule-use estimate and recommendation rules. */
 (function setupApplianceFinder(){
   const finder = document.getElementById('appliance-finder');
