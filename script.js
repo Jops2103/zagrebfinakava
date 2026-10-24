@@ -515,6 +515,17 @@ function updateChangeCapsuleField(){
     return true;
   }
 
+  // The buttons directly beneath each machine must always take the visitor to the inquiry form.
+  document.addEventListener('click', event => {
+    const machineButton = event.target.closest('.machine-select');
+    if (!machineButton) return;
+    const enquiry = document.getElementById('narudzba');
+    if (enquiry) enquiry.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!customerStatus.value) {
+      window.setTimeout(() => customerStatus.focus({ preventScroll: true }), 350);
+    }
+  }, true);
+
   // Capture clicks so an action cannot update selections before the status is chosen.
   document.addEventListener('click', event => {
     const action = event.target.closest(gatedActions);
