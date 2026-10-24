@@ -4196,3 +4196,38 @@ body {
 .customer-gateway-actions{display:flex;gap:10px;flex-wrap:wrap}
 .customer-gateway-actions .btn{min-height:46px}
 @media(max-width:700px){.customer-gateway{padding:16px;margin-top:20px}.customer-gateway-actions{display:grid;grid-template-columns:1fr}.customer-gateway-actions .btn{width:100%}}
+
+
+/* Existing-customer monthly quantity change request */
+.customer-change-section{scroll-margin-top:28px}
+.customer-change-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;max-width:900px;margin:0 auto;padding:clamp(20px,4vw,36px);border:1px solid #d9dce1;border-radius:10px;background:#fff}
+.customer-change-form .field{display:flex;flex-direction:column;gap:8px;min-width:0}
+.customer-change-form label{font-size:14px;font-weight:600;line-height:1.5}
+.customer-change-form input:not([type=checkbox]),.customer-change-form select,.customer-change-form textarea{width:100%;min-width:0;padding:12px 13px;border:1px solid #c9cdd3;border-radius:5px;background:#fff;color:#171717;font:inherit}
+.customer-change-form input:focus,.customer-change-form select:focus,.customer-change-form textarea:focus{outline:2px solid #003da5;outline-offset:2px}
+.customer-change-form .field.full,.customer-change-form .full{grid-column:1/-1}
+.customer-change-form .consent{display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.65}
+.customer-change-form .consent input{flex:0 0 18px;width:18px;height:18px;margin-top:3px}
+.customer-change-form .consent a{color:#003da5;text-decoration:underline}
+.customer-change-form .form-actions{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.customer-change-form .form-actions .btn{background:#003da5;border-color:#003da5;color:#fff}
+@media(max-width:700px){.customer-change-form{grid-template-columns:minmax(0,1fr);padding:18px;gap:14px}.customer-change-form .field.full,.customer-change-form .full{grid-column:1}.customer-change-form input:not([type=checkbox]),.customer-change-form select,.customer-change-form textarea{font-size:16px;min-height:46px}}
+
+
+/* Keep customer-specific forms collapsed until the visitor chooses their customer status. */
+#promjena-kolicine[hidden],
+#new-customer-fields[hidden] {
+  display: none !important;
+}
+#order-form .order-form-fields {
+  display: contents;
+}
+#order-form .order-form-fields[hidden] {
+  display: none !important;
+}
+#order-form .user-status-field {
+  grid-column: 1 / -1;
+  margin-bottom: 4px;
+}
+
+
