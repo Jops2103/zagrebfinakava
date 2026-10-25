@@ -4288,3 +4288,26 @@ body {
 
 /* Lavazza-blue confirmation for successful existing-customer requests. */
 .customer-change-form .status.success-status{color:#005b96;font-size:15px;font-weight:800;margin-top:10px}
+
+
+/* Homepage hero image spans the full viewport width. */
+.hero-machines-below{
+  width:100vw!important;
+  max-width:none!important;
+  margin:26px 0 0 calc(50% - 50vw)!important;
+  grid-column:1/-1;
+  min-width:0;
+}
+.hero-machines-below img{
+  display:block;
+  width:100%;
+  max-width:none;
+  height:auto;
+  max-height:none!important;
+  object-fit:contain;
+  object-position:center;
+}
+@media(max-width:700px){
+  .hero-machines-below{width:100vw!important;margin:18px 0 0 calc(50% - 50vw)!important;}
+  .hero-machines-below img{width:100%;height:auto;object-fit:contain;}
+}
