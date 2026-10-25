@@ -723,11 +723,14 @@ if (capsuleFromDetail && capsuleField && topicField) {
     else {showBoth=true;tag='Usporedite oba modela';copy=`Uz ${e.count} osoba procijenjena je potrošnja ${e.monthly} kapsula mjesečno. Budući da još niste odlučili koje napitke želite, usporedite oba aparata i odaberite onaj koji vam više odgovara.`;}
     const model=key?models[key]:null;
     resultTag.textContent=tag;resultTitle.textContent=showBoth?'Koji aparat vam više odgovara?':`Lavazza ${model.name}`;resultCopy.textContent=copy;
+    const modelMinimum = key === 'mini' ? 200 : key === 'milk' ? 300 : 0;
+    const recommendedTotal = Math.max(e.total, modelMinimum);
+    const recommendedBoxes = recommendedTotal / 100;
     resultFacts.replaceChildren();
-    [`Procijenjena potrošnja: ${e.monthly} kapsula mjesečno`,`Preporučena ugovorena količina: ${e.total} kapsula (${e.boxes} ${e.boxes===1?'kutija':'kutija'})`,`Broj osoba: ${e.count}`].concat(model?model.facts:[]).forEach(fact=>{const li=document.createElement('li');li.textContent=fact;resultFacts.append(li);});
+    [`Procijenjena potrošnja: ${e.monthly} kapsula mjesečno`,`Preporučena ugovorena količina: ${recommendedTotal} kapsula (${recommendedBoxes} kutije)`,`Broj osoba: ${e.count}`].concat(model?model.facts:[]).forEach(fact=>{const li=document.createElement('li');li.textContent=fact;resultFacts.append(li);});
     resultModels.hidden=!showBoth;resultButton.hidden=showBoth;
-    if(model)setModelButton(resultButton,model,`${e.total} kapsula mjesečno (preporuka vodiča)`);
-    resultModels.querySelectorAll('.finder-model-button').forEach(button=>{const m=button.dataset.model.includes('1200')?models.milk:models.mini;setModelButton(button,m,`${e.total} kapsula mjesečno (preporuka vodiča)`);});
+    if(model)setModelButton(resultButton,model,`${recommendedTotal} kapsula mjesečno (preporuka vodiča)`);
+    resultModels.querySelectorAll('.finder-model-button').forEach(button=>{const m=button.dataset.model.includes('1200')?models.milk:models.mini;const total=Math.max(e.total,m===models.milk?300:200);setModelButton(button,m,`${total} kapsula mjesečno (preporuka vodiča)`);});
     steps.forEach(item=>{item.hidden=true;});result.hidden=false;statusMessage.textContent='';progressLabel.textContent='Preporuka je spremna';progressFill.style.width='100%';resultTitle.focus({preventScroll:true});
   }
   finder.querySelectorAll('[data-finder-next]').forEach(button=>button.addEventListener('click',()=>{const current=steps.find(item=>Number(item.dataset.finderStep)===activeStep);if(!current||!current.querySelector('input[type="radio"]:checked')){statusMessage.textContent='Odaberite jednu opciju za nastavak.';return;}showStep(Number(button.dataset.finderNext));}));
