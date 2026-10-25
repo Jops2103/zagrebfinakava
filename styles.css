@@ -4284,3 +4284,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   #kapsule .capsule-select { transition: none; }
 }
+
+
+/* Lavazza-blue confirmation for successful existing-customer requests. */
+.customer-change-form .status.success-status{color:#005b96;font-size:15px;font-weight:800;margin-top:10px}
