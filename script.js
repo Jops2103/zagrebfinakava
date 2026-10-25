@@ -308,8 +308,9 @@ let finderPackageLimit = 0;
 function capsulePackageLimit() {
   if (finderPackageLimit > 0) return finderPackageLimit;
   const selectedModel = capsuleModelField ? capsuleModelField.value : '';
-  if (/LB\s*300/i.test(selectedModel)) return 1;
-  if (/LB\s*1200/i.test(selectedModel)) return 2;
+  // Each box contains 100 capsules. Enforce the published minimum for each model.
+  if (/LB\s*300/i.test(selectedModel)) return 2;
+  if (/LB\s*1200/i.test(selectedModel)) return 3;
   return 0;
 }
 
