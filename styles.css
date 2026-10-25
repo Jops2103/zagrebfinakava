@@ -4347,3 +4347,10 @@ body {
   mix-blend-mode:multiply;
   -webkit-mix-blend-mode:multiply;
 }
+
+
+/* Blend the white studio backdrop of Soul&2600.webp into the site's #eeeeec surface. */
+.hero-machines-below img {
+  background-color: #eeeeec;
+  mix-blend-mode: multiply;
+}
