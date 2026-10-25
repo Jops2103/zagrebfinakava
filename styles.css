@@ -4336,3 +4336,14 @@ body {
     margin:18px auto 0!important;
   }
 }
+
+
+/* Blend the hero machine photo's white backdrop into the site's gray background. */
+.hero-machines-below{
+  background:var(--bg);
+  isolation:isolate;
+}
+.hero-machines-below img{
+  mix-blend-mode:multiply;
+  -webkit-mix-blend-mode:multiply;
+}
