@@ -982,6 +982,7 @@ function updateChangeCapsuleField(){
 (function setupCustomerQuantityChange(){
   const form = document.getElementById('customer-change-form');
   const model = document.getElementById('change-model');
+  const newModel = document.getElementById('change-new-model');
   const quantity = document.getElementById('change-quantity');
   const note = document.getElementById('change-quantity-note');
   const status = document.getElementById('customer-change-status');
@@ -1010,8 +1011,26 @@ function updateChangeCapsuleField(){
     quantity.disabled = false;
     if (note) note.textContent = 'Minimalno ' + minimum + ' kapsula mjesečno za odabrani aparat. Odabir je u koracima od 100 kapsula.';
   }
+  function configureNewModel(){
+    if (!newModel) return;
+    newModel.replaceChildren();
+    const alternative = model.value === 'Lavazza LB 300 mini'
+      ? 'Lavazza LB 1200 Classy & Milk'
+      : model.value === 'Lavazza LB 1200 Classy & Milk'
+        ? 'Lavazza LB 300 mini'
+        : '';
+    if (!alternative) {
+      newModel.add(new Option('Najprije odaberite svoj aparat', ''));
+      newModel.disabled = true;
+      return;
+    }
+    newModel.add(new Option('Odaberite novi aparat', ''));
+    newModel.add(new Option(alternative, alternative));
+    newModel.disabled = false;
+  }
   model.addEventListener('change', () => {
     configure();
+    configureNewModel();
     selectedCapsules.clear();
     saveCapsuleSelections();
     updateChangeCapsuleField();
