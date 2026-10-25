@@ -1045,7 +1045,10 @@ function updateChangeCapsuleField(){
   });
   const params = new URLSearchParams(window.location.search);
   if (params.get('promjena-poslana') === '1' || params.has('promjena-poslana')) {
-    if (status) status.textContent = 'Hvala! Zahtjev je poslan. Potvrdit ćemo promjenu e-mailom.';
+    if (status) {
+      status.textContent = 'Poruka je uspješno poslana!';
+      status.classList.add('success-status');
+    }
     params.delete('promjena-poslana');
     const query = params.toString();
     window.history.replaceState({}, document.title, window.location.pathname + (query ? '?' + query : '') + window.location.hash);
