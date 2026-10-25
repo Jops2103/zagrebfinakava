@@ -4256,3 +4256,31 @@ body {
   border-color: #002d7a;
   color: #fff;
 }
+
+
+/* Capsule buttons: one-second hover feedback and persistent per-variety selection count. */
+#kapsule .capsule-select {
+  transform: scale(1);
+  transform-origin: center;
+  transition: background-color 1s ease, border-color 1s ease, transform 1s ease, box-shadow 1s ease;
+}
+#kapsule .capsule-select:hover,
+#kapsule .capsule-select:focus-visible {
+  background-color: #00245f;
+  border-color: #00245f;
+  transform: scale(1.04);
+  box-shadow: 0 7px 16px #003da52b;
+}
+#kapsule .capsule-select.capsule-selected {
+  background-color: #002f80;
+  border-color: #002f80;
+  box-shadow: inset 0 0 0 1px #ffffff45;
+}
+#kapsule .capsule-select.capsule-selected:hover,
+#kapsule .capsule-select.capsule-selected:focus-visible {
+  background-color: #001f55;
+  border-color: #001f55;
+}
+@media (prefers-reduced-motion: reduce) {
+  #kapsule .capsule-select { transition: none; }
+}
