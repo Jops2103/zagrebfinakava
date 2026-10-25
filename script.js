@@ -268,6 +268,22 @@ const additionalCapsulesWrap = document.getElementById('additional-capsules-fiel
 const additionalCapsulesDetails = document.getElementById('additional-capsules-details');
 const additionalCapsulesChoices = document.querySelectorAll('input[name="Dodatne kapsule"]');
 const selectedCapsules = new Map();
+
+function updateCapsuleButtonFeedback() {
+  document.querySelectorAll('.capsule-select').forEach(button => {
+    if (!button.dataset.originalLabel) button.dataset.originalLabel = button.textContent.trim();
+    const count = selectedCapsules.get(button.dataset.capsule) || 0;
+    button.classList.toggle('capsule-selected', count > 0);
+    button.setAttribute('aria-pressed', count > 0 ? 'true' : 'false');
+    if (count > 0) {
+      const word = count === 1 ? 'kutija' : (count >= 2 && count <= 4 ? 'kutije' : 'kutija');
+      button.textContent = 'Odabrano: ' + count + ' ' + word + ' ✓';
+    } else {
+      button.textContent = button.dataset.originalLabel;
+    }
+  });
+}
+
 const capsuleSelectionStorageKey = 'zfk-selected-capsules-v1';
 
 function saveCapsuleSelections() {
@@ -395,6 +411,8 @@ function updateSelectedCapsuleField() {
       note.textContent = 'Najprije odaberite aparat ili vrstu upita, a zatim izaberite kapsule.';
     }
   }
+
+  updateCapsuleButtonFeedback();
 
   const offerQuestionOnly = isOfferQuestion();
 
@@ -951,6 +969,7 @@ function updateChangeCapsuleField(){
   } else if (capsuleNote) {
     capsuleNote.textContent = 'Obavezno: odaberite vrste kapsula u galeriji dok ne dosegnete odabranu mjesečnu količinu. Svaki klik dodaje jednu kutiju od 100 kapsula.';
   }
+  updateCapsuleButtonFeedback();
 }
 
 
