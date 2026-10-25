@@ -4338,19 +4338,13 @@ body {
 }
 
 
-/* Blend the hero machine photo's white backdrop into the site's gray background. */
+/* Show the transparent parts of the hero image using the exact page background. */
 .hero-machines-below{
   background:var(--bg);
   isolation:isolate;
 }
 .hero-machines-below img{
-  mix-blend-mode:multiply;
-  -webkit-mix-blend-mode:multiply;
-}
-
-
-/* Blend the white studio backdrop of Soul&2600.webp into the site's #eeeeec surface. */
-.hero-machines-below img {
-  background-color: #eeeeec;
-  mix-blend-mode: multiply;
+  background-color:transparent;
+  mix-blend-mode:normal;
+  -webkit-mix-blend-mode:normal;
 }
