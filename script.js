@@ -20,6 +20,11 @@
 })();
 
 const form = document.getElementById('order-form');
+// Explicitly enforce POST for FormSubmit, even if a browser restores stale form state.
+if (form) {
+  form.setAttribute('method', 'POST');
+  form.method = 'post';
+}
 const status = document.getElementById('status');
 
 // Keep a clearly named copy of the sender's email in the submitted message body.
@@ -58,6 +63,10 @@ if (form) {
       }
       return;
     }
+
+    // Reassert POST immediately before the browser sends the form to FormSubmit.
+    form.setAttribute('method', 'POST');
+    form.method = 'post';
 
     // Give every submission a distinct subject so mail clients are less likely to group inquiries into one conversation.
     const subjectInput = form.querySelector('input[name="_subject"]');
