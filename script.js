@@ -967,6 +967,40 @@ if (capsuleFromDetail && capsuleField && topicField) {
 })();
 
 
+function refreshCustomerChangeButtons(){
+  const form = document.getElementById('customer-change-form');
+  if (!form) return;
+  const chooseButton = document.getElementById('change-choose-capsules');
+  const submitButton = form.querySelector('button[type="submit"]');
+  const quantity = document.getElementById('change-quantity');
+  const capsuleVarieties = document.getElementById('change-capsule-varieties');
+  const consent = document.getElementById('change-consent');
+  const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
+  const targetBoxes = Number(quantity && quantity.value) / 100;
+
+  if (chooseButton) {
+    const hasCapsules = selectedBoxes > 0 && !!(capsuleVarieties && capsuleVarieties.value.trim());
+    chooseButton.classList.toggle('is-ready', hasCapsules);
+    chooseButton.style.setProperty('background-color', hasCapsules ? '#003da5' : '#8a8f98', 'important');
+    chooseButton.style.setProperty('border-color', hasCapsules ? '#003da5' : '#8a8f98', 'important');
+    chooseButton.style.setProperty('color', '#fff', 'important');
+  }
+
+  const fieldsReady = Array.from(form.querySelectorAll('[required]')).every(field =>
+    !field.disabled && field.checkValidity()
+  );
+  const ready = fieldsReady && !!(consent && consent.checked) &&
+    Number.isFinite(targetBoxes) && targetBoxes > 0 &&
+    selectedBoxes === targetBoxes &&
+    !!(capsuleVarieties && capsuleVarieties.value.trim());
+  if (submitButton) {
+    submitButton.classList.toggle('is-ready', ready);
+    submitButton.style.setProperty('background-color', ready ? '#003da5' : '#8a8f98', 'important');
+    submitButton.style.setProperty('border-color', ready ? '#003da5' : '#8a8f98', 'important');
+    submitButton.style.setProperty('color', '#fff', 'important');
+  }
+}
+
 function updateChangeCapsuleField(){
   const capsuleVarieties = document.getElementById('change-capsule-varieties');
   const quantity = document.getElementById('change-quantity');
@@ -985,6 +1019,7 @@ function updateChangeCapsuleField(){
     capsuleNote.textContent = 'Obavezno: odaberite vrste kapsula u galeriji dok ne dosegnete odabranu mjesečnu količinu. Svaki klik dodaje jednu kutiju od 100 kapsula.';
   }
   updateCapsuleButtonFeedback();
+  refreshCustomerChangeButtons();
 }
 
 
@@ -1070,7 +1105,10 @@ function updateChangeCapsuleField(){
   });
   quantity.addEventListener('change', () => {
     clearCapsuleChoices();
+    refreshCustomerChangeButtons();
   });
+  form.addEventListener('input', refreshCustomerChangeButtons);
+  form.addEventListener('change', refreshCustomerChangeButtons);
   configureNewModel();
   configure();
   updateChangeCapsuleField();
