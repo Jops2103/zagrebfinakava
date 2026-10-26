@@ -1042,10 +1042,14 @@ function updateChangeCapsuleField(){
       newModel.disabled = true;
       return;
     }
-    newModel.add(new Option('Odaberite novi aparat', ''));
-    newModel.add(new Option(alternative, alternative));
+    newModel.add(new Option('Aparat ostaje isti', model.value));
+    newModel.add(new Option('Odaberite novi aparat: ' + alternative, alternative));
     newModel.disabled = false;
-    if (previousValue === alternative) newModel.value = alternative;
+    if (previousValue === model.value || previousValue === alternative) {
+      newModel.value = previousValue;
+    } else {
+      newModel.value = '';
+    }
   }
   function clearCapsuleChoices(){
     selectedCapsules.clear();
