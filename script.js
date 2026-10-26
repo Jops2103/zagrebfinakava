@@ -20,7 +20,7 @@
 })();
 
 const form = document.getElementById('order-form');
-// Explicitly enforce POST for FormSubmit, even if a browser restores stale form state.
+// Keep the new-customer form configured for Web3Forms.
 if (form) {
   form.setAttribute('method', 'POST');
   form.method = 'post';
@@ -64,7 +64,7 @@ if (form) {
       return;
     }
 
-    // Reassert POST immediately before the browser sends the form to FormSubmit.
+    // Reassert the Web3Forms POST configuration before submission.
     form.setAttribute('method', 'POST');
     form.method = 'post';
 
@@ -85,27 +85,6 @@ const menu = document.querySelector('.menu');
 const nav = document.querySelector('.header nav');
 
 document.getElementById('year').textContent = new Date().getFullYear();
-
-// FormSubmit redirects here after accepting a submission.
-const successMessage = document.getElementById('success-message');
-const params = new URLSearchParams(window.location.search);
-if (params.get('upit') === 'poslan' && successMessage) {
-  successMessage.hidden = false;
-  if (status) status.textContent = 'Poruka uspješno proslijeđena!';
-
-  // Remove the one-time success flag immediately so refreshing cannot replay it.
-  params.delete('upit');
-  const remainingQuery = params.toString();
-  const cleanUrl = window.location.pathname + (remainingQuery ? '?' + remainingQuery : '') + window.location.hash;
-  window.history.replaceState({}, document.title, cleanUrl);
-
-  window.setTimeout(() => {
-    successMessage.hidden = true;
-    if (status && status.textContent === 'Poruka uspješno proslijeđena!') {
-      status.textContent = '';
-    }
-  }, 30000);
-}
 
 function closeMenu({ returnFocus = false } = {}) {
   nav.classList.remove('open');
