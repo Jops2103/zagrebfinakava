@@ -4861,3 +4861,43 @@ body {
   border-color: #003da5 !important;
   color: #fff !important;
 }
+
+
+/* Keep the existing-customer form visibility identical on desktop and mobile.
+   Explicitly honor the hidden attribute and reset any inherited section display rules. */
+#promjena-kolicine[hidden] {
+  display: none !important;
+  visibility: hidden !important;
+}
+#promjena-kolicine:not([hidden]) {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  scroll-margin-top: 88px;
+}
+@media (max-width: 700px) {
+  #promjena-kolicine:not([hidden]) {
+    scroll-margin-top: 76px;
+    padding: 44px 17px;
+  }
+  .customer-change-form {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    padding: 20px 16px;
+    gap: 14px;
+  }
+  .customer-change-form .field,
+  .customer-change-form .field.full,
+  .customer-change-form .full {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+  .customer-change-form .form-actions,
+  .customer-change-form .form-actions .btn {
+    width: 100%;
+  }
+}
