@@ -523,7 +523,16 @@ document.querySelectorAll('.capsule-select').forEach(button => {
     if (!isCapsuleOnlyOrder() && !minimum) {
       if (status) status.textContent = 'Najprije odaberite aparat u odjeljku „ODABERITE SVOJ MODEL”, a zatim odaberite kapsule.';
       const modelSection = document.getElementById('ponuda');
-      if (modelSection) modelSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (modelSection) {
+        // On phones, reliably move the visitor to model selection before allowing
+        // any capsule choice; delay scrolling slightly so the tap/UI update settles.
+        if (window.matchMedia('(max-width: 760px)').matches) {
+          window.location.hash = 'ponuda';
+          window.setTimeout(() => modelSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+        } else {
+          modelSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
       return;
     }
     if (!isCapsuleOnlyOrder() && selectedBoxes >= minimum && !addingExtras) {
