@@ -521,7 +521,9 @@ document.querySelectorAll('.capsule-select').forEach(button => {
     const addingExtras = !isCapsuleOnlyOrder() && wantsAdditionalCapsules() && selectedBoxes >= minimum;
 
     if (!isCapsuleOnlyOrder() && !minimum) {
-      if (status) status.textContent = 'Najprije odaberite aparat, a zatim odaberite kapsule.';
+      if (status) status.textContent = 'Najprije odaberite aparat u odjeljku „ODABERITE SVOJ MODEL”, a zatim odaberite kapsule.';
+      const modelSection = document.getElementById('ponuda');
+      if (modelSection) modelSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
     if (!isCapsuleOnlyOrder() && selectedBoxes >= minimum && !addingExtras) {
