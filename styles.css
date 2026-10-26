@@ -4793,3 +4793,18 @@ body {
     max-width: min(72vw, 620px) !important;
   }
 }
+
+
+/* Reduce the LAVAZZA BLUE label above the capsule chooser by 50%. */
+#kapsule .capsule-heading > .eyebrow {
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+/* On mobile, halve the label size as well. */
+@media (max-width: 760px) {
+  #kapsule .capsule-heading > .eyebrow {
+    font-size: 7px;
+    line-height: 1.2;
+  }
+}
