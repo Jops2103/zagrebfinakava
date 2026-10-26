@@ -1125,34 +1125,47 @@ function updateChangeCapsuleField(){
 
 // Give a visual cue when the new-customer form is ready to submit.
 (function markOrderFormReady(){
-  const orderForm = document.getElementById('order-form');
-  if (!orderForm) return;
-  const submitButton = orderForm.querySelector('button[type="submit"]');
-  const topicField = document.getElementById('topic');
-  const modelField = document.getElementById('model');
-  const capsuleField = document.getElementById('capsules');
+  const form = document.getElementById('order-form');
+  if (!form) return;
+  const button = form.querySelector('button[type="submit"]');
+  const topic = document.getElementById('topic');
+  const model = document.getElementById('model');
+  const consent = document.getElementById('consent');
 
-  function updateReadyState(){
-    // Hidden conditional fields must not prevent the button from becoming blue.
-    const requiredFields = Array.from(orderForm.querySelectorAll('input[required], select[required], textarea[required]'));
-    let ready = requiredFields.every(field => {
+  function refreshButton(){
+    // Match the fields that the form's submit handler actually validates.
+    let ready = Array.from(form.querySelectorAll('[required]')).every(field => {
       if (field.disabled || field.closest('[hidden]')) return true;
-      const style = window.getComputedStyle(field);
-      if (style.display === 'none' || style.visibility === 'hidden' || field.getClientRects().length === 0) return true;
+      if (field.getClientRects().length === 0) return true;
       return field.checkValidity();
     });
-    const applianceOrder = topicField && topicField.value === 'Želim aparat uz mjesečnu kupnju kapsula';
-    if (ready && applianceOrder && modelField && capsuleField) {
-      const minimum = modelField.value === 'LB 1300 Classy Soul' ? 200 : modelField.value === 'LB2600' ? 300 : 0;
-      const quantity = Number.parseInt(String(capsuleField.value || '').replace(/[^0-9]/g, ''), 10) || 0;
-      if (minimum && quantity < minimum) ready = false;
+    if (consent && !consent.checked) ready = false;
+
+    // For an appliance offer, also require the model and its minimum capsule quantity.
+    const applianceOrder = topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula';
+    if (ready && applianceOrder) {
+      const capsuleInput = document.getElementById('capsules');
+      const count = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
+      const minimum = model && model.value.includes('1300') ? 2 : model && model.value.includes('2600') ? 3 : 0;
+      if (!model || !model.value || model.value === 'Nisam još odabrao/la' || !minimum || !capsuleInput || count < minimum) ready = false;
     }
-    if (submitButton) submitButton.classList.toggle('is-ready', ready);
+
+    if (button) {
+      button.classList.toggle('is-ready', ready);
+      if (ready) {
+        button.style.setProperty('background-color', '#003da5', 'important');
+        button.style.setProperty('border-color', '#003da5', 'important');
+        button.style.setProperty('color', '#fff', 'important');
+      } else {
+        button.style.removeProperty('background-color');
+        button.style.removeProperty('border-color');
+        button.style.removeProperty('color');
+      }
+    }
   }
 
-  orderForm.addEventListener('input', updateReadyState);
-  orderForm.addEventListener('change', updateReadyState);
-  // Capsule cards update the quantity field from their own click handler.
-  document.addEventListener('click', () => window.setTimeout(updateReadyState, 0));
-  updateReadyState();
+  form.addEventListener('input', refreshButton);
+  form.addEventListener('change', refreshButton);
+  document.addEventListener('click', () => window.setTimeout(refreshButton, 0));
+  refreshButton();
 })();
