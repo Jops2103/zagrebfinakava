@@ -1169,10 +1169,13 @@ function updateChangeCapsuleField(){
 
     const applianceOrder = topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula';
     if (ready && applianceOrder) {
-      const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
+      // This readiness checker is outside the capsule gallery's scope, so read the
+      // displayed box total instead of referencing its private selectedCapsules Map.
       const modelName = model ? model.value : '';
       const minimum = /1300/i.test(modelName) ? 2 : /2600/i.test(modelName) ? 3 : 0;
-      if (!modelName || !minimum || !capsuleInput || !capsuleInput.value.trim() || selectedCount < minimum) ready = false;
+      const quantityText = capsuleInput ? capsuleInput.value : '';
+      const selectedCount = Number.parseInt(quantityText, 10) || 0;
+      if (!modelName || !minimum || selectedCount < minimum) ready = false;
     }
 
     if (button) {
