@@ -4807,3 +4807,40 @@ body {
     line-height: 1.2;
   }
 }
+
+
+/* Keep the existing-customer success banner identical to the new-customer banner on desktop, tablet and mobile. */
+#customer-change-status.success-message {
+  display: block;
+  width: 100%;
+  max-width: 900px;
+  margin: -16px auto 24px;
+  padding: 15px 18px;
+  border: 1px solid #0b76b7;
+  border-left: 4px solid #0b76b7;
+  border-radius: 3px;
+  background: #e3edf3;
+  color: #005b96;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+#customer-change-status.success-message[hidden] {
+  display: none;
+}
+@media (max-width: 1000px) {
+  #customer-change-status.success-message {
+    width: 100%;
+    max-width: 900px;
+    margin: -16px auto 24px;
+    font-size: 15px;
+  }
+}
+@media (max-width: 700px) {
+  #customer-change-status.success-message {
+    padding: 15px 18px;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+}
