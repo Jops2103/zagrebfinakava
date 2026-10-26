@@ -428,6 +428,7 @@ function updateSelectedCapsuleField() {
   if (extraDoneButton) {
     extraDoneButton.hidden = offerQuestionOnly || (isCapsuleOnlyOrder() ? selectedBoxes === 0 : !wantsAdditionalCapsules());
   }
+  document.dispatchEvent(new Event('zfk:capsules-updated'));
 }
 
 document.querySelectorAll('.model-select').forEach(button => {
@@ -1156,43 +1157,40 @@ function updateChangeCapsuleField(){
   const consent = document.getElementById('consent');
 
   function refreshButton(){
-    // Match the fields that the form's submit handler actually validates.
+    // Only visible, enabled required fields count toward readiness.
     let ready = Array.from(form.querySelectorAll('[required]')).every(field => {
       if (field.disabled || field.closest('[hidden]')) return true;
       if (field.getClientRects().length === 0) return true;
       return field.checkValidity();
     });
-    if (consent && !consent.checked) ready = false;
+    if (!consent || !consent.checked) ready = false;
 
-    // For an appliance offer, also require the model and its minimum capsule quantity.
+    // An appliance request is ready only after the model and minimum capsule boxes are selected.
     const applianceOrder = topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula';
     if (ready && applianceOrder) {
       const capsuleInput = document.getElementById('capsules');
-      const count = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
-      const minimum = model && model.value.includes('1300') ? 2 : model && model.value.includes('2600') ? 3 : 0;
-      if (!model || !model.value || model.value === 'Nisam još odabrao/la' || !minimum || !capsuleInput || count < minimum) ready = false;
+      const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
+      const modelName = model ? model.value : '';
+      const minimum = /1300/i.test(modelName) ? 2 : /2600/i.test(modelName) ? 3 : 0;
+      if (!modelName || !minimum || !capsuleInput || !capsuleInput.value.trim() || selectedCount < minimum) ready = false;
     }
 
     if (button) {
       button.classList.toggle('is-ready', ready);
-      if (ready) {
-        button.style.setProperty('background-color', '#003da5', 'important');
-        button.style.setProperty('border-color', '#003da5', 'important');
-        button.style.setProperty('color', '#fff', 'important');
-      } else {
-        button.style.removeProperty('background-color');
-        button.style.removeProperty('border-color');
-        button.style.removeProperty('color');
-      }
+      button.style.setProperty('background-color', ready ? '#003da5' : '#8a8f98', 'important');
+      button.style.setProperty('border-color', ready ? '#003da5' : '#8a8f98', 'important');
+      button.style.setProperty('color', '#fff', 'important');
     }
   }
 
   form.addEventListener('input', refreshButton);
   form.addEventListener('change', refreshButton);
+  // Capsule selection updates a Map and readonly fields, so refresh explicitly after those updates.
+  document.addEventListener('zfk:capsules-updated', refreshButton);
   document.addEventListener('click', () => window.setTimeout(refreshButton, 0));
+  window.addEventListener('pageshow', refreshButton);
   refreshButton();
 })();
-
 
 /* Submit both ZFK forms through Web3Forms without leaving the page. */
 (function setupWeb3FormsSubmission(){
