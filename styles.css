@@ -4351,3 +4351,12 @@ body {
   mix-blend-mode:normal;
   -webkit-mix-blend-mode:normal;
 }
+
+
+/* On mobile, halve the current LAVAZZA BLUE label size as well (14px to 7px). */
+@media (max-width: 760px) {
+  #kapsule .capsule-heading > .eyebrow {
+    font-size: 7px;
+    line-height: 1.2;
+  }
+}
