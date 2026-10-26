@@ -1133,7 +1133,14 @@ function updateChangeCapsuleField(){
   const capsuleField = document.getElementById('capsules');
 
   function updateReadyState(){
-    let ready = orderForm.checkValidity();
+    // Hidden conditional fields must not prevent the button from becoming blue.
+    const requiredFields = Array.from(orderForm.querySelectorAll('input[required], select[required], textarea[required]'));
+    let ready = requiredFields.every(field => {
+      if (field.disabled || field.closest('[hidden]')) return true;
+      const style = window.getComputedStyle(field);
+      if (style.display === 'none' || style.visibility === 'hidden' || field.getClientRects().length === 0) return true;
+      return field.checkValidity();
+    });
     const applianceOrder = topicField && topicField.value === 'Želim aparat uz mjesečnu kupnju kapsula';
     if (ready && applianceOrder && modelField && capsuleField) {
       const minimum = modelField.value === 'LB 1300 Classy Soul' ? 200 : modelField.value === 'LB2600' ? 300 : 0;
