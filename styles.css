@@ -4844,3 +4844,12 @@ body {
     line-height: 1.6;
   }
 }
+
+
+/* Turn the new-customer submit button Lavazza blue only when required fields are complete. */
+#order-form .form-actions > button[type="submit"].is-ready,
+#order-form .form-actions > button[type="submit"].is-ready:hover {
+  background: #003da5;
+  border-color: #003da5;
+  color: #fff;
+}

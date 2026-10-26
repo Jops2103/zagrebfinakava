@@ -1121,3 +1121,31 @@ function updateChangeCapsuleField(){
     if (section) section.hidden = true;
   }));
 })();
+
+
+// Give a visual cue when the new-customer form is ready to submit.
+(function markOrderFormReady(){
+  const orderForm = document.getElementById('order-form');
+  if (!orderForm) return;
+  const submitButton = orderForm.querySelector('button[type="submit"]');
+  const topicField = document.getElementById('topic');
+  const modelField = document.getElementById('model');
+  const capsuleField = document.getElementById('capsules');
+
+  function updateReadyState(){
+    let ready = orderForm.checkValidity();
+    const applianceOrder = topicField && topicField.value === 'Želim aparat uz mjesečnu kupnju kapsula';
+    if (ready && applianceOrder && modelField && capsuleField) {
+      const minimum = modelField.value === 'LB 1300 Classy Soul' ? 200 : modelField.value === 'LB2600' ? 300 : 0;
+      const quantity = Number.parseInt(String(capsuleField.value || '').replace(/[^0-9]/g, ''), 10) || 0;
+      if (minimum && quantity < minimum) ready = false;
+    }
+    if (submitButton) submitButton.classList.toggle('is-ready', ready);
+  }
+
+  orderForm.addEventListener('input', updateReadyState);
+  orderForm.addEventListener('change', updateReadyState);
+  // Capsule cards update the quantity field from their own click handler.
+  document.addEventListener('click', () => window.setTimeout(updateReadyState, 0));
+  updateReadyState();
+})();
