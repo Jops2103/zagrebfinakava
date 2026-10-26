@@ -414,6 +414,9 @@ function updateSelectedCapsuleField() {
   }
 
   updateCapsuleButtonFeedback();
+  if (typeof window.refreshZfkOrderSubmitButton === 'function') {
+    window.refreshZfkOrderSubmitButton();
+  }
 
   const offerQuestionOnly = isOfferQuestion();
 
@@ -1123,7 +1126,7 @@ function updateChangeCapsuleField(){
 })();
 
 
-// Give a visual cue when the new-customer form is ready to submit.
+// Turn the new-customer submit button Lavazza blue when all currently visible required fields are valid.
 (function markOrderFormReady(){
   const form = document.getElementById('order-form');
   if (!form) return;
@@ -1133,39 +1136,41 @@ function updateChangeCapsuleField(){
   const consent = document.getElementById('consent');
 
   function refreshButton(){
-    // Match the fields that the form's submit handler actually validates.
-    let ready = Array.from(form.querySelectorAll('[required]')).every(field => {
-      if (field.disabled || field.closest('[hidden]')) return true;
-      if (field.getClientRects().length === 0) return true;
-      return field.checkValidity();
-    });
+    // Hidden fields belonging to another request type must not block readiness.
+    const requiredFields = Array.from(form.querySelectorAll('[required]')).filter(field =>
+      !field.disabled && !field.closest('[hidden]') && field.getClientRects().length > 0
+    );
+    let ready = requiredFields.every(field => field.checkValidity());
     if (consent && !consent.checked) ready = false;
 
-    // For an appliance offer, also require the model and its minimum capsule quantity.
+    // For an appliance offer, require the selected model and its minimum capsule boxes.
     const applianceOrder = topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula';
     if (ready && applianceOrder) {
       const capsuleInput = document.getElementById('capsules');
       const count = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
-      const minimum = model && model.value.includes('1300') ? 2 : model && model.value.includes('2600') ? 3 : 0;
-      if (!model || !model.value || model.value === 'Nisam još odabrao/la' || !minimum || !capsuleInput || count < minimum) ready = false;
+      const minimum = model && /1300/i.test(model.value) ? 2 : model && /2600/i.test(model.value) ? 3 : 0;
+      if (!model || !model.value || !minimum || !capsuleInput || count < minimum) ready = false;
     }
 
-    if (button) {
-      button.classList.toggle('is-ready', ready);
-      if (ready) {
-        button.style.setProperty('background-color', '#003da5', 'important');
-        button.style.setProperty('border-color', '#003da5', 'important');
-        button.style.setProperty('color', '#fff', 'important');
-      } else {
-        button.style.removeProperty('background-color');
-        button.style.removeProperty('border-color');
-        button.style.removeProperty('color');
-      }
+    if (!button) return;
+    button.classList.toggle('is-ready', ready);
+    if (ready) {
+      button.style.setProperty('background-color', '#003da5', 'important');
+      button.style.setProperty('border-color', '#003da5', 'important');
+      button.style.setProperty('color', '#fff', 'important');
+    } else {
+      button.style.removeProperty('background-color');
+      button.style.removeProperty('border-color');
+      button.style.removeProperty('color');
     }
   }
 
+  // Expose a safe refresh hook so capsule selections can update the button immediately.
+  window.refreshZfkOrderSubmitButton = refreshButton;
   form.addEventListener('input', refreshButton);
   form.addEventListener('change', refreshButton);
   document.addEventListener('click', () => window.setTimeout(refreshButton, 0));
+  document.addEventListener('input', refreshButton);
+  document.addEventListener('change', refreshButton);
   refreshButton();
 })();
