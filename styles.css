@@ -3714,9 +3714,9 @@ main > section{
   font-weight: 700;
 }
 
-/* Make the LAVAZZA BLUE label above the capsule chooser three times larger. */
+/* Reduce the LAVAZZA BLUE label above the capsule chooser by 50%. */
 #kapsule .capsule-heading > .eyebrow {
-  font-size: 30px;
+  font-size: 15px;
   line-height: 1.2;
 }
 
