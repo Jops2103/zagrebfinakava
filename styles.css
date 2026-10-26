@@ -4338,13 +4338,16 @@ body {
 }
 
 
-/* Show the transparent parts of the hero image using the exact page background. */
+/* Let the real transparent pixels reveal the same layered silver page background.
+   Do not paint a solid rectangle behind the image or isolate it from the body background. */
 .hero-machines-below{
-  background:var(--bg);
-  isolation:isolate;
+  background:transparent!important;
+  isolation:auto;
 }
 .hero-machines-below img{
-  background-color:transparent;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
   mix-blend-mode:normal;
   -webkit-mix-blend-mode:normal;
 }
