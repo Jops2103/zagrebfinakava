@@ -1006,8 +1006,14 @@ function updateChangeCapsuleField(){
     'Lavazza LB 1300 Classy Soul': 200,
     'Lavazza LB2600': 300
   };
+  function effectiveModel(){
+    return newModel && newModel.value ? newModel.value : model.value;
+  }
   function configure(){
-    const minimum = minimums[model.value];
+    // When the customer requests a different appliance, quantity options must
+    // use the minimum for the requested new model, not the current appliance.
+    const targetModel = effectiveModel();
+    const minimum = minimums[targetModel];
     quantity.replaceChildren();
     if (!minimum) {
       quantity.add(new Option('Najprije odaberite aparat', ''));
@@ -1017,13 +1023,14 @@ function updateChangeCapsuleField(){
     }
     quantity.add(new Option('Odaberite novu količinu', ''));
     for (let amount = minimum; amount <= minimum + 1000; amount += 100) {
-      quantity.add(new Option(amount + ' kapsula mjesečno (' + amount / 100 + (amount === 100 ? ' kutija)' : ' kutija)'), String(amount)));
+      quantity.add(new Option(amount + ' kapsula mjesečno (' + amount / 100 + ' kutija)', String(amount)));
     }
     quantity.disabled = false;
-    if (note) note.textContent = 'Minimalno ' + minimum + ' kapsula mjesečno za odabrani aparat. Odabir je u koracima od 100 kapsula.';
+    if (note) note.textContent = 'Minimalno ' + minimum + ' kapsula mjesečno za ' + (newModel && newModel.value ? 'novi odabrani aparat' : 'odabrani aparat') + '. Odabir je u koracima od 100 kapsula.';
   }
   function configureNewModel(){
     if (!newModel) return;
+    const previousValue = newModel.value;
     newModel.replaceChildren();
     const alternative = model.value === 'Lavazza LB 1300 Classy Soul'
       ? 'Lavazza LB2600'
@@ -1038,24 +1045,32 @@ function updateChangeCapsuleField(){
     newModel.add(new Option('Odaberite novi aparat', ''));
     newModel.add(new Option(alternative, alternative));
     newModel.disabled = false;
+    if (previousValue === alternative) newModel.value = alternative;
+  }
+  function clearCapsuleChoices(){
+    selectedCapsules.clear();
+    saveCapsuleSelections();
+    updateChangeCapsuleField();
+    if (status) status.textContent = '';
   }
   model.addEventListener('change', () => {
-    configure();
     configureNewModel();
-    selectedCapsules.clear();
-    saveCapsuleSelections();
-    updateChangeCapsuleField();
-    if (status) status.textContent = '';
+    configure();
+    clearCapsuleChoices();
+  });
+  if (newModel) newModel.addEventListener('change', () => {
+    configure();
+    quantity.value = '';
+    clearCapsuleChoices();
   });
   quantity.addEventListener('change', () => {
-    selectedCapsules.clear();
-    saveCapsuleSelections();
-    updateChangeCapsuleField();
-    if (status) status.textContent = '';
+    clearCapsuleChoices();
   });
+  configureNewModel();
+  configure();
   updateChangeCapsuleField();
   form.addEventListener('submit', event => {
-    const minimum = minimums[model.value];
+    const minimum = minimums[effectiveModel()];
     const amount = Number(quantity.value);
     const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
     if (!minimum || !Number.isFinite(amount) || amount < minimum || amount % 100 !== 0) {
