@@ -1155,20 +1155,20 @@ function updateChangeCapsuleField(){
   const topic = document.getElementById('topic');
   const model = document.getElementById('model');
   const consent = document.getElementById('consent');
+  const capsuleInput = document.getElementById('capsules');
+  let refreshQueued = false;
 
   function refreshButton(){
-    // Only visible, enabled required fields count toward readiness.
+    refreshQueued = false;
+    // Required fields must be valid on every device; ignore only disabled or explicitly hidden controls.
     let ready = Array.from(form.querySelectorAll('[required]')).every(field => {
       if (field.disabled || field.closest('[hidden]')) return true;
-      if (field.getClientRects().length === 0) return true;
       return field.checkValidity();
     });
     if (!consent || !consent.checked) ready = false;
 
-    // An appliance request is ready only after the model and minimum capsule boxes are selected.
     const applianceOrder = topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula';
     if (ready && applianceOrder) {
-      const capsuleInput = document.getElementById('capsules');
       const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
       const modelName = model ? model.value : '';
       const minimum = /1300/i.test(modelName) ? 2 : /2600/i.test(modelName) ? 3 : 0;
@@ -1178,18 +1178,32 @@ function updateChangeCapsuleField(){
     if (button) {
       button.classList.toggle('is-ready', ready);
       button.style.setProperty('background-color', ready ? '#003da5' : '#8a8f98', 'important');
+      button.style.setProperty('background', ready ? '#003da5' : '#8a8f98', 'important');
       button.style.setProperty('border-color', ready ? '#003da5' : '#8a8f98', 'important');
       button.style.setProperty('color', '#fff', 'important');
+      button.setAttribute('aria-disabled', ready ? 'false' : 'true');
     }
   }
 
-  form.addEventListener('input', refreshButton);
-  form.addEventListener('change', refreshButton);
-  // Capsule selection updates a Map and readonly fields, so refresh explicitly after those updates.
-  document.addEventListener('zfk:capsules-updated', refreshButton);
-  document.addEventListener('click', () => window.setTimeout(refreshButton, 0));
-  window.addEventListener('pageshow', refreshButton);
-  refreshButton();
+  function queueRefresh(){
+    if (refreshQueued) return;
+    refreshQueued = true;
+    window.setTimeout(refreshButton, 60);
+  }
+
+  form.addEventListener('input', queueRefresh, true);
+  form.addEventListener('change', queueRefresh, true);
+  form.addEventListener('focusout', queueRefresh, true);
+  document.addEventListener('zfk:capsules-updated', queueRefresh);
+  // Touch/pointer handlers cover mobile browsers where custom capsule selection updates after click.
+  document.addEventListener('click', queueRefresh, true);
+  document.addEventListener('pointerup', queueRefresh, true);
+  document.addEventListener('touchend', queueRefresh, { passive: true, capture: true });
+  window.addEventListener('pageshow', queueRefresh);
+  window.addEventListener('resize', queueRefresh);
+  window.addEventListener('orientationchange', queueRefresh);
+  document.addEventListener('visibilitychange', queueRefresh);
+  queueRefresh();
 })();
 
 /* Submit both ZFK forms through Web3Forms without leaving the page. */
