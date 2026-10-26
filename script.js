@@ -1042,8 +1042,9 @@ function updateChangeCapsuleField(){
       newModel.disabled = true;
       return;
     }
+    newModel.add(new Option('Aparat ostaje isti ili odaberite novi aparat', ''));
     newModel.add(new Option('Aparat ostaje isti', model.value));
-    newModel.add(new Option('Odaberite novi aparat: ' + alternative, alternative));
+    newModel.add(new Option('Novi aparat: ' + alternative, alternative));
     newModel.disabled = false;
     if (previousValue === model.value || previousValue === alternative) {
       newModel.value = previousValue;
