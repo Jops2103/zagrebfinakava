@@ -256,20 +256,18 @@
 
   <section class="section order-section" id="narudzba"><div class="section-heading"><p class="eyebrow">KONTAKT I UPIT</p><h2 id="order-heading">Pošaljite <span>upit</span></h2><p id="order-intro">Ispunite obrazac kako bismo vas mogli kontaktirati i potvrditi detalje ponude.</p></div>
     <p id="success-message" class="success-message" role="status" hidden>Poruka uspješno proslijeđena!</p>
-    <form id="order-form" action="https://formsubmit.co/zagrebfinakava@proton.me" method="POST">
-      <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" class="honeypot" style="position:absolute;left:-5000px">
-      <input type="hidden" name="_subject" value="Novi upit — Zagreb Fina Kava">
-      <input type="hidden" name="_template" value="table">
-      <input type="hidden" name="_next" value="https://jops2103.github.io/zagrebfinakava/?upit=poslan#narudzba">
-      <input type="hidden" name="_url" value="https://jops2103.github.io/zagrebfinakava/">
+    <form id="order-form" action="https://api.web3forms.com/submit" method="POST">
+      <input type="hidden" name="access_key" value="2151c9a7-37e9-467d-8846-8c0bbacb9889">
+      <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" class="honeypot" style="display:none">
+      <input type="hidden" name="subject" value="ZFK — Novi upit">
+      <input type="hidden" name="from_name" value="Zagreb Fina Kava">
       <div class="field"><label for="name">Ime i prezime / ime firme *</label><input id="name" name="Ime i prezime / ime firme" required autocomplete="name" placeholder="Ime i prezime ili ime firme"></div>
       <div class="field"><label for="phone">Broj telefona *</label><input id="phone" name="Broj telefona" required type="tel" autocomplete="tel" placeholder="Vaš broj telefona"></div>
       <div class="field">
         <label for="email">E-mail osobe / firme koja šalje upit *</label>
-        <input id="email" name="E-mail osobe / firme koja šalje upit" type="email" required autocomplete="email" aria-describedby="email-required-note" placeholder="ime@primjer.hr">
+        <input id="email" name="email" type="email" required autocomplete="email" aria-describedby="email-required-note" placeholder="ime@primjer.hr">
         <span id="email-required-note" class="form-note">Obavezno polje — bez valjane e-mail adrese upit se ne može poslati.</span>
       </div>
-      <input type="hidden" id="sender-email-copy" name="_replyto" value="">
       <div class="field"><label for="customer-type">Ponuda za *</label><select id="customer-type" name="Namjena ponude" required><option value="">Odaberite</option><option>Dom / kućanstvo</option><option>Tvrtka / ured</option><option>Apartman</option><option>Drugi poslovni prostor</option></select></div>
       <div class="field"><label for="topic">Vrsta upita *</label><select id="topic" name="Vrsta upita" required><option value="">Odaberite</option><option>Želim aparat uz mjesečnu kupnju kapsula</option><option>Imam pitanje o ponudi</option></select></div>
       <div class="field full"><label for="model">Odabrani aparat *</label><select id="model" name="Odabrani aparat" required><option value="">Odaberite aparat</option><option>LB 1300 Classy Soul</option><option>LB2600</option></select></div>
@@ -281,7 +279,7 @@
       <p class="form-note full">Sva polja označena zvjezdicom (*) obavezna su. Upit se ne može poslati dok ih ne ispunite i ne potvrdite suglasnost.</p>
       <label class="consent full"><input id="consent" type="checkbox" name="Suglasnost za obradu osobnih podataka" value="Pročitana obavijest i prihvaćena obrada osobnih podataka" required> Pročitao/la sam informacije koje su mi pružene u skladu s člancima 13. i 14. Uredbe (EU) 2016/679 te pristajem na obradu svojih osobnih podataka. <strong>(Obavezno označiti)</strong> *</label>
       <p class="form-note full privacy-reference">Pročitajte <a href="privatnost.html">Izjavu o privatnosti i korištenju osobnih podataka ZFK-a</a>.</p>
-      <p class="form-note full">Upit se šalje putem servisa za obrasce. Pri prvom korištenju možda će biti potrebno potvrditi adresu primatelja putem e-maila.</p>
+      <p class="form-note full">Podaci se šalju sigurnom vezom radi obrade vašeg upita.</p>
       <div class="full form-actions"><button class="btn primary" type="submit">Pošalji upit <span>↗</span></button><p id="status" class="status" role="status"></p></div>
     </form>
     <div class="email-order-note">
@@ -298,13 +296,13 @@
       <p>Želite li povećati ili smanjiti svoju redovitu mjesečnu narudžbu ili promijeniti vrstu aparata za kavu? Promjena stupa na snagu nakon što potvrdimo nove uvjete s vama.</p>
     </div>
     <p id="customer-change-status" class="success-message" role="status" aria-live="polite" hidden></p>
-    <form id="customer-change-form" action="https://formsubmit.co/zagrebfinakava@proton.me" method="POST" class="customer-change-form">
-      <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" class="honeypot" style="position:absolute;left:-5000px">
-      <input type="hidden" name="_subject" value="Zahtjev postojećeg korisnika — promjena mjesečne količine kapsula">
-      <input type="hidden" name="_template" value="table">
-      <input type="hidden" name="_next" value="https://jops2103.github.io/zagrebfinakava/?promjena-poslana=1#promjena-kolicine">
+    <form id="customer-change-form" action="https://api.web3forms.com/submit" method="POST" class="customer-change-form">
+      <input type="hidden" name="access_key" value="2151c9a7-37e9-467d-8846-8c0bbacb9889">
+      <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" class="honeypot" style="display:none">
+      <input type="hidden" name="subject" value="ZFK — Zahtjev postojećeg korisnika">
+      <input type="hidden" name="from_name" value="Zagreb Fina Kava">
       <div class="field"><label for="change-name">Ime i prezime / naziv firme *</label><input id="change-name" name="Ime i prezime / naziv firme" required autocomplete="name" placeholder="Ime ili naziv firme"></div>
-      <div class="field"><label for="change-email">E-mail povezan s postojećom narudžbom *</label><input id="change-email" name="E-mail korisnika" type="email" required autocomplete="email" placeholder="ime@primjer.hr"></div>
+      <div class="field"><label for="change-email">E-mail povezan s postojećom narudžbom *</label><input id="change-email" name="email" type="email" required autocomplete="email" placeholder="ime@primjer.hr"></div>
       <div class="field full"><label for="change-model">Vaš aparat *</label><select id="change-model" name="Postojeći aparat" required><option value="">Odaberite aparat</option><option value="Lavazza LB 1300 Classy Soul">Lavazza LB 1300 Classy Soul — minimum 200 kapsula mjesečno</option><option value="Lavazza LB2600">Lavazza LB2600 — minimum 300 kapsula mjesečno</option></select></div>
       <div class="field full"><label for="change-new-model">Promjena aparata *</label><select id="change-new-model" name="Željeni novi aparat" required disabled><option value="">Najprije odaberite svoj aparat</option></select><span class="form-note">Prikazat će se samo drugi model, različit od aparata koji trenutačno imate.</span></div>
       <div class="field full"><label for="change-quantity">Nova mjesečna količina ili samo promjena vrste kapsula *</label><select id="change-quantity" name="Nova mjesečna količina ili samo promjena vrste kapsula" required disabled><option value="">Najprije odaberite aparat</option></select><span id="change-quantity-note" class="form-note">Količine se biraju u koracima od 100 kapsula. Primjenjuje se minimalna količina za odabrani aparat.</span></div>

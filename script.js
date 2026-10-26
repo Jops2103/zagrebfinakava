@@ -69,7 +69,7 @@ if (form) {
     form.method = 'post';
 
     // Give every submission a distinct subject so mail clients are less likely to group inquiries into one conversation.
-    const subjectInput = form.querySelector('input[name="_subject"]');
+    const subjectInput = form.querySelector('input[name="subject"]');
     const topicForSubject = (selectedTopic && selectedTopic.value || 'Novi upit').trim();
     const modelForSubject = (selectedModel && selectedModel.value || '').trim();
     const subjectDetails = [topicForSubject, modelForSubject && modelForSubject !== 'Nisam još odabrao/la' ? modelForSubject : 'bez odabranog aparata']
@@ -79,9 +79,6 @@ if (form) {
     const readableTime = submittedAt.toLocaleString('hr-HR', { dateStyle: 'short', timeStyle: 'medium' });
     if (subjectInput) subjectInput.value = `ZFK — ${subjectDetails} — ${readableTime} — #${Date.now()}`;
 
-    const emailInput = document.getElementById('email');
-    const emailCopy = document.getElementById('sender-email-copy');
-    if (emailInput && emailCopy) emailCopy.value = emailInput.value.trim();
   });
 }
 const menu = document.querySelector('.menu');
@@ -1215,4 +1212,71 @@ function updateChangeCapsuleField(){
   form.addEventListener('change', refreshButton);
   document.addEventListener('click', () => window.setTimeout(refreshButton, 0));
   refreshButton();
+})();
+
+
+/* Submit both ZFK forms through Web3Forms without leaving the page. */
+(function setupWeb3FormsSubmission(){
+  const forms = [document.getElementById('order-form'), document.getElementById('customer-change-form')].filter(Boolean);
+  forms.forEach(form => {
+    form.setAttribute('method', 'POST');
+    form.setAttribute('action', 'https://api.web3forms.com/submit');
+    form.addEventListener('submit', async event => {
+      if (event.defaultPrevented) return;
+      event.preventDefault();
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      const isExisting = form.id === 'customer-change-form';
+      const statusElement = document.getElementById(isExisting ? 'customer-change-status' : 'status');
+      const successElement = isExisting ? statusElement : document.getElementById('success-message');
+      const submitButton = form.querySelector('button[type="submit"]');
+      const originalButtonText = submitButton ? submitButton.innerHTML : '';
+      const subjectField = form.querySelector('input[name="subject"]');
+      if (subjectField) {
+        const submittedAt = new Date();
+        const timestamp = submittedAt.toLocaleString('hr-HR', { dateStyle: 'short', timeStyle: 'medium' });
+        subjectField.value = (isExisting ? 'ZFK — Zahtjev postojećeg korisnika' : 'ZFK — Novi upit') + ' — ' + timestamp + ' — #' + Date.now();
+      }
+
+      if (statusElement) {
+        statusElement.hidden = false;
+        statusElement.textContent = isExisting ? 'Zahtjev se šalje…' : 'Upit se šalje…';
+      }
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.setAttribute('aria-busy', 'true');
+      }
+
+      try {
+        const response = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'Accept': 'application/json' }
+        });
+        const result = await response.json();
+        if (!response.ok || result.success !== true) {
+          throw new Error(result.message || 'Slanje nije uspjelo.');
+        }
+
+        if (statusElement) statusElement.textContent = isExisting
+          ? 'Zahtjev je uspješno poslan! Svaki zahtjev šalje se kao zasebna e-mail poruka.'
+          : 'Poruka uspješno proslijeđena!';
+        if (!isExisting && successElement) successElement.hidden = false;
+        if (submitButton) {
+          submitButton.innerHTML = isExisting ? 'Zahtjev poslan ✓' : 'Upit poslan ✓';
+          submitButton.setAttribute('aria-label', isExisting ? 'Zahtjev uspješno poslan' : 'Upit uspješno poslan');
+        }
+      } catch (error) {
+        if (statusElement) statusElement.textContent = 'Slanje nije uspjelo. Provjerite internetsku vezu i pokušajte ponovno. Ako se problem nastavi, javite nam se e-mailom.';
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.innerHTML = originalButtonText;
+          submitButton.removeAttribute('aria-busy');
+        }
+      }
+    });
+  });
 })();
