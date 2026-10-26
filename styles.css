@@ -4853,3 +4853,11 @@ body {
   border-color: #003da5;
   color: #fff;
 }
+
+/* Keep the ready submit button visibly Lavazza blue across desktop and mobile. */
+#order-form .form-actions > button[type="submit"].is-ready,
+#order-form .form-actions > button[type="submit"].is-ready:hover {
+  background-color: #003da5 !important;
+  border-color: #003da5 !important;
+  color: #fff !important;
+}
