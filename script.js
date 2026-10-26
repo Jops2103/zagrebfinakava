@@ -1094,7 +1094,12 @@ function updateChangeCapsuleField(){
     if (status) status.textContent = 'Zahtjev se šalje…';
   });
   const params = new URLSearchParams(window.location.search);
-  if (params.get('promjena-poslana') === '1' || params.has('promjena-poslana')) {
+  if (params.has('promjena-poslana')) {
+    const section = document.getElementById('promjena-kolicine');
+    if (section) {
+      section.hidden = false;
+      document.body.dataset.customerChangeMode = 'true';
+    }
     if (status) {
       status.textContent = 'Poruka je uspješno poslana!';
       status.classList.add('success-status');
@@ -1102,6 +1107,7 @@ function updateChangeCapsuleField(){
     params.delete('promjena-poslana');
     const query = params.toString();
     window.history.replaceState({}, document.title, window.location.pathname + (query ? '?' + query : '') + window.location.hash);
+    if (section) window.setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
   }
 })();
 
