@@ -1107,7 +1107,7 @@ function updateChangeCapsuleField(){
     params.delete('promjena-poslana');
     const query = params.toString();
     window.history.replaceState({}, document.title, window.location.pathname + (query ? '?' + query : '') + window.location.hash);
-    if (section) window.setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    if (section) window.requestAnimationFrame(() => section.scrollIntoView({ behavior: 'auto', block: 'start' }));
   }
 })();
 
