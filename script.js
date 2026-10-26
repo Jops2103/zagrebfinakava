@@ -1102,7 +1102,7 @@ function updateChangeCapsuleField(){
     }
     if (status) {
       status.textContent = 'Poruka je uspješno poslana!';
-      status.classList.add('success-status');
+      status.hidden = false;
     }
     params.delete('promjena-poslana');
     const query = params.toString();
