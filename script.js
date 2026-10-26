@@ -309,8 +309,8 @@ function capsulePackageLimit() {
   if (finderPackageLimit > 0) return finderPackageLimit;
   const selectedModel = capsuleModelField ? capsuleModelField.value : '';
   // Each box contains 100 capsules. Enforce the published minimum for each model.
-  if (/LB\s*300/i.test(selectedModel)) return 2;
-  if (/LB\s*1200/i.test(selectedModel)) return 3;
+  if (/LB\s*1300/i.test(selectedModel)) return 2;
+  if (/LB2600/i.test(selectedModel)) return 3;
   return 0;
 }
 
@@ -451,7 +451,7 @@ document.querySelectorAll('.model-select').forEach(button => {
       const target = document.getElementById('change-model');
       const modelName = button.dataset.model || '';
       if (target) {
-        target.value = /LB\\s*1200/i.test(modelName) ? 'Lavazza LB 1200 Classy & Milk' : /LB\\s*300/i.test(modelName) ? 'Lavazza LB 300 mini' : '';
+        target.value = /LB\\s*2600/i.test(modelName) ? 'Lavazza LB2600' : /LB\\s*300/i.test(modelName) ? 'Lavazza LB 1300 Classy Soul' : '';
         target.dispatchEvent(new Event('change', {bubbles:true}));
       }
       document.getElementById('promjena-kolicine')?.scrollIntoView({behavior:'smooth',block:'start'});
@@ -459,17 +459,17 @@ document.querySelectorAll('.model-select').forEach(button => {
       return;
     }
     // Finder and machine-card buttons share this handler. Match the canonical form
-    // option by model family so longer display names (e.g. "LB 1200 Classy & Milk")
-    // still select the corresponding inquiry-form option ("Lavazza LB 1200").
+    // option by model family so longer display names (e.g. "LB2600")
+    // still select the corresponding inquiry-form option ("Lavazza LB 2600").
     const modelName = button.dataset.model || '';
     const quantityMatch = (button.dataset.quantity || '').match(/(\d+)\s*kapsula/i);
     // A finder recommendation like "300 kapsula mjesečno" means three 100-capsule
     // boxes in the inquiry. Regular machine-card selections keep their usual minimum.
     finderPackageLimit = quantityMatch ? Math.max(1, Math.ceil(Number(quantityMatch[1]) / 100)) : 0;
-    const modelPattern = /LB\s*300/i.test(modelName)
-      ? /LB\s*300/i
-      : /LB\s*1200/i.test(modelName)
-        ? /LB\s*1200/i
+    const modelPattern = /LB\s*1300/i.test(modelName)
+      ? /LB\s*1300/i
+      : /LB2600/i.test(modelName)
+        ? /LB2600/i
         : null;
     const modelOption = modelPattern
       ? Array.from(capsuleModelField.options).find(item => modelPattern.test(item.textContent))
@@ -705,8 +705,8 @@ if (capsuleFromDetail && capsuleField && topicField) {
   let activeStep = 1;
   const useLabels = {home:'za dom', apartment:'za apartman', office:'za ured ili poslovni prostor'};
   const models = {
-    mini:{name:'LB 300 mini',modelValue:'Lavazza LB 300 mini',quantity:'Preporučena količina prema vodiču',tag:'Za espresso i crnu kavu',facts:['Kompaktan format','Za espresso i crnu kavu','Bez sustava za mliječne napitke']},
-    milk:{name:'LB 1200 Classy & Milk',modelValue:'Lavazza LB 1200 Classy & Milk',quantity:'Preporučena količina prema vodiču',tag:'Za mliječne napitke i veće potrebe',facts:['Sustav za mliječne napitke','Spremnik za vodu od 1,8 l','Spremnik za iskorištene kapsule do 15 kapsula']}
+    mini:{name:'LB 1300 Classy Soul',modelValue:'Lavazza LB 1300 Classy Soul',quantity:'Preporučena količina prema vodiču',tag:'Za espresso i crnu kavu',facts:['Kompaktan format','Za espresso i crnu kavu','Bez sustava za mliječne napitke']},
+    milk:{name:'LB2600',modelValue:'Lavazza LB2600',quantity:'Preporučena količina prema vodiču',tag:'Za mliječne napitke i veće potrebe',facts:['Za espresso i mliječne napitke','Spremnik za vodu od 3,6 l','Spremnik za iskorištene kapsule do 25 kapsula']}
   };
   function answer(name){const chosen=finder.querySelector(`input[name="${name}"]:checked`);return chosen?chosen.value:'';}
   function people(){const n=Number.parseInt(peopleInput.value,10);return Number.isFinite(n)?Math.min(500,Math.max(1,n)):1;}
@@ -718,9 +718,9 @@ if (capsuleFromDetail && capsuleField && topicField) {
     if(!use||!drinks){statusMessage.textContent='Odaberite odgovor prije prikaza preporuke.';return;}
     const e=estimate();
     let key='',showBoth=false,tag='',copy='';
-    if(drinks==='black'){key='mini';tag='Preporuka prema vašim željama';copy=`Budući da želite samo espresso i crnu kavu, preporučujemo LB 300 mini ${useLabels[use]}. Veća potrošnja kapsula ne isključuje ovaj model ako ne trebate mliječne napitke.`;}
-    else if(drinks==='milk'){key='milk';tag='Preporuka prema vašim željama';copy=`Budući da želite i mliječne napitke, preporučujemo LB 1200 Classy & Milk ${useLabels[use]}.`;}
-    else if(e.count>3||e.monthly>=300){key='milk';showBoth=true;tag='Naš savjet: LB 1200 Classy & Milk';copy=`Uz ${e.count} osoba procijenjena je potrošnja ${e.monthly} kapsula mjesečno. Za više od 3 osobe praktičniji može biti LB 1200 Classy & Milk zbog većeg spremnika za vodu i kapaciteta za iskorištene kapsule. Od 300 kapsula mjesečno naviše posebno ga preporučujemo. Ipak, konačan izbor je vaš.`;}
+    if(drinks==='black'){key='mini';tag='Preporuka prema vašim željama';copy=`Budući da želite samo espresso i crnu kavu, preporučujemo LB 1300 Classy Soul ${useLabels[use]}. Veća potrošnja kapsula ne isključuje ovaj model ako ne trebate mliječne napitke.`;}
+    else if(drinks==='milk'){key='milk';tag='Preporuka prema vašim željama';copy=`Budući da želite i mliječne napitke, preporučujemo LB2600 ${useLabels[use]}.`;}
+    else if(e.count>3||e.monthly>=300){key='milk';showBoth=true;tag='Naš savjet: LB2600';copy=`Uz ${e.count} osoba procijenjena je potrošnja ${e.monthly} kapsula mjesečno. Za više od 3 osobe praktičniji može biti LB2600 zbog većeg spremnika za vodu i kapaciteta za iskorištene kapsule. Od 300 kapsula mjesečno naviše posebno ga preporučujemo. Ipak, konačan izbor je vaš.`;}
     else {showBoth=true;tag='Usporedite oba modela';copy=`Uz ${e.count} osoba procijenjena je potrošnja ${e.monthly} kapsula mjesečno. Budući da još niste odlučili koje napitke želite, usporedite oba aparata i odaberite onaj koji vam više odgovara.`;}
     const model=key?models[key]:null;
     resultTag.textContent=tag;resultTitle.textContent=showBoth?'Koji aparat vam više odgovara?':`Lavazza ${model.name}`;resultCopy.textContent=copy;
@@ -731,7 +731,7 @@ if (capsuleFromDetail && capsuleField && topicField) {
     [`Procijenjena potrošnja: ${e.monthly} kapsula mjesečno`,`Preporučena ugovorena količina: ${recommendedTotal} kapsula (${recommendedBoxes} kutije)`,`Broj osoba: ${e.count}`].concat(model?model.facts:[]).forEach(fact=>{const li=document.createElement('li');li.textContent=fact;resultFacts.append(li);});
     resultModels.hidden=!showBoth;resultButton.hidden=showBoth;
     if(model)setModelButton(resultButton,model,`${recommendedTotal} kapsula mjesečno (preporuka vodiča)`);
-    resultModels.querySelectorAll('.finder-model-button').forEach(button=>{const m=button.dataset.model.includes('1200')?models.milk:models.mini;const total=Math.max(e.total,m===models.milk?300:200);setModelButton(button,m,`${total} kapsula mjesečno (preporuka vodiča)`);});
+    resultModels.querySelectorAll('.finder-model-button').forEach(button=>{const m=button.dataset.model.includes('2600')?models.milk:models.mini;const total=Math.max(e.total,m===models.milk?300:200);setModelButton(button,m,`${total} kapsula mjesečno (preporuka vodiča)`);});
     steps.forEach(item=>{item.hidden=true;});result.hidden=false;statusMessage.textContent='';progressLabel.textContent='Preporuka je spremna';progressFill.style.width='100%';resultTitle.focus({preventScroll:true});
   }
   finder.querySelectorAll('[data-finder-next]').forEach(button=>button.addEventListener('click',()=>{const current=steps.find(item=>Number(item.dataset.finderStep)===activeStep);if(!current||!current.querySelector('input[type="radio"]:checked')){statusMessage.textContent='Odaberite jednu opciju za nastavak.';return;}showStep(Number(button.dataset.finderNext));}));
@@ -992,8 +992,8 @@ function updateChangeCapsuleField(){
   if (!form || !model || !quantity) return;
 
   const minimums = {
-    'Lavazza LB 300 mini': 200,
-    'Lavazza LB 1200 Classy & Milk': 300
+    'Lavazza LB 1300 Classy Soul': 200,
+    'Lavazza LB2600': 300
   };
   function configure(){
     const minimum = minimums[model.value];
@@ -1014,10 +1014,10 @@ function updateChangeCapsuleField(){
   function configureNewModel(){
     if (!newModel) return;
     newModel.replaceChildren();
-    const alternative = model.value === 'Lavazza LB 300 mini'
-      ? 'Lavazza LB 1200 Classy & Milk'
-      : model.value === 'Lavazza LB 1200 Classy & Milk'
-        ? 'Lavazza LB 300 mini'
+    const alternative = model.value === 'Lavazza LB 1300 Classy Soul'
+      ? 'Lavazza LB2600'
+      : model.value === 'Lavazza LB2600'
+        ? 'Lavazza LB 1300 Classy Soul'
         : '';
     if (!alternative) {
       newModel.add(new Option('Najprije odaberite svoj aparat', ''));
