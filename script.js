@@ -1320,7 +1320,7 @@ function updateChangeCapsuleField(){
     }
     if (diagnostic) {
       diagnostic.textContent = ready
-        ? 'Sve je ispunjeno — gumb je spreman za slanje.'
+        ? 'Sve je ispunjeno — spremno za slanje.'
         : 'Za plavu boju gumba još treba: ' + missing.join('; ') + '.';
       diagnostic.style.display = 'block';
       diagnostic.style.color = ready ? '#003da5' : '#8a2d2d';
