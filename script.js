@@ -1080,11 +1080,13 @@ function updateChangeCapsuleField(){
         ? 'Lavazza LB 1300 Classy Soul'
         : '';
     newModel.add(new Option(current ? 'Odaberite ostanak ili novi aparat' : 'Najprije odaberite svoj aparat', ''));
+    // Always show the no-change choice, including on mobile/tablet.
+    // When the current model is known, its value keeps that same machine selected.
+    newModel.add(new Option('Bez promjene aparata', current || 'same'));
     if (current) {
-      newModel.add(new Option('Bez promjene', current));
       newModel.add(new Option('Novi aparat: ' + alternative, alternative));
     } else {
-      // Keep the control tappable on mobile even before the current model is selected.
+      // Keep the control usable before the current model is selected.
       newModel.add(new Option('Lavazza LB 1300 Classy Soul', 'Lavazza LB 1300 Classy Soul'));
       newModel.add(new Option('Lavazza LB2600', 'Lavazza LB2600'));
     }
