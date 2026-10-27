@@ -575,7 +575,7 @@ document.querySelectorAll('.capsule-select').forEach(button => {
       return;
     }
     if (!isCapsuleOnlyOrder() && selectedBoxes >= minimum && !addingExtras) {
-      if (status) status.textContent = `Za ovaj aparat odaberite ukupno ${minimum} ${minimum === 1 ? 'kutiju' : 'kutije'}. Već ste odabrali tu količinu.`;
+      if (status) status.textContent = '';
       return;
     }
 
@@ -1319,11 +1319,9 @@ function updateChangeCapsuleField(){
       button.insertAdjacentElement('afterend', diagnostic);
     }
     if (diagnostic) {
-      diagnostic.textContent = ready
-        ? 'Spremno za slanje!'
-        : 'Za plavu boju gumba još treba: ' + missing.join('; ') + '.';
-      diagnostic.style.display = 'block';
-      diagnostic.style.color = ready ? '#003da5' : '#8a2d2d';
+      diagnostic.textContent = ready ? 'Spremno za slanje!' : '';
+      diagnostic.style.display = ready ? 'block' : 'none';
+      diagnostic.style.color = '#003da5';
     }
 
     if (button) {
