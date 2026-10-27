@@ -1250,7 +1250,13 @@ function updateChangeCapsuleField(){
   function refreshButton(){
     refreshQueued = false;
     const requiredFields = Array.from(form.querySelectorAll('[required]')).filter(isVisible);
-    let ready = requiredFields.every(field => field.checkValidity());
+    let ready = requiredFields.length > 0 && requiredFields.every(field => {
+      if (field.type === 'checkbox') return field.checked && field.checkValidity();
+      if (field.tagName === 'TEXTAREA' || field.tagName === 'INPUT' || field.tagName === 'SELECT') {
+        return String(field.value || '').trim() !== '' && field.checkValidity();
+      }
+      return field.checkValidity();
+    });
     if (!consent || !consent.checked) ready = false;
 
     const applianceOrder = topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula';
