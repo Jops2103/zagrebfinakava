@@ -27,6 +27,18 @@ if (form) {
 }
 const status = document.getElementById('status');
 
+// The appliance field is required only for an appliance offer. A general offer question
+// must not be held back by an appliance the visitor is not trying to order.
+const orderTopicField = document.getElementById('topic');
+const orderModelField = document.getElementById('model');
+function syncOrderConditionalRequirements(){
+  if (!orderModelField) return;
+  const isApplianceOrder = !!(orderTopicField && orderTopicField.value === 'Želim aparat uz mjesečnu kupnju kapsula');
+  orderModelField.required = isApplianceOrder;
+}
+syncOrderConditionalRequirements();
+if (orderTopicField) orderTopicField.addEventListener('change', syncOrderConditionalRequirements);
+
 // Keep a clearly named copy of the sender's email in the submitted message body.
 // The required email field is validated by the browser before this submit handler runs.
 if (form) {
@@ -1260,6 +1272,8 @@ function updateChangeCapsuleField(){
     // Recompute from the currently visible, enabled required fields. Using
     // form.checkValidity() here can disagree with the custom step-by-step form
     // because hidden/disabled conditional fields must not affect button styling.
+    // Check the always-required contact fields, but do not let a conditional
+    // appliance field block a general question.
     let ready = Array.from(form.querySelectorAll('[required]')).every(field => {
       if (field.disabled || field.closest('[hidden]')) return true;
       const style = window.getComputedStyle(field);
@@ -1270,14 +1284,13 @@ function updateChangeCapsuleField(){
     // Consent is always mandatory, regardless of the type of inquiry.
     if (!consent || !consent.checked) ready = false;
 
-    // For an appliance order, verify the real selected-box count rather than
-    // parsing the display-only quantity text (e.g. "2 kutije").
+    // Appliance orders also require a valid model and the minimum capsule quantity.
     const applianceOrder = topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula';
-    if (ready && applianceOrder) {
+    if (applianceOrder) {
       const modelName = model ? model.value : '';
       const minimum = capsulePackageLimit();
       const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
-      if (!modelName || !minimum || selectedCount < minimum) ready = false;
+      if (!modelName || !model.checkValidity() || !minimum || selectedCount < minimum) ready = false;
     }
 
     if (button) {
