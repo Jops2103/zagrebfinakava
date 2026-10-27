@@ -667,11 +667,9 @@ if (capsuleFromDetail && capsuleField && topicField) {
   if (chooseCapsules) chooseCapsules.addEventListener('click', () => {
     const quantity = document.getElementById('change-quantity');
     const status = document.getElementById('customer-change-status');
-    // Always take existing customers to the gallery. If required choices are
-    // missing, the capsule cards will explain what to complete in the form.
+    // Keep capsule choices when the customer returns to the gallery.
+    // Clearing here made it impossible to add or adjust varieties over multiple visits.
     document.body.dataset.customerChangeMode = 'true';
-    selectedCapsules.clear();
-    saveCapsuleSelections();
     updateChangeCapsuleField();
     if (!changeModel || !changeModel.value || !quantity || !quantity.value) {
       if (status) status.textContent = 'Odaberite aparat i mjesečnu količinu u obrascu prije odabira kapsula.';
