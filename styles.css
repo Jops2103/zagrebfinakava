@@ -4901,3 +4901,42 @@ body {
     width: 100%;
   }
 }
+
+
+/* Touch-friendly existing-customer form on phones and tablets. */
+@media (max-width: 1000px) {
+  #promjena-kolicine:not([hidden]) {
+    padding-left: clamp(16px, 3vw, 28px);
+    padding-right: clamp(16px, 3vw, 28px);
+  }
+  .customer-change-form {
+    width: 100%;
+    max-width: 900px;
+  }
+  .customer-change-form input:not([type="checkbox"]),
+  .customer-change-form select,
+  .customer-change-form textarea {
+    min-height: 48px;
+    font-size: 16px;
+    touch-action: manipulation;
+  }
+  .customer-change-form select {
+    white-space: normal;
+    text-overflow: ellipsis;
+  }
+  .customer-change-form .btn {
+    min-height: 48px;
+    touch-action: manipulation;
+  }
+}
+@media (min-width: 701px) and (max-width: 1000px) {
+  .customer-change-form {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding: 24px;
+  }
+  .customer-change-form .field.full,
+  .customer-change-form .full {
+    grid-column: 1 / -1;
+  }
+}
