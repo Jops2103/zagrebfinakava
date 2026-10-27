@@ -1160,9 +1160,12 @@ function updateChangeCapsuleField(){
 
   function refreshButton(){
     refreshQueued = false;
-    // Required fields must be valid on every device; ignore only disabled or explicitly hidden controls.
+    // Only validate required controls that are actually available to the user.
+    // Mobile layouts and conditional sections may hide required fields without disabling them.
     let ready = Array.from(form.querySelectorAll('[required]')).every(field => {
       if (field.disabled || field.closest('[hidden]')) return true;
+      const style = window.getComputedStyle(field);
+      if (style.display === 'none' || style.visibility === 'hidden' || field.getClientRects().length === 0) return true;
       return field.checkValidity();
     });
     if (!consent || !consent.checked) ready = false;
