@@ -1376,15 +1376,22 @@ function updateChangeCapsuleField(){
   function makeSupabasePayload(form, isExisting) {
     const capsuleSelection = selectedCapsuleNames(form);
     if (!isExisting) {
+      const topic = document.getElementById('topic')?.value || '';
       const model = canonicalMachine(document.getElementById('model')?.value);
       const rawQuantity = String(document.getElementById('capsules')?.value || '');
       const matches = rawQuantity.match(/\d+/g);
-      const quantity = matches ? Number(matches[0]) * (rawQuantity.includes('kut') ? 100 : 1) : 0;
+      const selectedQuantity = matches ? Number(matches[0]) * (rawQuantity.includes('kut') ? 100 : 1) : 0;
+      const isApplianceOrder = topic === 'Želim aparat uz mjesečnu kupnju kapsula';
+      const isCapsuleOrder = topic === 'Želim naručiti kapsule';
+      // Keep non-appliance inquiries recordable even when no machine or capsule selection applies.
+      const storedMachine = isApplianceOrder ? model : (isCapsuleOrder ? 'Narudžba kapsula' : 'Opći upit');
+      const quantity = isApplianceOrder || isCapsuleOrder ? selectedQuantity : 0;
       return {
         request_type: 'new',
+        request_topic: topic,
         name: document.getElementById('name')?.value.trim(),
         email: document.getElementById('email')?.value.trim(),
-        machine: model,
+        machine: storedMachine,
         quantity,
         capsule_selection: capsuleSelection,
         note: [
@@ -1455,7 +1462,14 @@ function updateChangeCapsuleField(){
       let savedInSupabase = false;
       try {
         const payload = makeSupabasePayload(form, isExisting);
-        if (!payload.name || !payload.email || !payload.machine || !payload.capsule_selection.length) {
+        const isGeneralInquiry = !isExisting &&
+          payload.request_topic === 'Imam pitanje o ponudi';
+        const isCapsuleOrder = !isExisting &&
+          payload.request_topic === 'Želim naručiti kapsule';
+        if (!payload.name || !payload.email ||
+            (!isGeneralInquiry && !payload.machine) ||
+            (!isGeneralInquiry && !payload.capsule_selection.length) ||
+            (isCapsuleOrder && !(Number(payload.quantity) > 0))) {
           throw new Error('Nedostaju obavezni podaci za spremanje zahtjeva.');
         }
 
