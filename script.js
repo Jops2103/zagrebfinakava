@@ -483,14 +483,15 @@ document.querySelectorAll('.capsule-select').forEach(button => {
       const quantityField = document.getElementById('change-quantity');
       const changeStatus = document.getElementById('customer-change-status');
       const capsuleText = document.getElementById('change-capsule-varieties');
+      const sameQuantity = !!(quantityField && quantityField.value === 'same');
       const targetBoxes = Number(quantityField && quantityField.value) / 100;
       const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
-      if (!Number.isFinite(targetBoxes) || targetBoxes < 1) {
+      if (!sameQuantity && (!Number.isFinite(targetBoxes) || targetBoxes < 1)) {
         if (changeStatus) changeStatus.textContent = 'Najprije odaberite aparat i novu mjesečnu količinu u obrascu.';
         document.getElementById('promjena-kolicine')?.scrollIntoView({behavior:'smooth',block:'start'});
         return;
       }
-      if (selectedCount >= targetBoxes) {
+      if (!sameQuantity && selectedCount >= targetBoxes) {
         if (changeStatus) changeStatus.textContent = 'Već ste odabrali vrste za svih ' + (targetBoxes * 100) + ' kapsula mjesečno.';
         document.getElementById('promjena-kolicine')?.scrollIntoView({behavior:'smooth',block:'start'});
         return;
@@ -499,7 +500,7 @@ document.querySelectorAll('.capsule-select').forEach(button => {
       saveCapsuleSelections();
       updateChangeCapsuleField();
       if (changeStatus) changeStatus.textContent = '';
-      if (selectedCount + 1 >= targetBoxes) window.setTimeout(() => document.getElementById('promjena-kolicine')?.scrollIntoView({behavior:'smooth',block:'start'}),250);
+      if (!sameQuantity && selectedCount + 1 >= targetBoxes) window.setTimeout(() => document.getElementById('promjena-kolicine')?.scrollIntoView({behavior:'smooth',block:'start'}),250);
       return;
     }
     const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
@@ -962,6 +963,7 @@ function refreshCustomerChangeButtons(){
   const capsuleVarieties = document.getElementById('change-capsule-varieties');
   const consent = document.getElementById('change-consent');
   const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
+  const sameQuantity = !!(quantity && quantity.value === 'same');
   const targetBoxes = Number(quantity && quantity.value) / 100;
 
   if (chooseButton) {
@@ -975,9 +977,11 @@ function refreshCustomerChangeButtons(){
   const fieldsReady = Array.from(form.querySelectorAll('[required]')).every(field =>
     !field.disabled && field.checkValidity()
   );
+  const capsuleSelectionReady = sameQuantity
+    ? selectedBoxes > 0
+    : Number.isFinite(targetBoxes) && targetBoxes > 0 && selectedBoxes === targetBoxes;
   const ready = fieldsReady && !!(consent && consent.checked) &&
-    Number.isFinite(targetBoxes) && targetBoxes > 0 &&
-    selectedBoxes === targetBoxes &&
+    capsuleSelectionReady &&
     !!(capsuleVarieties && capsuleVarieties.value.trim());
   if (submitButton) {
     submitButton.classList.toggle('is-ready', ready);
@@ -996,8 +1000,13 @@ function updateChangeCapsuleField(){
   capsuleVarieties.value = selectedBoxes
     ? Array.from(selectedCapsules, ([name, qty]) => qty > 1 ? name + ' × ' + qty : name).join(', ')
     : '';
+  const sameQuantity = !!(quantity && quantity.value === 'same');
   const targetBoxes = Number(quantity && quantity.value) / 100;
-  if (capsuleNote && targetBoxes > 0) {
+  if (capsuleNote && sameQuantity) {
+    capsuleNote.textContent = selectedBoxes
+      ? 'Odabrane vrste kapsula za promjenu; postojeća mjesečna količina ostaje ista.'
+      : 'Količina ostaje ista. U galeriji odaberite barem jednu kutiju željenih vrsta kapsula.';
+  } else if (capsuleNote && targetBoxes > 0) {
     capsuleNote.textContent = selectedBoxes < targetBoxes
       ? 'Odabrano ' + (selectedBoxes * 100) + ' od ' + (targetBoxes * 100) + ' kapsula. Odaberite još ' + ((targetBoxes - selectedBoxes) * 100) + ' kapsula u galeriji.'
       : 'Odabir kapsula je popunjen za željenu mjesečnu količinu.';
@@ -1047,6 +1056,7 @@ function updateChangeCapsuleField(){
       if (note) note.textContent = 'Najprije odaberite aparat u polju „Vaš aparat”.';
       return;
     }
+    quantity.add(new Option('Samo promjena vrste kapsula (količina ostaje ista)', 'same'));
     quantity.add(new Option('Odaberite novu količinu', ''));
     for (let amount = minimum; amount <= minimum + 1000; amount += 100) {
       quantity.add(new Option(amount + ' kapsula mjesečno (' + amount / 100 + ' kutija)', String(amount)));
@@ -1118,15 +1128,16 @@ function updateChangeCapsuleField(){
   updateChangeCapsuleField();
   form.addEventListener('submit', event => {
     const minimum = minimums[effectiveModel()];
+    const sameQuantity = quantity.value === 'same';
     const amount = Number(quantity.value);
     const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
-    if (!minimum || !Number.isFinite(amount) || amount < minimum || amount % 100 !== 0) {
+    if (!sameQuantity && (!minimum || !Number.isFinite(amount) || amount < minimum || amount % 100 !== 0)) {
       event.preventDefault();
       if (status) status.textContent = 'Odaberite aparat i valjanu mjesečnu količinu prije slanja zahtjeva.';
       quantity.focus();
       return;
     }
-    if (selectedBoxes !== amount / 100 || !capsuleVarieties || !capsuleVarieties.value.trim()) {
+    if ((sameQuantity ? selectedBoxes < 1 : selectedBoxes !== amount / 100) || !capsuleVarieties || !capsuleVarieties.value.trim()) {
       event.preventDefault();
       updateChangeCapsuleField();
       if (status) status.textContent = 'Obavezno odaberite vrste kapsula za cijelu željenu mjesečnu količinu.';
@@ -1216,6 +1227,10 @@ function updateChangeCapsuleField(){
     form.addEventListener(type, queueRefresh, {capture:true, passive:type === 'touchend'})
   );
   document.addEventListener('zfk:capsules-updated', queueRefresh);
+  [topic, model, varieties, consent].filter(Boolean).forEach(field => {
+    field.addEventListener('input', queueRefresh);
+    field.addEventListener('change', queueRefresh);
+  });
   document.addEventListener('visibilitychange', queueRefresh);
   window.addEventListener('pageshow', queueRefresh);
   window.addEventListener('resize', queueRefresh);
@@ -1259,9 +1274,16 @@ function updateChangeCapsuleField(){
       }
 
       try {
+        const formData = new FormData(form);
+        if (isExisting) {
+          const quantityField = document.getElementById('change-quantity');
+          if (quantityField && quantityField.value === 'same') {
+            formData.set('Nova mjesečna količina ili samo promjena vrste kapsula', 'Samo promjena vrste kapsula; postojeća mjesečna količina ostaje ista.');
+          }
+        }
         const response = await fetch('https://api.web3forms.com/submit', {
           method: 'POST',
-          body: new FormData(form),
+          body: formData,
           headers: { 'Accept': 'application/json' }
         });
         const result = await response.json();
