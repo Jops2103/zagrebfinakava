@@ -1071,7 +1071,7 @@ function updateChangeCapsuleField(){
         : '';
     newModel.add(new Option(current ? 'Odaberite ostanak ili novi aparat' : 'Najprije odaberite svoj aparat', ''));
     if (current) {
-      newModel.add(new Option('Aparat ostaje isti', current));
+      newModel.add(new Option('Bez promjene', current));
       newModel.add(new Option('Novi aparat: ' + alternative, alternative));
     } else {
       // Keep the control tappable on mobile even before the current model is selected.
