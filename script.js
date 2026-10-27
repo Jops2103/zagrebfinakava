@@ -37,7 +37,13 @@ function syncOrderConditionalRequirements(){
   orderModelField.required = isApplianceOrder;
 }
 syncOrderConditionalRequirements();
-if (orderTopicField) orderTopicField.addEventListener('change', syncOrderConditionalRequirements);
+if (orderTopicField) orderTopicField.addEventListener('change', () => {
+  syncOrderConditionalRequirements();
+  // Immediately show/hide and disable conditional appliance/capsule fields
+  // when the inquiry type changes, then refresh submit-button readiness.
+  if (typeof updateSelectedCapsuleField === 'function') updateSelectedCapsuleField();
+  document.dispatchEvent(new Event('zfk:capsules-updated'));
+});
 
 // Keep a clearly named copy of the sender's email in the submitted message body.
 // The required email field is validated by the browser before this submit handler runs.
