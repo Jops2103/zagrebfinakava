@@ -1135,6 +1135,16 @@ function updateChangeCapsuleField(){
     newModel.addEventListener('change', refreshNewMachine);
   }
   quantity.addEventListener('change', () => {
+    const minimum = minimums[effectiveModel()];
+    const selectedAmount = Number(quantity.value);
+    // A browser's native select must never retain a quantity below the
+    // effective appliance's minimum, even if a disabled option is tapped.
+    if (quantity.value && quantity.value !== 'same' &&
+        (!Number.isFinite(selectedAmount) || selectedAmount < minimum || selectedAmount % 100 !== 0)) {
+      quantity.value = '';
+      if (status) status.textContent = 'Za LB2600 najmanja je količina 300 kapsula, a za LB 1300 Classy Soul 200 kapsula mjesečno. Odaberite dopuštenu količinu.';
+      configure();
+    }
     clearCapsuleChoices();
     refreshCustomerChangeButtons();
   });
