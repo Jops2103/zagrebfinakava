@@ -1051,9 +1051,15 @@ function updateChangeCapsuleField(){
     const targetModel = effectiveModel();
     const minimum = minimums[targetModel];
     const previousQuantity = quantity.value;
+    const isSwitching = !!(newModel && newModel.value && newModel.value !== 'same' && newModel.value !== model.value);
     Array.from(quantity.options).forEach(option => {
       const amount = Number(option.value);
-      if (option.value && option.value !== 'same' && Number.isFinite(amount)) {
+      if (option.value === 'same') {
+        // When switching appliances, the current monthly quantity is unknown.
+        // Require an explicit quantity so the new model's minimum is enforced.
+        option.disabled = isSwitching;
+        option.hidden = false;
+      } else if (option.value && Number.isFinite(amount)) {
         option.disabled = !minimum || amount < minimum;
         option.hidden = !!minimum && amount < minimum;
       }
@@ -1067,10 +1073,10 @@ function updateChangeCapsuleField(){
     if (previousQuantity && previousQuantity !== 'same' && Number(previousQuantity) < minimum) {
       quantity.value = '';
     }
-    const isSwitching = !!(newModel && newModel.value && newModel.value !== 'same' && newModel.value !== model.value);
     if (note) note.textContent = (newModel && newModel.value === 'same' ? 'Aparat ostaje isti. ' : '') +
       'Minimalno ' + minimum + ' kapsula mjesečno za ' + (isSwitching ? 'novi odabrani aparat' : 'odabrani aparat') +
-      '. Količine su u koracima od 100 kapsula.';
+      '. Količine su u koracima od 100 kapsula.' +
+      (isSwitching ? ' Pri promjeni aparata odaberite konkretnu količinu; opcija „Bez promjene količine” nije dostupna jer se postojeća količina ne može provjeriti.' : '');
   }
   function configureNewModel(){
     if (!newModel) return;
@@ -1142,9 +1148,12 @@ function updateChangeCapsuleField(){
     const sameQuantity = quantity.value === 'same';
     const amount = Number(quantity.value);
     const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
-    if (!sameQuantity && (!minimum || !Number.isFinite(amount) || amount < minimum || amount % 100 !== 0)) {
+    const isSwitching = !!(newModel && newModel.value && newModel.value !== 'same' && newModel.value !== model.value);
+    if ((sameQuantity && isSwitching) || (!sameQuantity && (!minimum || !Number.isFinite(amount) || amount < minimum || amount % 100 !== 0))) {
       event.preventDefault();
-      if (status) status.textContent = 'Odaberite valjanu mjesečnu količinu za odabrani aparat.';
+      if (status) status.textContent = sameQuantity && isSwitching
+        ? 'Pri promjeni aparata odaberite konkretnu mjesečnu količinu koja zadovoljava minimum novog aparata.'
+        : 'Odaberite valjanu mjesečnu količinu za odabrani aparat.';
       quantity.focus();
       return;
     }
