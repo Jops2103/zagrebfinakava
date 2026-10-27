@@ -1271,6 +1271,9 @@ function updateChangeCapsuleField(){
   function getBlockers() {
     const blockers = [];
     for (const field of Array.from(form.querySelectorAll('[required]'))) {
+      // These are optional additions/display-only fields and must never block submission.
+      if (field.id === 'message' || field.id === 'capsules' ||
+          field.closest('#additional-capsules-field')) continue;
       if (!isVisible(field) || field.readOnly) continue;
       let missing = field.type === 'checkbox' ? !field.checked : !String(field.value || '').trim();
       if (!missing && typeof field.checkValidity === 'function') missing = !field.checkValidity();
@@ -1291,11 +1294,9 @@ function updateChangeCapsuleField(){
       const modelField = document.getElementById('model');
       const normalizedModel = String(modelField && modelField.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
       const minimumBoxes = normalizedModel.includes('LB2600') ? 3 : normalizedModel.includes('LB1300') ? 2 : 0;
-      const quantityText = String(quantity && quantity.value || '');
-      const quantityMatch = quantityText.match(/\d+/);
-      const displayedBoxes = quantityMatch ? Number(quantityMatch[0]) : 0;
+      const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
       if (!minimumBoxes) blockers.push('odabrani aparat');
-      else if (displayedBoxes < minimumBoxes) blockers.push('minimalna količina kapsula (' + minimumBoxes + ' kutije)');
+      else if (selectedCount < minimumBoxes) blockers.push('odabrana minimalna količina kapsula (' + minimumBoxes + ' kutije)');
     }
     return [...new Set(blockers)];
   }
