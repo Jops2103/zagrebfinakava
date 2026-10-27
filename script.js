@@ -1039,8 +1039,8 @@ function updateChangeCapsuleField(){
   function effectiveModel(){
     const currentModel = model.value;
     const requestedModel = newModel && newModel.value;
-    // The "stay with current appliance" choice has the same value as currentModel.
-    // Use the requested model only when it is one of the known supported models.
+    // The stable "same" option explicitly means keep the current appliance.
+    if (requestedModel === 'same') return currentModel;
     return requestedModel && Object.prototype.hasOwnProperty.call(minimums, requestedModel)
       ? requestedModel
       : currentModel;
@@ -1066,36 +1066,33 @@ function updateChangeCapsuleField(){
     if (previousQuantity && Array.from(quantity.options).some(option => option.value === previousQuantity)) {
       quantity.value = previousQuantity;
     }
-    const isSwitching = !!(newModel && newModel.value && newModel.value !== model.value);
+    const isSwitching = !!(newModel && newModel.value && newModel.value !== 'same' && newModel.value !== model.value);
     if (note) note.textContent = 'Minimalno ' + minimum + ' kapsula mjesečno za ' + (isSwitching ? 'novi odabrani aparat' : 'odabrani aparat') + '. Odabir je u koracima od 100 kapsula.';
   }
   function configureNewModel(){
     if (!newModel) return;
-    const previousValue = newModel.value;
-    newModel.replaceChildren();
+    // Keep a stable set of native <option> elements. Replacing the options each
+    // time the current model changes can make mobile browser pickers lose taps
+    // or reset their selected value.
+    const options = Array.from(newModel.options);
+    const placeholder = options.find(option => option.value === '');
+    const same = options.find(option => option.value === 'same');
+    const soul = options.find(option => option.value === 'Lavazza LB 1300 Classy Soul');
+    const lb2600 = options.find(option => option.value === 'Lavazza LB2600');
     const current = model.value;
-    const alternative = current === 'Lavazza LB 1300 Classy Soul'
-      ? 'Lavazza LB2600'
-      : current === 'Lavazza LB2600'
-        ? 'Lavazza LB 1300 Classy Soul'
-        : '';
-    newModel.add(new Option(current ? 'Odaberite ostanak ili novi aparat' : 'Najprije odaberite svoj aparat', ''));
-    // Always show the no-change choice, including on mobile/tablet.
-    // When the current model is known, its value keeps that same machine selected.
-    newModel.add(new Option('Bez promjene aparata', current || 'same'));
-    if (current) {
-      newModel.add(new Option('Novi aparat: ' + alternative, alternative));
-    } else {
-      // Keep the control usable before the current model is selected.
-      newModel.add(new Option('Lavazza LB 1300 Classy Soul', 'Lavazza LB 1300 Classy Soul'));
-      newModel.add(new Option('Lavazza LB2600', 'Lavazza LB2600'));
-    }
+    if (placeholder) placeholder.textContent = current
+      ? 'Odaberite ostanak ili novi aparat'
+      : 'Najprije odaberite svoj aparat';
+    if (same) same.textContent = 'Bez promjene aparata';
+    if (soul) soul.textContent = current === soul.value
+      ? 'Trenutačni aparat: Lavazza LB 1300 Classy Soul'
+      : 'Novi aparat: Lavazza LB 1300 Classy Soul';
+    if (lb2600) lb2600.textContent = current === lb2600.value
+      ? 'Trenutačni aparat: Lavazza LB2600'
+      : 'Novi aparat: Lavazza LB2600';
     newModel.disabled = false;
-    if (current && (previousValue === current || previousValue === alternative)) {
-      newModel.value = previousValue;
-    } else {
-      newModel.value = '';
-    }
+    // Do not silently select a model. Preserve a user's explicit choice.
+    if (newModel.value === current && current) newModel.value = 'same';
   }
   function clearCapsuleChoices(){
     selectedCapsules.clear();
