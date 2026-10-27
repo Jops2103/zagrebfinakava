@@ -478,7 +478,20 @@ document.querySelectorAll('.model-select').forEach(button => {
 });
 
 document.querySelectorAll('.capsule-select').forEach(button => {
+  let capsuleFeedbackTimer = null;
   button.addEventListener('click', () => {
+    // Give new and existing customers the same one-second click feedback.
+    button.classList.remove('capsule-click-resting');
+    button.classList.remove('capsule-click-feedback');
+    if (capsuleFeedbackTimer) window.clearTimeout(capsuleFeedbackTimer);
+    // Restart the animation reliably for repeated taps on the same variety.
+    void button.offsetWidth;
+    button.classList.add('capsule-click-feedback');
+    capsuleFeedbackTimer = window.setTimeout(() => {
+      button.classList.remove('capsule-click-feedback');
+      button.classList.add('capsule-click-resting');
+      capsuleFeedbackTimer = null;
+    }, 1000);
     if (!capsuleField) return;
     const variety = button.dataset.capsule;
     if (document.body.dataset.customerChangeMode === 'true') {
