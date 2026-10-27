@@ -1253,34 +1253,43 @@ function updateChangeCapsuleField(){
   const model = document.getElementById('model');
   const consent = document.getElementById('consent');
   const varieties = document.getElementById('capsule-varieties');
+  const quantity = document.getElementById('capsules');
   let refreshQueued = false;
 
   function isVisible(field){
     if (field.disabled || field.closest('[hidden]')) return false;
     const style = window.getComputedStyle(field);
-    return style.display !== 'none' && style.visibility !== 'hidden' && field.getClientRects().length > 0;
+    return style.display !== 'none' && style.visibility !== 'hidden' &&
+      field.getClientRects().length > 0;
   }
 
   function refreshButton(){
     refreshQueued = false;
-    // Only actual, visible required fields should control the visual state.
-    // Ignore readonly summary fields; they are checked separately for appliance orders.
+    // Match the browser's actual submission requirements, but only count visible
+    // fields and do not treat readonly, generated summaries as user-entered fields.
     const requiredFields = Array.from(form.querySelectorAll('[required]')).filter(field =>
       isVisible(field) && !field.readOnly
     );
-    let ready = requiredFields.length > 0 && requiredFields.every(field => {
-      if (field.type === 'checkbox') return field.checked && field.checkValidity();
-      if (field.tagName === 'TEXTAREA' || field.tagName === 'INPUT' || field.tagName === 'SELECT') {
-        return String(field.value || '').trim() !== '' && field.checkValidity();
+    let ready = requiredFields.length > 0;
+    for (const field of requiredFields) {
+      if (field.type === 'checkbox') {
+        if (!field.checked) ready = false;
+      } else if (field.type === 'radio') {
+        if (!form.querySelector('input[type="radio"][name="' + CSS.escape(field.name) + '"]:checked')) ready = false;
+      } else if (!String(field.value || '').trim()) {
+        ready = false;
       }
-      return field.checkValidity();
-    });
-    if (!consent || !consent.checked) ready = false;
+      if (typeof field.checkValidity === 'function' && !field.checkValidity()) ready = false;
+    }
 
+    if (!consent || !consent.checked) ready = false;
     const applianceOrder = topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula';
     if (applianceOrder) {
-      if (!model || !model.value || !model.checkValidity() || !varieties ||
-          !varieties.value.trim() || varieties.value.trim() === 'Nijedna vrsta još nije odabrana') ready = false;
+      const capsuleSummary = varieties ? String(varieties.value || '').trim() : '';
+      const selectedCapsules = capsuleSummary && capsuleSummary !== 'Nijedna vrsta još nije odabrana';
+      if (!model || !model.value || !model.checkValidity() || !selectedCapsules) ready = false;
+      // For appliance orders, require the quantity calculated from the capsule choices.
+      if (!quantity || !String(quantity.value || '').trim()) ready = false;
     }
 
     if (button) {
@@ -1300,12 +1309,11 @@ function updateChangeCapsuleField(){
     window.setTimeout(refreshButton, 0);
   }
 
-  // Capture events from controls and refresh after capsule-selection code has updated the form.
   ['input','change','click','focusout','keyup','pointerup','touchend'].forEach(type =>
     form.addEventListener(type, queueRefresh, {capture:true, passive:type === 'touchend'})
   );
   document.addEventListener('zfk:capsules-updated', queueRefresh);
-  [topic, model, varieties, consent].filter(Boolean).forEach(field => {
+  [topic, model, varieties, consent, quantity].filter(Boolean).forEach(field => {
     field.addEventListener('input', queueRefresh);
     field.addEventListener('change', queueRefresh);
   });
