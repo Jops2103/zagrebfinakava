@@ -1278,16 +1278,17 @@ function updateChangeCapsuleField(){
 
   function refreshButton(){
     refreshQueued = false;
-    // Use the exact always-required fields rather than querying every [required]
-    // element, because conditional fields may remain in the DOM while hidden.
     const contactFields = [name, phone, email, customerType, topic];
     let ready = contactFields.every(field => !!field && field.checkValidity());
     ready = ready && !!(consent && consent.checked && consent.checkValidity());
 
-    // Only an appliance order requires a model and the minimum capsule boxes.
     const applianceOrder = !!(topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula');
     if (applianceOrder) {
-      const minimum = capsulePackageLimit();
+      // Read the model directly from the visible form; the separate capsule
+      // guide's model selector may not have been used.
+      const selectedModel = String(model && model.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const minimum = selectedModel.includes('LB1300') ? 2
+        : selectedModel.includes('LB2600') ? 3 : 0;
       const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
       ready = ready && !!(model && model.value && model.checkValidity()) &&
         minimum > 0 && selectedCount >= minimum;
