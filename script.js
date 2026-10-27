@@ -1160,8 +1160,7 @@ function updateChangeCapsuleField(){
 
   function refreshButton(){
     refreshQueued = false;
-    // Only validate required controls that are actually available to the user.
-    // Mobile layouts and conditional sections may hide required fields without disabling them.
+    // Only visible fields marked required (*) determine readiness.
     let ready = Array.from(form.querySelectorAll('[required]')).every(field => {
       if (field.disabled || field.closest('[hidden]')) return true;
       const style = window.getComputedStyle(field);
@@ -1171,14 +1170,11 @@ function updateChangeCapsuleField(){
     if (!consent || !consent.checked) ready = false;
 
     const applianceOrder = topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula';
+    // "Odabrane kapsule *" must contain a real selection, not its instructional default.
     if (ready && applianceOrder) {
-      // This readiness checker is outside the capsule gallery's scope, so read the
-      // displayed box total instead of referencing its private selectedCapsules Map.
-      const modelName = model ? model.value : '';
-      const minimum = /1300/i.test(modelName) ? 2 : /2600/i.test(modelName) ? 3 : 0;
-      const quantityText = capsuleInput ? capsuleInput.value : '';
-      const selectedCount = Number.parseInt(quantityText, 10) || 0;
-      if (!modelName || !minimum || selectedCount < minimum) ready = false;
+      const varieties = document.getElementById('capsule-varieties');
+      if (!model || !model.value || !varieties || !varieties.value.trim() ||
+          varieties.value.trim() === 'Nijedna vrsta još nije odabrana') ready = false;
     }
 
     if (button) {
