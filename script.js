@@ -1045,29 +1045,41 @@ function updateChangeCapsuleField(){
       ? requestedModel
       : currentModel;
   }
+  // Keep the native select's option nodes stable for mobile browsers.
+  // Only hide quantities below the selected appliance's minimum.
   function configure(){
     const targetModel = effectiveModel();
     const minimum = minimums[targetModel];
     const previousQuantity = quantity.value;
-    quantity.replaceChildren();
+    if (!quantity.dataset.optionsReady) {
+      quantity.replaceChildren();
+      quantity.add(new Option('Odaberite količinu', ''));
+      quantity.add(new Option('Samo promjena vrste kapsula (količina ostaje ista)', 'same'));
+      for (let amount = 200; amount <= 2000; amount += 100) {
+        quantity.add(new Option(amount + ' kapsula (' + amount / 100 + ' kutije)', String(amount)));
+      }
+      quantity.dataset.optionsReady = 'true';
+    }
+    Array.from(quantity.options).forEach(option => {
+      const amount = Number(option.value);
+      if (option.value && option.value !== 'same' && Number.isFinite(amount)) {
+        option.hidden = !!minimum && amount < minimum;
+        option.disabled = !minimum || amount < minimum;
+      }
+    });
+    quantity.disabled = !minimum;
     if (!minimum) {
-      quantity.add(new Option('Najprije odaberite svoj aparat', ''));
-      quantity.disabled = true;
+      quantity.value = '';
       if (note) note.textContent = 'Najprije odaberite aparat u polju „Vaš aparat”.';
       return;
     }
-    quantity.add(new Option('Samo promjena vrste kapsula (količina ostaje ista)', 'same'));
-    quantity.add(new Option('Odaberite novu količinu', ''));
-    for (let amount = minimum; amount <= minimum + 1000; amount += 100) {
-      quantity.add(new Option(amount + ' kapsula mjesečno (' + amount / 100 + ' kutija)', String(amount)));
-    }
-    quantity.disabled = false;
-    // Preserve a valid choice when a mobile browser fires both input and change.
-    if (previousQuantity && Array.from(quantity.options).some(option => option.value === previousQuantity)) {
-      quantity.value = previousQuantity;
+    if (previousQuantity && previousQuantity !== 'same' && Number(previousQuantity) < minimum) {
+      quantity.value = '';
     }
     const isSwitching = !!(newModel && newModel.value && newModel.value !== 'same' && newModel.value !== model.value);
-    if (note) note.textContent = 'Minimalno ' + minimum + ' kapsula mjesečno za ' + (isSwitching ? 'novi odabrani aparat' : 'odabrani aparat') + '. Odabir je u koracima od 100 kapsula.';
+    if (note) note.textContent = (newModel && newModel.value === 'same' ? 'Aparat ostaje isti. ' : '') +
+      'Minimalno ' + minimum + ' kapsula mjesečno za ' + (isSwitching ? 'novi odabrani aparat' : 'odabrani aparat') +
+      '. Količine su u koracima od 100 kapsula.';
   }
   function configureNewModel(){
     if (!newModel) return;
