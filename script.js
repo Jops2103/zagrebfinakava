@@ -1368,8 +1368,8 @@ function updateChangeCapsuleField(){
     }
     const field = form.querySelector('#change-capsule-varieties, #capsule-varieties');
     return String(field && field.value || '')
-      .split(/,\\s*/)
-      .map(value => value.trim().replace(/\\s×\\s\\d+$/, ''))
+      .split(/,\s*/)
+      .map(value => value.trim().replace(/\s×\s\d+$/, ''))
       .filter(value => value && !/^Nijedna vrsta/i.test(value));
   }
 
@@ -1378,7 +1378,7 @@ function updateChangeCapsuleField(){
     if (!isExisting) {
       const model = canonicalMachine(document.getElementById('model')?.value);
       const rawQuantity = String(document.getElementById('capsules')?.value || '');
-      const matches = rawQuantity.match(/\\d+/g);
+      const matches = rawQuantity.match(/\d+/g);
       const quantity = matches ? Number(matches[0]) * (rawQuantity.includes('kut') ? 100 : 1) : 0;
       return {
         request_type: 'new',
@@ -1394,7 +1394,7 @@ function updateChangeCapsuleField(){
           'Dodatne kapsule: ' + (document.querySelector('input[name="Dodatne kapsule"]:checked')?.value || 'Ne'),
           'Dodatne odabrane kapsule: ' + (document.getElementById('additional-capsule-varieties')?.value || ''),
           'Poruka: ' + (document.getElementById('message')?.value.trim() || '')
-        ].filter(Boolean).join('\\n')
+        ].filter(Boolean).join('\n')
       };
     }
 
@@ -1416,7 +1416,7 @@ function updateChangeCapsuleField(){
         'Promjena količine: ' + (quantityValue === 'same' ? 'Bez promjene količine' : quantityValue + ' kapsula mjesečno'),
         'Broj postojeće narudžbe: ' + (document.getElementById('change-reference')?.value.trim() || 'nije naveden'),
         'Dodatna napomena: ' + (document.getElementById('change-message')?.value.trim() || '')
-      ].join('\\n')
+      ].join('\n')
     };
   }
 
