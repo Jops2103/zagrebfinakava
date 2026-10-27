@@ -1244,8 +1244,8 @@ function updateChangeCapsuleField(){
 })();
 
 
-// Keep the new-customer submit button disabled until every required field,
- // capsule selection, and the privacy consent are complete.
+// Keep the new-customer submit button gray until every visible required field,
+// applicable capsule selection, and privacy consent are complete.
 (function markOrderFormReady(){
   const form = document.getElementById('order-form');
   if (!form) return;
@@ -1284,19 +1284,24 @@ function updateChangeCapsuleField(){
     }
 
     if (!consent || !consent.checked) blockers.push('prihvaćeni uvjeti i suglasnost');
+
+    const selectedTopic = topic ? topic.value : '';
+    const applianceOrder = selectedTopic === 'Želim aparat uz mjesečnu kupnju kapsula';
+    const capsuleOnlyOrder = selectedTopic === 'Želim naručiti kapsule';
     const capsuleSummary = varieties ? String(varieties.value || '').trim() : '';
-    if (!capsuleSummary || capsuleSummary === 'Nijedna vrsta još nije odabrana') {
+    const capsuleSummaryNeeded = applianceOrder || capsuleOnlyOrder || isVisible(varieties);
+    if (capsuleSummaryNeeded && (!capsuleSummary || capsuleSummary === 'Nijedna vrsta još nije odabrana')) {
       blockers.push('odabrane kapsule');
     }
 
-    const applianceOrder = topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula';
     if (applianceOrder) {
-      if (!quantity || !String(quantity.value || '').trim()) {
-        blockers.push('ukupna količina kapsula');
-      } else {
-        const minimum = /LB\s*2600/i.test(model ? model.value : '') ? 3 : 2;
-        const match = String(quantity.value).match(/\d+/);
-        if (!match || Number(match[0]) < minimum) blockers.push('minimalna količina kapsula (' + minimum + ' kutije)');
+      const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
+      const selectedModel = String(model && model.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const minimum = selectedModel.includes('LB2600') ? 3 : selectedModel.includes('LB1300') ? 2 : 0;
+      if (!model || !model.value || !minimum) {
+        blockers.push('odabrani aparat');
+      } else if (!quantity || !String(quantity.value || '').trim() || selectedBoxes < minimum) {
+        blockers.push('minimalna količina kapsula (' + minimum + ' kutije)');
       }
     }
     return [...new Set(blockers)];
@@ -1314,7 +1319,7 @@ function updateChangeCapsuleField(){
       button.style.setProperty('border-color', color, 'important');
       button.style.setProperty('color', '#fff', 'important');
       button.setAttribute('aria-disabled', ready ? 'false' : 'true');
-      button.title = ready ? 'Obrazac je spreman za slanje' : 'Ispunite sva obavezna polja i prihvatite uvjete';
+      button.title = ready ? 'Sve je ispunjeno — upit je spreman za slanje' : 'Ispunite sva obavezna polja i prihvatite uvjete';
     }
     if (diagnostic) {
       diagnostic.textContent = ready
