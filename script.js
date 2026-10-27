@@ -262,9 +262,11 @@ function updateCapsuleButtonFeedback() {
     button.setAttribute('aria-pressed', count > 0 ? 'true' : 'false');
     if (count > 0) {
       const word = count === 1 ? 'kutija' : (count >= 2 && count <= 4 ? 'kutije' : 'kutija');
-      button.textContent = 'Odabrano: ' + count + ' ' + word + ' ✓';
+      button.textContent = '✓ Odabrano: ' + count + ' ' + word;
+      button.setAttribute('aria-label', button.dataset.capsule + ': odabrano ' + count + ' ' + word + '. Kliknite za dodavanje još jedne kutije.');
     } else {
       button.textContent = button.dataset.originalLabel;
+      button.setAttribute('aria-label', button.dataset.capsule + ': odaberite kapsule');
     }
   });
 }
@@ -667,11 +669,9 @@ if (capsuleFromDetail && capsuleField && topicField) {
   if (chooseCapsules) chooseCapsules.addEventListener('click', () => {
     const quantity = document.getElementById('change-quantity');
     const status = document.getElementById('customer-change-status');
-    // Always take existing customers to the gallery. If required choices are
-    // missing, the capsule cards will explain what to complete in the form.
+    // Keep capsule choices when the customer returns to the gallery.
+    // Clearing here made it impossible to add or adjust varieties over multiple visits.
     document.body.dataset.customerChangeMode = 'true';
-    selectedCapsules.clear();
-    saveCapsuleSelections();
     updateChangeCapsuleField();
     if (!changeModel || !changeModel.value || !quantity || !quantity.value) {
       if (status) status.textContent = 'Odaberite aparat i mjesečnu količinu u obrascu prije odabira kapsula.';
