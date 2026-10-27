@@ -508,19 +508,19 @@ document.querySelectorAll('.capsule-select').forEach(button => {
       const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
       if (!sameQuantity && (!Number.isFinite(targetBoxes) || targetBoxes < 1)) {
         if (changeStatus) changeStatus.textContent = 'Najprije odaberite aparat i novu mjesečnu količinu u obrascu.';
-        document.getElementById('promjena-kolicine')?.scrollIntoView({behavior:'smooth',block:'start'});
         return;
       }
       if (!sameQuantity && selectedCount >= targetBoxes) {
         if (changeStatus) changeStatus.textContent = 'Već ste odabrali vrste za svih ' + (targetBoxes * 100) + ' kapsula mjesečno.';
-        document.getElementById('promjena-kolicine')?.scrollIntoView({behavior:'smooth',block:'start'});
         return;
       }
       selectedCapsules.set(variety, (selectedCapsules.get(variety) || 0) + 1);
       saveCapsuleSelections();
       updateChangeCapsuleField();
       if (changeStatus) changeStatus.textContent = '';
-      if (!sameQuantity && selectedCount + 1 >= targetBoxes) window.setTimeout(() => document.getElementById('promjena-kolicine')?.scrollIntoView({behavior:'smooth',block:'start'}),250);
+      // Stay in the capsule gallery while the customer is selecting varieties.
+      // The completed selection is reflected in the existing-customer form without
+      // forcibly scrolling away from the gallery.
       return;
     }
     const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
@@ -674,6 +674,12 @@ if (capsuleFromDetail && capsuleField && topicField) {
     if (link.dataset.customerRoute !== 'existing') return;
     event.preventDefault();
     if (changeSection) changeSection.hidden = false;
+    // Start a fresh existing-customer selection so choices from the new-customer
+    // flow cannot silently fill the requested quantity and bounce the visitor away.
+    selectedCapsules.clear();
+    saveCapsuleSelections();
+    updateCapsuleButtonFeedback();
+    updateChangeCapsuleField();
     document.body.dataset.customerChangeMode = 'true';
     if (changeSection) {
       changeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
