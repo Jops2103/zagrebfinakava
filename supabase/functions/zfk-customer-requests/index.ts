@@ -51,6 +51,11 @@ Deno.serve(async (req: Request) => {
 
     const payload = await req.json();
     const requestType = payload.request_type;
+    const requestTopic = typeof payload.request_topic === "string" ? payload.request_topic.trim() : "";
+    const isExisting = requestType === "existing";
+    const isApplianceOrder = isExisting || requestTopic === "Želim aparat uz mjesečnu kupnju kapsula";
+    const isCapsuleOrder = !isExisting && requestTopic === "Želim naručiti kapsule";
+    const isGeneralInquiry = !isExisting && requestTopic === "Imam pitanje o ponudi";
     const name = typeof payload.name === "string" ? payload.name.trim() : "";
     const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
     const machine = typeof payload.machine === "string" ? payload.machine.trim() : "";
@@ -68,20 +73,36 @@ Deno.serve(async (req: Request) => {
     if (!name || name.length > 250 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 320) {
       return jsonResponse({ success: false, message: "Provjerite ime i e-mail adresu." }, 400);
     }
-    if (!(machine in machineMinimums)) {
+    if (requestType === "new" && ![ "Želim aparat uz mjesečnu kupnju kapsula", "Želim naručiti kapsule", "Imam pitanje o ponudi" ].includes(requestTopic)) {
+      return jsonResponse({ success: false, message: "Odaberite vrstu upita." }, 400);
+    }
+    if (isApplianceOrder && !(machine in machineMinimums)) {
       return jsonResponse({ success: false, message: "Odabrani aparat nije prepoznat." }, 400);
     }
-    if (capsuleSelection.length === 0 || capsuleSelection.length > 30) {
+    if (isApplianceOrder && (capsuleSelection.length === 0 || capsuleSelection.length > 30)) {
       return jsonResponse({ success: false, message: "Odaberite barem jednu vrstu kapsula." }, 400);
     }
-    if (requestType === "new") {
-      if (!Number.isInteger(quantity) || quantity! < machineMinimums[machine] || quantity! > 2000 || quantity! % 100 !== 0) {
+    if (isCapsuleOrder && (capsuleSelection.length === 0 || capsuleSelection.length > 30)) {
+      return jsonResponse({ success: false, message: "Odaberite barem jednu vrstu kapsula." }, 400);
+    }
+    if (isGeneralInquiry && capsuleSelection.length > 30) {
+      return jsonResponse({ success: false, message: "Odabir kapsula nije valjan." }, 400);
+    }
+    if (isApplianceOrder) {
+      const minimum = machineMinimums[machine];
+      if (requestType === "new" && (!Number.isInteger(quantity) || quantity! < minimum || quantity! > 2000 || quantity! % 100 !== 0)) {
         return jsonResponse({ success: false, message: "Količina kapsula nije valjana za odabrani aparat." }, 400);
       }
-    } else if (quantity !== null) {
-      if (!Number.isInteger(quantity) || quantity < machineMinimums[machine] || quantity > 2000 || quantity % 100 !== 0) {
+      if (requestType === "existing" && quantity !== null &&
+          (!Number.isInteger(quantity) || quantity < minimum || quantity > 2000 || quantity % 100 !== 0)) {
         return jsonResponse({ success: false, message: "Nova količina kapsula nije valjana za odabrani aparat." }, 400);
       }
+    } else if (isCapsuleOrder) {
+      if (!Number.isInteger(quantity) || quantity! < 100 || quantity! > 2000 || quantity! % 100 !== 0) {
+        return jsonResponse({ success: false, message: "Količina kapsula nije valjana." }, 400);
+      }
+    } else if (isGeneralInquiry && quantity !== 0) {
+      return jsonResponse({ success: false, message: "Opći upit ne smije sadržavati količinu kapsula." }, 400);
     }
 
     const supabaseUrl = "https://wbupmpqymavxjxatwzsh.supabase.co";
@@ -99,7 +120,7 @@ Deno.serve(async (req: Request) => {
         requested_machine: machine,
         requested_monthly_capsules: quantity,
         capsule_selection: capsuleSelection,
-        customer_note: `Vrsta zahtjeva: ${requestType === "new" ? "novi korisnik" : "postojeći korisnik"}\n${note}`.trim(),
+        customer_note: `Vrsta zahtjeva: ${requestType === "new" ? "novi korisnik" : "postojeći korisnik"}${requestType === "new" ? `\nVrsta upita: ${requestTopic}` : ""}\n${note}`.trim(),
         request_status: "pending",
       }),
     });
