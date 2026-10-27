@@ -1270,10 +1270,14 @@ function updateChangeCapsuleField(){
   }
   function getBlockers() {
     const blockers = [];
+    const selectedTopic = topic ? topic.value : '';
+    const offerQuestion = selectedTopic === 'Imam pitanje o ponudi';
     for (const field of Array.from(form.querySelectorAll('[required]'))) {
-      // These are optional additions/display-only fields and must never block submission.
+      // Optional/display-only fields never block submission.
       if (field.id === 'message' || field.id === 'capsules' ||
           field.closest('#additional-capsules-field')) continue;
+      // A general offer question requires no appliance or capsule selection.
+      if (offerQuestion && ['model', 'capsule-varieties'].includes(field.id)) continue;
       if (!isVisible(field) || field.readOnly) continue;
       let missing = field.type === 'checkbox' ? !field.checked : !String(field.value || '').trim();
       if (!missing && typeof field.checkValidity === 'function') missing = !field.checkValidity();
@@ -1281,12 +1285,11 @@ function updateChangeCapsuleField(){
     }
     if (!consent || !consent.checked) blockers.push('prihvaćeni uvjeti i suglasnost');
 
-    const selectedTopic = topic ? topic.value : '';
     const applianceOrder = selectedTopic === 'Želim aparat uz mjesečnu kupnju kapsula';
     const capsuleOnlyOrder = selectedTopic === 'Želim naručiti kapsule';
     const capsuleFieldVisible = isVisible(varieties);
     const capsuleSummary = varieties ? String(varieties.value || '').trim() : '';
-    if ((applianceOrder || capsuleOnlyOrder || capsuleFieldVisible) &&
+    if (!offerQuestion && (applianceOrder || capsuleOnlyOrder || capsuleFieldVisible) &&
         (!capsuleSummary || capsuleSummary === 'Nijedna vrsta još nije odabrana')) {
       blockers.push('odabrane kapsule');
     }
