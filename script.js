@@ -1267,47 +1267,43 @@ function updateChangeCapsuleField(){
   const form = document.getElementById('order-form');
   if (!form) return;
   const button = form.querySelector('button[type="submit"]');
+  const name = document.getElementById('name');
+  const phone = document.getElementById('phone');
+  const email = document.getElementById('email');
+  const customerType = document.getElementById('customer-type');
   const topic = document.getElementById('topic');
   const model = document.getElementById('model');
   const consent = document.getElementById('consent');
-  const varieties = document.getElementById('capsule-varieties');
   let refreshQueued = false;
 
   function refreshButton(){
     refreshQueued = false;
-    // Recompute from the currently visible, enabled required fields. Using
-    // form.checkValidity() here can disagree with the custom step-by-step form
-    // because hidden/disabled conditional fields must not affect button styling.
-    // Check the always-required contact fields, but do not let a conditional
-    // appliance field block a general question.
-    let ready = Array.from(form.querySelectorAll('[required]')).every(field => {
-      if (field.disabled || field.closest('[hidden]')) return true;
-      const style = window.getComputedStyle(field);
-      if (style.display === 'none' || style.visibility === 'hidden' || field.getClientRects().length === 0) return true;
-      return field.checkValidity();
-    });
+    // Use the exact always-required fields rather than querying every [required]
+    // element, because conditional fields may remain in the DOM while hidden.
+    const contactFields = [name, phone, email, customerType, topic];
+    let ready = contactFields.every(field => !!field && field.checkValidity());
+    ready = ready && !!(consent && consent.checked && consent.checkValidity());
 
-    // Consent is always mandatory, regardless of the type of inquiry.
-    if (!consent || !consent.checked) ready = false;
-
-    // Appliance orders also require a valid model and the minimum capsule quantity.
-    const applianceOrder = topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula';
+    // Only an appliance order requires a model and the minimum capsule boxes.
+    const applianceOrder = !!(topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula');
     if (applianceOrder) {
-      const modelName = model ? model.value : '';
       const minimum = capsulePackageLimit();
       const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
-      if (!modelName || !model.checkValidity() || !minimum || selectedCount < minimum) ready = false;
+      ready = ready && !!(model && model.value && model.checkValidity()) &&
+        minimum > 0 && selectedCount >= minimum;
     }
 
     if (button) {
-      button.classList.toggle('is-ready', ready);
       const color = ready ? '#003da5' : '#8a8f98';
+      button.classList.toggle('is-ready', ready);
       button.style.setProperty('background-color', color, 'important');
       button.style.setProperty('background', color, 'important');
       button.style.setProperty('border-color', color, 'important');
       button.style.setProperty('color', '#fff', 'important');
       button.setAttribute('aria-disabled', ready ? 'false' : 'true');
-      button.title = ready ? 'Sve je ispunjeno — upit je spreman za slanje' : 'Ispunite obavezna polja i prihvatite suglasnost';
+      button.title = ready
+        ? 'Sve je ispunjeno — upit je spreman za slanje'
+        : 'Ispunite obavezna polja i prihvatite suglasnost';
     }
   }
 
@@ -1318,8 +1314,6 @@ function updateChangeCapsuleField(){
   }
 
   ['input','change','focusout'].forEach(type => form.addEventListener(type, queueRefresh, true));
-  // Recalculate immediately when the consent checkbox is ticked; do not leave
-  // the button gray because another queued refresh was waiting.
   if (consent) consent.addEventListener('change', refreshButton);
   document.addEventListener('zfk:capsules-updated', refreshButton);
   document.addEventListener('click', queueRefresh, true);
