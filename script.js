@@ -262,9 +262,11 @@ function updateCapsuleButtonFeedback() {
     button.setAttribute('aria-pressed', count > 0 ? 'true' : 'false');
     if (count > 0) {
       const word = count === 1 ? 'kutija' : (count >= 2 && count <= 4 ? 'kutije' : 'kutija');
-      button.textContent = 'Odabrano: ' + count + ' ' + word + ' ✓';
+      button.textContent = '✓ Odabrano: ' + count + ' ' + word;
+      button.setAttribute('aria-label', button.dataset.capsule + ': odabrano ' + count + ' ' + word + '. Kliknite za dodavanje još jedne kutije.');
     } else {
       button.textContent = button.dataset.originalLabel;
+      button.setAttribute('aria-label', button.dataset.capsule + ': odaberite kapsule');
     }
   });
 }
