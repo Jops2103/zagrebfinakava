@@ -1244,94 +1244,41 @@ function updateChangeCapsuleField(){
 })();
 
 
-// Keep the new-customer submit button gray until every visible required field,
-// applicable capsule selection, and privacy consent are complete.
-(function markOrderFormReady(){
+// Restore the previously working submit-button readiness logic.
+(function refreshOrderSubmitReadiness(){
   const form = document.getElementById('order-form');
   if (!form) return;
   const button = form.querySelector('button[type="submit"]');
   const topic = document.getElementById('topic');
+  const model = document.getElementById('model');
   const consent = document.getElementById('consent');
-  const varieties = document.getElementById('capsule-varieties');
-  const quantity = document.getElementById('capsules');
-  const diagnostic = document.getElementById('submit-readiness-diagnostic');
+  const capsuleInput = document.getElementById('capsules');
+  let refreshQueued = false;
 
-  function isVisible(field) {
-    if (!field || field.disabled || field.closest('[hidden]')) return false;
-    const style = window.getComputedStyle(field);
-    return style.display !== 'none' && style.visibility !== 'hidden' && field.getClientRects().length > 0;
-  }
-  function labelFor(field) {
-    if (field.id) {
-      const label = form.querySelector('label[for="' + field.id + '"]');
-      if (label) return label.textContent.replace(/\s*\*\s*$/, '').trim();
-    }
-    return field.name || 'Obavezno polje';
-  }
-  function getBlockers() {
-    const blockers = [];
-    const selectedTopic = topic ? topic.value : '';
-    const offerQuestion = selectedTopic === 'Imam pitanje o ponudi';
+  function refreshButton(){
+    refreshQueued = false;
+    let ready = Array.from(form.querySelectorAll('[required]')).every(field => {
+      if (field.disabled || field.closest('[hidden]')) return true;
+      const style = window.getComputedStyle(field);
+      if (style.display === 'none' || style.visibility === 'hidden' || field.getClientRects().length === 0) return true;
+      return field.checkValidity();
+    });
+    if (!consent || !consent.checked) ready = false;
 
-    // General offer questions must not depend on appliance or capsule fields.
-    // Validate only the exact fields required for this route.
-    const requiredFields = offerQuestion
-      ? ['name', 'phone', 'email', 'customer-type', 'topic']
-          .map(id => document.getElementById(id)).filter(Boolean)
-      : Array.from(form.querySelectorAll('[required]')).filter(field =>
-          field.id !== 'message' &&
-          field.id !== 'capsules' &&
-          !field.closest('#additional-capsules-field') &&
-          isVisible(field) &&
-          !field.readOnly
-        );
-
-    for (const field of requiredFields) {
-      if (!isVisible(field) || field.disabled) continue;
-      let missing = field.type === 'checkbox' ? !field.checked : !String(field.value || '').trim();
-      if (!missing && typeof field.checkValidity === 'function') missing = !field.checkValidity();
-      if (missing) blockers.push(labelFor(field));
-    }
-    if (!consent || !consent.checked) blockers.push('prihvaćeni uvjeti i suglasnost');
-
-    const applianceOrder = selectedTopic === 'Želim aparat uz mjesečnu kupnju kapsula';
-    const capsuleOnlyOrder = selectedTopic === 'Želim naručiti kapsule';
-    const capsuleFieldVisible = isVisible(varieties);
-    const capsuleSummary = varieties ? String(varieties.value || '').trim() : '';
-    if (!offerQuestion && (applianceOrder || capsuleOnlyOrder || capsuleFieldVisible) &&
-        (!capsuleSummary || capsuleSummary === 'Nijedna vrsta još nije odabrana')) {
-      blockers.push('odabrane kapsule');
-    }
-    if (applianceOrder) {
-      const modelField = document.getElementById('model');
-      const normalizedModel = String(modelField && modelField.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-      const minimumBoxes = normalizedModel.includes('LB2600') ? 3 : normalizedModel.includes('LB1300') ? 2 : 0;
-      const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
-      const additionalChoice = document.querySelector('input[name="Dodatne kapsule"]:checked');
-      const wantsExtras = !!(additionalChoice && additionalChoice.value === 'Da');
-      const additionalVarieties = document.getElementById('additional-capsule-varieties');
-      const additionalVarietySummary = String(additionalVarieties && additionalVarieties.value || '').trim();
-
-      if (!modelField || !String(modelField.value || '').trim()) blockers.push('odabrani aparat');
-      else if (!minimumBoxes) blockers.push('valjano odabrani aparat');
-      if (minimumBoxes > 0 && selectedCount < minimumBoxes) {
-        blockers.push('odabrana minimalna količina kapsula (' + minimumBoxes + ' kutije)');
-      }
-      // "NE" is a valid answer and never blocks submission. If "DA" is selected,
-      // at least one additional box/type must actually be selected.
-      if (wantsExtras && (selectedCount <= minimumBoxes ||
-          !additionalVarietySummary ||
-          additionalVarietySummary === 'Nijedna dodatna vrsta još nije odabrana')) {
-        blockers.push('odabrane dodatne kapsule jer je označeno DA');
+    const applianceOrder = topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula';
+    if (ready && applianceOrder) {
+      const modelName = model ? model.value : '';
+      const minimum = /1300/i.test(modelName) ? 2 : /2600/i.test(modelName) ? 3 : 0;
+      const quantityText = capsuleInput ? capsuleInput.value : '';
+      const selectedCount = Number.parseInt(quantityText, 10) || 0;
+      const varieties = document.getElementById('capsule-varieties');
+      if (!modelName || !minimum || selectedCount < minimum || !varieties ||
+          !varieties.value.trim() || varieties.value.trim() === 'Nijedna vrsta još nije odabrana') {
+        ready = false;
       }
     }
-    return [...new Set(blockers)];
-  }
-  function refreshButton() {
-    const blockers = getBlockers();
-    const ready = blockers.length === 0;
+
     if (button) {
-      button.disabled = !ready;
       button.classList.toggle('is-ready', ready);
       const color = ready ? '#003da5' : '#8a8f98';
       button.style.setProperty('background-color', color, 'important');
@@ -1339,27 +1286,27 @@ function updateChangeCapsuleField(){
       button.style.setProperty('border-color', color, 'important');
       button.style.setProperty('color', '#fff', 'important');
       button.setAttribute('aria-disabled', ready ? 'false' : 'true');
-      button.title = ready ? 'Sve je ispunjeno — upit je spreman za slanje' : 'Ispunite sva obavezna polja i prihvatite uvjete';
+      button.title = ready ? 'Sve je ispunjeno — upit je spreman za slanje' : 'Ispunite obavezna polja i prihvatite suglasnost';
     }
-    if (diagnostic) diagnostic.textContent = ready
-      ? 'Sva obavezna polja su ispunjena i suglasnost je prihvaćena.'
-      : 'Za slanje ispunite: ' + blockers.join('; ') + '.';
-    return ready;
   }
-  ['input','change','click','keyup','focusout'].forEach(type => form.addEventListener(type, refreshButton, true));
-  document.addEventListener('zfk:capsules-updated', refreshButton);
-  window.addEventListener('pageshow', refreshButton);
-  window.addEventListener('load', refreshButton);
-  form.addEventListener('submit', event => {
-    if (!refreshButton()) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      form.reportValidity();
-      if (diagnostic) diagnostic.focus();
-    }
-  }, true);
-  refreshButton();
-})();
+
+  function queueRefresh(){
+    if (refreshQueued) return;
+    refreshQueued = true;
+    window.setTimeout(refreshButton, 60);
+  }
+
+  ['input','change','focusout'].forEach(type => form.addEventListener(type, queueRefresh, true));
+  document.addEventListener('zfk:capsules-updated', queueRefresh);
+  document.addEventListener('click', queueRefresh, true);
+  document.addEventListener('pointerup', queueRefresh, true);
+  document.addEventListener('touchend', queueRefresh, { passive: true, capture: true });
+  window.addEventListener('pageshow', queueRefresh);
+  window.addEventListener('resize', queueRefresh);
+  window.addEventListener('orientationchange', queueRefresh);
+  document.addEventListener('visibilitychange', queueRefresh);
+  queueRefresh();
+})();;
 
 /* Submit both ZFK forms through Web3Forms without leaving the page. */
 (function setupWeb3FormsSubmission(){
