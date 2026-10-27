@@ -1053,21 +1053,23 @@ function updateChangeCapsuleField(){
     if (!newModel) return;
     const previousValue = newModel.value;
     newModel.replaceChildren();
-    const alternative = model.value === 'Lavazza LB 1300 Classy Soul'
+    const current = model.value;
+    const alternative = current === 'Lavazza LB 1300 Classy Soul'
       ? 'Lavazza LB2600'
-      : model.value === 'Lavazza LB2600'
+      : current === 'Lavazza LB2600'
         ? 'Lavazza LB 1300 Classy Soul'
         : '';
-    if (!alternative) {
-      newModel.add(new Option('Najprije odaberite svoj aparat', ''));
-      newModel.disabled = true;
-      return;
+    newModel.add(new Option(current ? 'Odaberite ostanak ili novi aparat' : 'Najprije odaberite svoj aparat', ''));
+    if (current) {
+      newModel.add(new Option('Aparat ostaje isti', current));
+      newModel.add(new Option('Novi aparat: ' + alternative, alternative));
+    } else {
+      // Keep the control tappable on mobile even before the current model is selected.
+      newModel.add(new Option('Lavazza LB 1300 Classy Soul', 'Lavazza LB 1300 Classy Soul'));
+      newModel.add(new Option('Lavazza LB2600', 'Lavazza LB2600'));
     }
-    newModel.add(new Option('Aparat ostaje isti ili odaberite novi aparat', ''));
-    newModel.add(new Option('Aparat ostaje isti', model.value));
-    newModel.add(new Option('Novi aparat: ' + alternative, alternative));
     newModel.disabled = false;
-    if (previousValue === model.value || previousValue === alternative) {
+    if (current && (previousValue === current || previousValue === alternative)) {
       newModel.value = previousValue;
     } else {
       newModel.value = '';
@@ -1079,16 +1081,22 @@ function updateChangeCapsuleField(){
     updateChangeCapsuleField();
     if (status) status.textContent = '';
   }
-  model.addEventListener('change', () => {
+  const refreshMachineOptions = () => {
     configureNewModel();
     configure();
     clearCapsuleChoices();
-  });
-  if (newModel) newModel.addEventListener('change', () => {
-    configure();
-    quantity.value = '';
-    clearCapsuleChoices();
-  });
+  };
+  model.addEventListener('change', refreshMachineOptions);
+  model.addEventListener('input', refreshMachineOptions);
+  if (newModel) {
+    const refreshNewMachine = () => {
+      configure();
+      quantity.value = '';
+      clearCapsuleChoices();
+    };
+    newModel.addEventListener('change', refreshNewMachine);
+    newModel.addEventListener('input', refreshNewMachine);
+  }
   quantity.addEventListener('change', () => {
     clearCapsuleChoices();
     refreshCustomerChangeButtons();
