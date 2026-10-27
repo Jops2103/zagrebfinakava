@@ -297,7 +297,7 @@ function capsulePackageLimit() {
   const selectedModel = capsuleModelField ? capsuleModelField.value : '';
   // Each box contains 100 capsules. Enforce the published minimum for each model.
   if (/LB\s*1300/i.test(selectedModel)) return 2;
-  if (/LB2600/i.test(selectedModel)) return 3;
+  if (/LB\s*2600/i.test(selectedModel)) return 3;
   return 0;
 }
 
@@ -439,7 +439,7 @@ document.querySelectorAll('.model-select').forEach(button => {
       const target = document.getElementById('change-model');
       const modelName = button.dataset.model || '';
       if (target) {
-        target.value = /LB\\s*2600/i.test(modelName) ? 'Lavazza LB2600' : /LB\\s*300/i.test(modelName) ? 'Lavazza LB 1300 Classy Soul' : '';
+        target.value = /LB\s*2600/i.test(modelName) ? 'Lavazza LB2600' : /LB\\s*300/i.test(modelName) ? 'Lavazza LB 1300 Classy Soul' : '';
         target.dispatchEvent(new Event('change', {bubbles:true}));
       }
       document.getElementById('promjena-kolicine')?.scrollIntoView({behavior:'smooth',block:'start'});
@@ -456,8 +456,8 @@ document.querySelectorAll('.model-select').forEach(button => {
     finderPackageLimit = quantityMatch ? Math.max(1, Math.ceil(Number(quantityMatch[1]) / 100)) : 0;
     const modelPattern = /LB\s*1300/i.test(modelName)
       ? /LB\s*1300/i
-      : /LB2600/i.test(modelName)
-        ? /LB2600/i
+      : /LB\s*2600/i.test(modelName)
+        ? /LB\s*2600/i
         : null;
     const modelOption = modelPattern
       ? Array.from(capsuleModelField.options).find(item => modelPattern.test(item.textContent))
