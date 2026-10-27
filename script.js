@@ -1163,33 +1163,33 @@ function updateChangeCapsuleField(){
   const topic = document.getElementById('topic');
   const model = document.getElementById('model');
   const consent = document.getElementById('consent');
-  const capsuleInput = document.getElementById('capsules');
+  const varieties = document.getElementById('capsule-varieties');
   let refreshQueued = false;
+
+  function isVisible(field){
+    if (field.disabled || field.closest('[hidden]')) return false;
+    const style = window.getComputedStyle(field);
+    return style.display !== 'none' && style.visibility !== 'hidden' && field.getClientRects().length > 0;
+  }
 
   function refreshButton(){
     refreshQueued = false;
-    // Only visible fields marked required (*) determine readiness.
-    let ready = Array.from(form.querySelectorAll('[required]')).every(field => {
-      if (field.disabled || field.closest('[hidden]')) return true;
-      const style = window.getComputedStyle(field);
-      if (style.display === 'none' || style.visibility === 'hidden' || field.getClientRects().length === 0) return true;
-      return field.checkValidity();
-    });
+    const requiredFields = Array.from(form.querySelectorAll('[required]')).filter(isVisible);
+    let ready = requiredFields.every(field => field.checkValidity());
     if (!consent || !consent.checked) ready = false;
 
     const applianceOrder = topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula';
-    // "Odabrane kapsule *" must contain a real selection, not its instructional default.
-    if (ready && applianceOrder) {
-      const varieties = document.getElementById('capsule-varieties');
+    if (applianceOrder) {
       if (!model || !model.value || !varieties || !varieties.value.trim() ||
           varieties.value.trim() === 'Nijedna vrsta još nije odabrana') ready = false;
     }
 
     if (button) {
       button.classList.toggle('is-ready', ready);
-      button.style.setProperty('background-color', ready ? '#003da5' : '#8a8f98', 'important');
-      button.style.setProperty('background', ready ? '#003da5' : '#8a8f98', 'important');
-      button.style.setProperty('border-color', ready ? '#003da5' : '#8a8f98', 'important');
+      const color = ready ? '#003da5' : '#8a8f98';
+      button.style.setProperty('background-color', color, 'important');
+      button.style.setProperty('background', color, 'important');
+      button.style.setProperty('border-color', color, 'important');
       button.style.setProperty('color', '#fff', 'important');
       button.setAttribute('aria-disabled', ready ? 'false' : 'true');
     }
@@ -1198,23 +1198,20 @@ function updateChangeCapsuleField(){
   function queueRefresh(){
     if (refreshQueued) return;
     refreshQueued = true;
-    window.setTimeout(refreshButton, 60);
+    window.setTimeout(refreshButton, 0);
   }
 
-  form.addEventListener('input', queueRefresh, true);
-  form.addEventListener('change', queueRefresh, true);
-  form.addEventListener('focusout', queueRefresh, true);
+  // Capture events from controls and refresh after capsule-selection code has updated the form.
+  ['input','change','click','focusout','keyup','pointerup','touchend'].forEach(type =>
+    form.addEventListener(type, queueRefresh, {capture:true, passive:type === 'touchend'})
+  );
   document.addEventListener('zfk:capsules-updated', queueRefresh);
-  // Touch/pointer handlers cover mobile browsers where custom capsule selection updates after click.
-  document.addEventListener('click', queueRefresh, true);
-  document.addEventListener('pointerup', queueRefresh, true);
-  document.addEventListener('touchend', queueRefresh, { passive: true, capture: true });
+  document.addEventListener('visibilitychange', queueRefresh);
   window.addEventListener('pageshow', queueRefresh);
   window.addEventListener('resize', queueRefresh);
   window.addEventListener('orientationchange', queueRefresh);
-  document.addEventListener('visibilitychange', queueRefresh);
   queueRefresh();
-})();
+})();;
 
 /* Submit both ZFK forms through Web3Forms without leaving the page. */
 (function setupWeb3FormsSubmission(){
