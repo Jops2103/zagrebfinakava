@@ -1106,16 +1106,18 @@ function updateChangeCapsuleField(){
     configure();
     clearCapsuleChoices();
   };
+  // Native select controls on mobile/tablet may emit both input and change.
+  // Rebuilding dependent selects twice can erase the user's choice, so react
+  // to the committed selection only.
   model.addEventListener('change', refreshMachineOptions);
-  model.addEventListener('input', refreshMachineOptions);
   if (newModel) {
     const refreshNewMachine = () => {
       quantity.value = '';
       configure();
       clearCapsuleChoices();
+      refreshCustomerChangeButtons();
     };
     newModel.addEventListener('change', refreshNewMachine);
-    newModel.addEventListener('input', refreshNewMachine);
   }
   quantity.addEventListener('change', () => {
     clearCapsuleChoices();
