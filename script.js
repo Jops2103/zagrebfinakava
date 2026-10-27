@@ -963,6 +963,7 @@ function refreshCustomerChangeButtons(){
   const capsuleVarieties = document.getElementById('change-capsule-varieties');
   const consent = document.getElementById('change-consent');
   const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
+  const sameQuantity = !!(quantity && quantity.value === 'same');
   const targetBoxes = Number(quantity && quantity.value) / 100;
 
   if (chooseButton) {
