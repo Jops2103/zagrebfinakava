@@ -1255,43 +1255,79 @@ function updateChangeCapsuleField(){
   const varieties = document.getElementById('capsule-varieties');
   const quantity = document.getElementById('capsules');
   let refreshQueued = false;
+  let diagnostic = document.getElementById('submit-readiness-diagnostic');
+
+  if (button && !diagnostic) {
+    diagnostic = document.createElement('p');
+    diagnostic.id = 'submit-readiness-diagnostic';
+    diagnostic.className = 'form-note';
+    diagnostic.setAttribute('role', 'status');
+    diagnostic.setAttribute('aria-live', 'polite');
+    diagnostic.style.marginTop = '8px';
+    button.insertAdjacentElement('afterend', diagnostic);
+  }
 
   function isVisible(field){
-    if (field.disabled || field.closest('[hidden]')) return false;
+    if (!field || field.disabled || field.closest('[hidden]')) return false;
     const style = window.getComputedStyle(field);
     return style.display !== 'none' && style.visibility !== 'hidden' &&
       field.getClientRects().length > 0;
   }
 
+  function fieldLabel(field){
+    if (field.id) {
+      const label = form.querySelector('label[for="' + field.id + '"]');
+      if (label) return label.textContent.replace(/\\s*\\*\\s*$/, '').trim();
+    }
+    if (field.name === 'Suglasnost za obradu osobnih podataka') return 'Suglasnost za obradu osobnih podataka';
+    return field.name || 'Obavezno polje';
+  }
+
   function refreshButton(){
     refreshQueued = false;
-    // Match the browser's actual submission requirements, but only count visible
-    // fields and do not treat readonly, generated summaries as user-entered fields.
+    const blockers = [];
     const requiredFields = Array.from(form.querySelectorAll('[required]')).filter(field =>
       isVisible(field) && !field.readOnly
     );
-    let ready = requiredFields.length > 0;
+
     for (const field of requiredFields) {
+      let missing = false;
       if (field.type === 'checkbox') {
-        if (!field.checked) ready = false;
+        missing = !field.checked;
       } else if (field.type === 'radio') {
-        if (!form.querySelector('input[type="radio"][name="' + CSS.escape(field.name) + '"]:checked')) ready = false;
-      } else if (!String(field.value || '').trim()) {
-        ready = false;
+        missing = !form.querySelector('input[type="radio"][name="' + CSS.escape(field.name) + '"]:checked');
+      } else {
+        missing = !String(field.value || '').trim();
       }
-      if (typeof field.checkValidity === 'function' && !field.checkValidity()) ready = false;
+      if (!missing && typeof field.checkValidity === 'function') missing = !field.checkValidity();
+      if (missing) blockers.push(fieldLabel(field));
     }
 
-    if (!consent || !consent.checked) ready = false;
+    if (!consent || !consent.checked) {
+      if (!blockers.includes('Suglasnost za obradu osobnih podataka')) blockers.push('Suglasnost za obradu osobnih podataka');
+    }
+
     const applianceOrder = topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula';
     if (applianceOrder) {
       const capsuleSummary = varieties ? String(varieties.value || '').trim() : '';
-      const selectedCapsules = capsuleSummary && capsuleSummary !== 'Nijedna vrsta još nije odabrana';
-      if (!model || !model.value || !model.checkValidity() || !selectedCapsules) ready = false;
-      // For appliance orders, require the quantity calculated from the capsule choices.
-      if (!quantity || !String(quantity.value || '').trim()) ready = false;
+      if (!model || !model.value || !model.checkValidity()) {
+        if (!blockers.includes('Odabrani aparat')) blockers.push('Odabrani aparat');
+      }
+      if (!capsuleSummary || capsuleSummary === 'Nijedna vrsta još nije odabrana') {
+        blockers.push('Odabrane kapsule (odaberi vrste u galeriji)');
+      }
+      if (!quantity || !String(quantity.value || '').trim()) {
+        blockers.push('Ukupna količina kapsula');
+      } else {
+        const count = Array.from(window.selectedCapsules || []).length;
+        const minimum = /LB\\s*2600/i.test(model ? model.value : '') ? 3 : 2;
+        const boxCount = (String(quantity.value).match(/\\d+/) || [])[0];
+        if (boxCount && Number(boxCount) < minimum) blockers.push('Minimalna količina kapsula (' + minimum + ' kutije)');
+      }
     }
 
+    const uniqueBlockers = [...new Set(blockers)];
+    const ready = uniqueBlockers.length === 0;
     if (button) {
       button.classList.toggle('is-ready', ready);
       const color = ready ? '#003da5' : '#8a8f98';
@@ -1300,6 +1336,12 @@ function updateChangeCapsuleField(){
       button.style.setProperty('border-color', color, 'important');
       button.style.setProperty('color', '#fff', 'important');
       button.setAttribute('aria-disabled', ready ? 'false' : 'true');
+    }
+    if (diagnostic) {
+      diagnostic.textContent = ready
+        ? 'Sva obavezna polja su ispunjena — upit je spreman za slanje.'
+        : 'Za aktivaciju plave tipke provjerite: ' + uniqueBlockers.join('; ') + '.';
+      diagnostic.style.color = ready ? '#166534' : '#5b6472';
     }
   }
 
