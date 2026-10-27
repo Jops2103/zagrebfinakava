@@ -1353,6 +1353,80 @@ function updateChangeCapsuleField(){
 /* Submit both ZFK forms through Web3Forms without leaving the page. */
 (function setupWeb3FormsSubmission(){
   const forms = [document.getElementById('order-form'), document.getElementById('customer-change-form')].filter(Boolean);
+  const supabaseFunctionUrl = 'https://wbupmpqymavxjxatwzsh.supabase.co/functions/v1/zfk-customer-requests';
+
+  function canonicalMachine(value) {
+    const normalized = String(value || '').trim();
+    if (/1300/i.test(normalized)) return 'Lavazza LB 1300 Classy Soul';
+    if (/2600/i.test(normalized)) return 'Lavazza LB2600';
+    return normalized;
+  }
+
+  function selectedCapsuleNames(form) {
+    if (typeof selectedCapsules !== 'undefined' && selectedCapsules instanceof Map) {
+      return Array.from(selectedCapsules.keys());
+    }
+    const field = form.querySelector('#change-capsule-varieties, #capsule-varieties');
+    return String(field && field.value || '')
+      .split(/,\s*/)
+      .map(value => value.trim().replace(/\s×\s\d+$/, ''))
+      .filter(value => value && !/^Nijedna vrsta/i.test(value));
+  }
+
+  function makeSupabasePayload(form, isExisting) {
+    const capsuleSelection = selectedCapsuleNames(form);
+    if (!isExisting) {
+      const topic = document.getElementById('topic')?.value || '';
+      const model = canonicalMachine(document.getElementById('model')?.value);
+      const rawQuantity = String(document.getElementById('capsules')?.value || '');
+      const matches = rawQuantity.match(/\d+/g);
+      const selectedQuantity = matches ? Number(matches[0]) * (rawQuantity.includes('kut') ? 100 : 1) : 0;
+      const isApplianceOrder = topic === 'Želim aparat uz mjesečnu kupnju kapsula';
+      const isCapsuleOrder = topic === 'Želim naručiti kapsule';
+      // Keep non-appliance inquiries recordable even when no machine or capsule selection applies.
+      const storedMachine = isApplianceOrder ? model : (isCapsuleOrder ? 'Narudžba kapsula' : 'Opći upit');
+      const quantity = isApplianceOrder || isCapsuleOrder ? selectedQuantity : 0;
+      return {
+        request_type: 'new',
+        request_topic: topic,
+        name: document.getElementById('name')?.value.trim(),
+        email: document.getElementById('email')?.value.trim(),
+        machine: storedMachine,
+        quantity,
+        capsule_selection: capsuleSelection,
+        note: [
+          'Telefon: ' + (document.getElementById('phone')?.value.trim() || ''),
+          'Namjena ponude: ' + (document.getElementById('customer-type')?.value || ''),
+          'Vrsta upita: ' + (document.getElementById('topic')?.value || ''),
+          'Dodatne kapsule: ' + (document.querySelector('input[name="Dodatne kapsule"]:checked')?.value || 'Ne'),
+          'Dodatne odabrane kapsule: ' + (document.getElementById('additional-capsule-varieties')?.value || ''),
+          'Poruka: ' + (document.getElementById('message')?.value.trim() || '')
+        ].filter(Boolean).join('\n')
+      };
+    }
+
+    const currentMachine = canonicalMachine(document.getElementById('change-model')?.value);
+    const desiredMachineValue = document.getElementById('change-new-model')?.value || 'same';
+    const desiredMachine = desiredMachineValue === 'same' ? currentMachine : canonicalMachine(desiredMachineValue);
+    const quantityValue = document.getElementById('change-quantity')?.value || 'same';
+    return {
+      request_type: 'existing',
+      name: document.getElementById('change-name')?.value.trim(),
+      email: document.getElementById('change-email')?.value.trim(),
+      machine: desiredMachine,
+      current_machine: currentMachine,
+      quantity: quantityValue === 'same' ? null : Number(quantityValue),
+      capsule_selection: capsuleSelection,
+      note: [
+        'Postojeći aparat: ' + currentMachine,
+        'Željeni aparat: ' + (desiredMachineValue === 'same' ? 'Bez promjene aparata' : desiredMachine),
+        'Promjena količine: ' + (quantityValue === 'same' ? 'Bez promjene količine' : quantityValue + ' kapsula mjesečno'),
+        'Broj postojeće narudžbe: ' + (document.getElementById('change-reference')?.value.trim() || 'nije naveden'),
+        'Dodatna napomena: ' + (document.getElementById('change-message')?.value.trim() || '')
+      ].join('\n')
+    };
+  }
+
   forms.forEach(form => {
     form.setAttribute('method', 'POST');
     form.setAttribute('action', 'https://api.web3forms.com/submit');
@@ -1378,19 +1452,43 @@ function updateChangeCapsuleField(){
 
       if (statusElement) {
         statusElement.hidden = false;
-        statusElement.textContent = isExisting ? 'Zahtjev se šalje…' : 'Upit se šalje…';
+        statusElement.textContent = isExisting ? 'Zahtjev se sprema i šalje…' : 'Upit se sprema i šalje…';
       }
       if (submitButton) {
         submitButton.disabled = true;
         submitButton.setAttribute('aria-busy', 'true');
       }
 
+      let savedInSupabase = false;
       try {
+        const payload = makeSupabasePayload(form, isExisting);
+        const isGeneralInquiry = !isExisting &&
+          payload.request_topic === 'Imam pitanje o ponudi';
+        const isCapsuleOrder = !isExisting &&
+          payload.request_topic === 'Želim naručiti kapsule';
+        if (!payload.name || !payload.email ||
+            (!isGeneralInquiry && !payload.machine) ||
+            (!isGeneralInquiry && !payload.capsule_selection.length) ||
+            (isCapsuleOrder && !(Number(payload.quantity) > 0))) {
+          throw new Error('Nedostaju obavezni podaci za spremanje zahtjeva.');
+        }
+
+        const databaseResponse = await fetch(supabaseFunctionUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const databaseResult = await databaseResponse.json().catch(() => ({}));
+        if (!databaseResponse.ok || databaseResult.success !== true) {
+          throw new Error(databaseResult.message || 'Spremanje zahtjeva u evidenciju nije uspjelo.');
+        }
+        savedInSupabase = true;
+
         const formData = new FormData(form);
         if (isExisting) {
           const quantityField = document.getElementById('change-quantity');
           if (quantityField && quantityField.value === 'same') {
-            formData.set('Nova mjesečna količina ili samo promjena vrste kapsula', 'Samo promjena vrste kapsula; postojeća mjesečna količina ostaje ista.');
+            formData.set('Nova mjesečna količina ili samo promjena vrste kapsula', 'Bez promjene mjesečne količine; zahtjev se odnosi na odabir kapsula i/ili promjenu aparata.');
           }
         }
         const response = await fetch('https://api.web3forms.com/submit', {
@@ -1400,23 +1498,34 @@ function updateChangeCapsuleField(){
         });
         const result = await response.json();
         if (!response.ok || result.success !== true) {
-          throw new Error(result.message || 'Slanje nije uspjelo.');
+          const emailError = new Error(result.message || 'Slanje e-maila nije uspjelo.');
+          emailError.savedInSupabase = true;
+          throw emailError;
         }
 
         if (statusElement) statusElement.textContent = isExisting
-          ? 'Zahtjev je uspješno poslan! Svaki zahtjev šalje se kao zasebna e-mail poruka.'
-          : 'Poruka uspješno proslijeđena!';
+          ? 'Zahtjev je uspješno spremljen i poslan e-mailom. Promjena se ne primjenjuje dok je ne potvrdimo.'
+          : 'Upit je uspješno spremljen i e-mail je poslan!';
         if (!isExisting && successElement) successElement.hidden = false;
         if (submitButton) {
           submitButton.innerHTML = isExisting ? 'Zahtjev poslan ✓' : 'Upit poslan ✓';
           submitButton.setAttribute('aria-label', isExisting ? 'Zahtjev uspješno poslan' : 'Upit uspješno poslan');
         }
       } catch (error) {
-        if (statusElement) statusElement.textContent = 'Slanje nije uspjelo. Provjerite internetsku vezu i pokušajte ponovno. Ako se problem nastavi, javite nam se e-mailom.';
-        if (submitButton) {
+        if (statusElement) {
+          if (savedInSupabase || error.savedInSupabase) {
+            statusElement.textContent = 'Zahtjev je spremljen u evidenciju, ali e-mail nije potvrđen. Nemojte slati obrazac ponovno; javite nam se na zagrebfinakava@proton.me kako bismo izbjegli duplikat.';
+          } else {
+            statusElement.textContent = 'Zahtjev nije uspješno spremljen i poslan. ' + (error.message || 'Provjerite internetsku vezu i pokušajte ponovno.');
+          }
+        }
+        if (submitButton && !(savedInSupabase || error.savedInSupabase)) {
           submitButton.disabled = false;
           submitButton.innerHTML = originalButtonText;
           submitButton.removeAttribute('aria-busy');
+        } else if (submitButton) {
+          submitButton.innerHTML = 'Zahtjev spremljen — provjerite e-mail';
+          submitButton.setAttribute('aria-label', 'Zahtjev spremljen, ali slanje e-maila nije potvrđeno');
         }
       }
     });
