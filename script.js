@@ -960,16 +960,14 @@ function refreshCustomerChangeButtons(){
   const chooseButton = document.getElementById('change-choose-capsules');
   const submitButton = form.querySelector('button[type="submit"]');
   const quantity = document.getElementById('change-quantity');
-  const capsuleChange = document.getElementById('change-capsule-change');
   const capsuleVarieties = document.getElementById('change-capsule-varieties');
   const consent = document.getElementById('change-consent');
   const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
   const sameQuantity = !!(quantity && quantity.value === 'same');
   const targetBoxes = Number(quantity && quantity.value) / 100;
-  const changingCapsules = !!(capsuleChange && capsuleChange.value === 'yes');
 
   if (chooseButton) {
-    const hasCapsules = changingCapsules && selectedBoxes > 0 && !!(capsuleVarieties && capsuleVarieties.value.trim());
+    const hasCapsules = selectedBoxes > 0 && !!(capsuleVarieties && capsuleVarieties.value.trim());
     chooseButton.classList.toggle('is-ready', hasCapsules);
     chooseButton.style.setProperty('background-color', hasCapsules ? '#003da5' : '#8a8f98', 'important');
     chooseButton.style.setProperty('border-color', hasCapsules ? '#003da5' : '#8a8f98', 'important');
@@ -979,12 +977,12 @@ function refreshCustomerChangeButtons(){
   const fieldsReady = Array.from(form.querySelectorAll('[required]')).every(field =>
     !field.disabled && field.checkValidity()
   );
-  const capsuleSelectionReady = !changingCapsules || (sameQuantity
+  const capsuleSelectionReady = sameQuantity
     ? selectedBoxes > 0
-    : Number.isFinite(targetBoxes) && targetBoxes > 0 && selectedBoxes === targetBoxes);
+    : Number.isFinite(targetBoxes) && targetBoxes > 0 && selectedBoxes === targetBoxes;
   const ready = fieldsReady && !!(consent && consent.checked) &&
     capsuleSelectionReady &&
-    (!changingCapsules || !!(capsuleVarieties && capsuleVarieties.value.trim()));
+    !!(capsuleVarieties && capsuleVarieties.value.trim());
   if (submitButton) {
     submitButton.classList.toggle('is-ready', ready);
     submitButton.style.setProperty('background-color', ready ? '#003da5' : '#8a8f98', 'important');
@@ -996,7 +994,6 @@ function refreshCustomerChangeButtons(){
 function updateChangeCapsuleField(){
   const capsuleVarieties = document.getElementById('change-capsule-varieties');
   const quantity = document.getElementById('change-quantity');
-  const capsuleChange = document.getElementById('change-capsule-change');
   const capsuleNote = document.getElementById('change-capsule-note');
   if (!capsuleVarieties) return;
   const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
@@ -1005,10 +1002,7 @@ function updateChangeCapsuleField(){
     : '';
   const sameQuantity = !!(quantity && quantity.value === 'same');
   const targetBoxes = Number(quantity && quantity.value) / 100;
-  const changingCapsules = !!(capsuleChange && capsuleChange.value === 'yes');
-  if (capsuleNote && !changingCapsules) {
-    capsuleNote.textContent = 'Odaberite „Da” ako želite promijeniti vrste kapsula.';
-  } else if (capsuleNote && sameQuantity) {
+  if (capsuleNote && sameQuantity) {
     capsuleNote.textContent = selectedBoxes
       ? 'Odabrane vrste kapsula za promjenu; količina ostaje ista.'
       : 'Količina ostaje ista. U galeriji odaberite željene vrste kapsula.';
@@ -1146,8 +1140,6 @@ function updateChangeCapsuleField(){
     const minimum = minimums[effectiveModel()];
     const sameQuantity = quantity.value === 'same';
     const amount = Number(quantity.value);
-    const capsuleChange = document.getElementById('change-capsule-change');
-    const changingCapsules = !!(capsuleChange && capsuleChange.value === 'yes');
     const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
     if (!sameQuantity && (!minimum || !Number.isFinite(amount) || amount < minimum || amount % 100 !== 0)) {
       event.preventDefault();
@@ -1155,7 +1147,7 @@ function updateChangeCapsuleField(){
       quantity.focus();
       return;
     }
-    if (changingCapsules && ((sameQuantity ? selectedBoxes < 1 : selectedBoxes !== amount / 100) || !capsuleVarieties || !capsuleVarieties.value.trim())) {
+    if (((sameQuantity ? selectedBoxes < 1 : selectedBoxes !== amount / 100) || !capsuleVarieties || !capsuleVarieties.value.trim())) {
       event.preventDefault();
       updateChangeCapsuleField();
       if (status) status.textContent = 'Odaberite vrste kapsula za cijelu odabranu mjesečnu količinu.';
@@ -1164,24 +1156,6 @@ function updateChangeCapsuleField(){
     }
     if (status) status.textContent = 'Zahtjev se šalje…';
   });
-  const capsuleChange = document.getElementById('change-capsule-change');
-  const capsuleSelection = document.getElementById('change-capsule-selection');
-  const capsuleVarietiesField = document.getElementById('change-capsule-varieties');
-  const chooseCapsulesButton = document.getElementById('change-choose-capsules');
-  function configureCapsuleChange(){
-    const changing = !!(capsuleChange && capsuleChange.value === 'yes');
-    if (capsuleSelection) capsuleSelection.hidden = !changing;
-    if (capsuleVarietiesField) {
-      capsuleVarietiesField.disabled = !changing;
-      capsuleVarietiesField.required = changing;
-    }
-    if (chooseCapsulesButton) chooseCapsulesButton.disabled = !changing;
-    if (!changing) clearCapsuleChoices();
-    updateChangeCapsuleField();
-    refreshCustomerChangeButtons();
-  }
-  if (capsuleChange) capsuleChange.addEventListener('change', configureCapsuleChange);
-  configureCapsuleChange();
   const params = new URLSearchParams(window.location.search);
   if (params.has('promjena-poslana')) {
     const section = document.getElementById('promjena-kolicine');
