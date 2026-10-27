@@ -1211,7 +1211,7 @@ function updateChangeCapsuleField(){
   window.addEventListener('resize', queueRefresh);
   window.addEventListener('orientationchange', queueRefresh);
   queueRefresh();
-})();;
+})();
 
 /* Submit both ZFK forms through Web3Forms without leaving the page. */
 (function setupWeb3FormsSubmission(){
