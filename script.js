@@ -1310,20 +1310,6 @@ function updateChangeCapsuleField(){
     }
     const ready = missing.length === 0;
 
-    let diagnostic = document.getElementById('button-readiness-debug');
-    if (!diagnostic && button) {
-      diagnostic = document.createElement('p');
-      diagnostic.id = 'button-readiness-debug';
-      diagnostic.setAttribute('role', 'status');
-      diagnostic.style.cssText = 'margin:10px 0 0;font-size:14px;line-height:1.45;color:#8a2d2d;';
-      button.insertAdjacentElement('afterend', diagnostic);
-    }
-    if (diagnostic) {
-      diagnostic.textContent = ready ? 'Spremno za slanje!' : '';
-      diagnostic.style.display = ready ? 'block' : 'none';
-      diagnostic.style.color = '#003da5';
-    }
-
     if (button) {
       const color = ready ? '#003da5' : '#8a8f98';
       button.classList.toggle('is-ready', ready);
