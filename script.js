@@ -1257,10 +1257,15 @@ function updateChangeCapsuleField(){
 
   function refreshButton(){
     refreshQueued = false;
-    // Match the browser's actual form validity instead of maintaining a second,
-    // slightly different interpretation of required fields for the button color.
-    // The submit handler uses this same native validity check before sending.
-    let ready = form.checkValidity();
+    // Recompute from the currently visible, enabled required fields. Using
+    // form.checkValidity() here can disagree with the custom step-by-step form
+    // because hidden/disabled conditional fields must not affect button styling.
+    let ready = Array.from(form.querySelectorAll('[required]')).every(field => {
+      if (field.disabled || field.closest('[hidden]')) return true;
+      const style = window.getComputedStyle(field);
+      if (style.display === 'none' || style.visibility === 'hidden' || field.getClientRects().length === 0) return true;
+      return field.checkValidity();
+    });
 
     // Consent is always mandatory, regardless of the type of inquiry.
     if (!consent || !consent.checked) ready = false;
@@ -1272,11 +1277,7 @@ function updateChangeCapsuleField(){
       const modelName = model ? model.value : '';
       const minimum = capsulePackageLimit();
       const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
-      // The selected box count is the source of truth. The varieties textarea is
-      // a read-only summary of those selections and must not independently block the button.
-      if (!modelName || !minimum || selectedCount < minimum) {
-        ready = false;
-      }
+      if (!modelName || !minimum || selectedCount < minimum) ready = false;
     }
 
     if (button) {
