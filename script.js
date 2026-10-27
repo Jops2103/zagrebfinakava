@@ -492,6 +492,11 @@ document.querySelectorAll('.capsule-select').forEach(button => {
       button.classList.add('capsule-click-resting');
       capsuleFeedbackTimer = null;
     }, 1000);
+    if (!button.dataset.capsuleRestingListeners) {
+      button.addEventListener('pointerleave', () => button.classList.remove('capsule-click-resting'));
+      button.addEventListener('focusout', () => button.classList.remove('capsule-click-resting'));
+      button.dataset.capsuleRestingListeners = 'true';
+    }
     if (!capsuleField) return;
     const variety = button.dataset.capsule;
     if (document.body.dataset.customerChangeMode === 'true') {
