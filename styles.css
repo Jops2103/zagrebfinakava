@@ -4281,8 +4281,38 @@ body {
   background-color: #001f55;
   border-color: #001f55;
 }
+/* Identical one-second tap feedback for both new and existing customers.
+   The resting class prevents hover styling from keeping the button enlarged. */
+#kapsule .capsule-select.capsule-click-feedback {
+  animation: capsule-selection-tap 1s ease both;
+  position: relative;
+  z-index: 1;
+}
+#kapsule .capsule-select.capsule-click-resting:hover,
+#kapsule .capsule-select.capsule-click-resting:focus-visible {
+  transform: scale(1);
+  box-shadow: none;
+}
+#kapsule .capsule-select.capsule-click-resting.capsule-selected:hover,
+#kapsule .capsule-select.capsule-click-resting.capsule-selected:focus-visible {
+  background-color: #002f80;
+  border-color: #002f80;
+  box-shadow: inset 0 0 0 1px #ffffff45;
+}
+@keyframes capsule-selection-tap {
+  0%, 100% { transform: scale(1); }
+  18%, 62% { transform: scale(1.045); background-color: #001f55; border-color: #001f55; box-shadow: 0 7px 16px #003da540; }
+}
+#kapsule .capsule-select.capsule-click-resting {
+  transition: background-color .2s ease, border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+#kapsule .capsule-select.capsule-click-resting:not(.capsule-selected) {
+  background-color: #003da5;
+  border-color: #003da5;
+}
 @media (prefers-reduced-motion: reduce) {
   #kapsule .capsule-select { transition: none; }
+  #kapsule .capsule-select.capsule-click-feedback { animation: none; }
 }
 
 
