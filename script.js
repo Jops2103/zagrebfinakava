@@ -1274,9 +1274,9 @@ function updateChangeCapsuleField(){
       const modelName = model ? model.value : '';
       const minimum = capsulePackageLimit();
       const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
-      const varietyText = varieties ? varieties.value.trim() : '';
-      if (!modelName || !minimum || selectedCount < minimum || !varietyText ||
-          varietyText === 'Nijedna vrsta još nije odabrana') {
+      // The selected box count is the source of truth. The varieties textarea is
+      // a read-only summary of those selections and must not independently block the button.
+      if (!modelName || !minimum || selectedCount < minimum) {
         ready = false;
       }
     }
@@ -1300,7 +1300,10 @@ function updateChangeCapsuleField(){
   }
 
   ['input','change','focusout'].forEach(type => form.addEventListener(type, queueRefresh, true));
-  document.addEventListener('zfk:capsules-updated', queueRefresh);
+  // Recalculate immediately when the consent checkbox is ticked; do not leave
+  // the button gray because another queued refresh was waiting.
+  if (consent) consent.addEventListener('change', refreshButton);
+  document.addEventListener('zfk:capsules-updated', refreshButton);
   document.addEventListener('click', queueRefresh, true);
   document.addEventListener('pointerup', queueRefresh, true);
   document.addEventListener('touchend', queueRefresh, { passive: true, capture: true });
