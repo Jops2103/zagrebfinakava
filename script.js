@@ -1111,8 +1111,15 @@ function updateChangeCapsuleField(){
   model.addEventListener('change', refreshMachineOptions);
   if (newModel) {
     const refreshNewMachine = () => {
-      quantity.value = '';
+      // Choosing "Bez promjene aparata" must keep the quantity/capsule-change
+      // selector available for the existing appliance.
+      const keepingCurrent = newModel.value === 'same';
+      if (!keepingCurrent) quantity.value = '';
       configure();
+      if (keepingCurrent && model.value && minimums[model.value]) {
+        quantity.disabled = false;
+        if (note) note.textContent = 'Aparat ostaje isti. Odaberite novu mjesečnu količinu ili samo promjenu vrste kapsula.';
+      }
       clearCapsuleChoices();
       refreshCustomerChangeButtons();
     };
