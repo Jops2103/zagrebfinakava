@@ -1272,13 +1272,22 @@ function updateChangeCapsuleField(){
     const blockers = [];
     const selectedTopic = topic ? topic.value : '';
     const offerQuestion = selectedTopic === 'Imam pitanje o ponudi';
-    for (const field of Array.from(form.querySelectorAll('[required]'))) {
-      // Optional/display-only fields never block submission.
-      if (field.id === 'message' || field.id === 'capsules' ||
-          field.closest('#additional-capsules-field')) continue;
-      // A general offer question requires no appliance or capsule selection.
-      if (offerQuestion && ['model', 'capsule-varieties'].includes(field.id)) continue;
-      if (!isVisible(field) || field.readOnly) continue;
+
+    // General offer questions must not depend on appliance or capsule fields.
+    // Validate only the exact fields required for this route.
+    const requiredFields = offerQuestion
+      ? ['name', 'phone', 'email', 'customer-type', 'topic']
+          .map(id => document.getElementById(id)).filter(Boolean)
+      : Array.from(form.querySelectorAll('[required]')).filter(field =>
+          field.id !== 'message' &&
+          field.id !== 'capsules' &&
+          !field.closest('#additional-capsules-field') &&
+          isVisible(field) &&
+          !field.readOnly
+        );
+
+    for (const field of requiredFields) {
+      if (!isVisible(field) || field.disabled) continue;
       let missing = field.type === 'checkbox' ? !field.checked : !String(field.value || '').trim();
       if (!missing && typeof field.checkValidity === 'function') missing = !field.checkValidity();
       if (missing) blockers.push(labelFor(field));
