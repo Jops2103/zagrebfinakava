@@ -1278,9 +1278,19 @@ function updateChangeCapsuleField(){
 
   function refreshButton(){
     refreshQueued = false;
-    const contactFields = [name, phone, email, customerType, topic];
-    let ready = contactFields.every(field => !!field && field.checkValidity());
-    ready = ready && !!(consent && consent.checked && consent.checkValidity());
+    const contactFields = [
+      [name, 'Ime i prezime / ime firme'],
+      [phone, 'Broj telefona'],
+      [email, 'E-mail (provjerite format adrese)'],
+      [customerType, 'Ponuda za'],
+      [topic, 'Vrsta upita']
+    ];
+    const missing = contactFields
+      .filter(([field]) => !field || !field.checkValidity())
+      .map(([, label]) => label);
+    if (!consent || !consent.checked || !consent.checkValidity()) {
+      missing.push('prihvatiti suglasnost kvačicom');
+    }
 
     const applianceOrder = !!(topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula');
     if (applianceOrder) {
@@ -1290,8 +1300,29 @@ function updateChangeCapsuleField(){
       const minimum = selectedModel.includes('LB1300') ? 2
         : selectedModel.includes('LB2600') ? 3 : 0;
       const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
-      ready = ready && !!(model && model.value && model.checkValidity()) &&
-        minimum > 0 && selectedCount >= minimum;
+      if (!model || !model.value || !model.checkValidity() || minimum === 0) {
+        missing.push('odabrati aparat');
+      }
+      if (minimum > 0 && selectedCount < minimum) {
+        missing.push('odabrati najmanje ' + minimum + ' kutije kapsula (trenutno: ' + selectedCount + ')');
+      }
+    }
+    const ready = missing.length === 0;
+
+    let diagnostic = document.getElementById('button-readiness-debug');
+    if (!diagnostic && button) {
+      diagnostic = document.createElement('p');
+      diagnostic.id = 'button-readiness-debug';
+      diagnostic.setAttribute('role', 'status');
+      diagnostic.style.cssText = 'margin:10px 0 0;font-size:14px;line-height:1.45;color:#8a2d2d;';
+      button.insertAdjacentElement('afterend', diagnostic);
+    }
+    if (diagnostic) {
+      diagnostic.textContent = ready
+        ? 'Sve je ispunjeno — gumb je spreman za slanje.'
+        : 'Za plavu boju gumba još treba: ' + missing.join('; ') + '.';
+      diagnostic.style.display = 'block';
+      diagnostic.style.color = ready ? '#003da5' : '#8a2d2d';
     }
 
     if (button) {
@@ -1304,7 +1335,7 @@ function updateChangeCapsuleField(){
       button.setAttribute('aria-disabled', ready ? 'false' : 'true');
       button.title = ready
         ? 'Sve je ispunjeno — upit je spreman za slanje'
-        : 'Ispunite obavezna polja i prihvatite suglasnost';
+        : 'Pogledajte poruku ispod gumba kako biste vidjeli što nedostaje';
     }
   }
 
