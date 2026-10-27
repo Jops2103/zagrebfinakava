@@ -1307,8 +1307,23 @@ function updateChangeCapsuleField(){
       const normalizedModel = String(modelField && modelField.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
       const minimumBoxes = normalizedModel.includes('LB2600') ? 3 : normalizedModel.includes('LB1300') ? 2 : 0;
       const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
-      if (!minimumBoxes) blockers.push('odabrani aparat');
-      else if (selectedCount < minimumBoxes) blockers.push('odabrana minimalna količina kapsula (' + minimumBoxes + ' kutije)');
+      const additionalChoice = document.querySelector('input[name="Dodatne kapsule"]:checked');
+      const wantsExtras = !!(additionalChoice && additionalChoice.value === 'Da');
+      const additionalVarieties = document.getElementById('additional-capsule-varieties');
+      const additionalVarietySummary = String(additionalVarieties && additionalVarieties.value || '').trim();
+
+      if (!modelField || !String(modelField.value || '').trim()) blockers.push('odabrani aparat');
+      else if (!minimumBoxes) blockers.push('valjano odabrani aparat');
+      if (minimumBoxes > 0 && selectedCount < minimumBoxes) {
+        blockers.push('odabrana minimalna količina kapsula (' + minimumBoxes + ' kutije)');
+      }
+      // "NE" is a valid answer and never blocks submission. If "DA" is selected,
+      // at least one additional box/type must actually be selected.
+      if (wantsExtras && (selectedCount <= minimumBoxes ||
+          !additionalVarietySummary ||
+          additionalVarietySummary === 'Nijedna dodatna vrsta još nije odabrana')) {
+        blockers.push('odabrane dodatne kapsule jer je označeno DA');
+      }
     }
     return [...new Set(blockers)];
   }
