@@ -294,10 +294,18 @@ let finderPackageLimit = 0;
 
 function capsulePackageLimit() {
   if (finderPackageLimit > 0) return finderPackageLimit;
-  const selectedModel = capsuleModelField ? capsuleModelField.value : '';
+  // Read both the selected value and visible option label, and normalize spaces
+  // and punctuation so “LB 2600 Magystra” and “LB2600” resolve identically.
+  const selectedOption = capsuleModelField && capsuleModelField.selectedOptions
+    ? capsuleModelField.selectedOptions[0]
+    : null;
+  const selectedModel = [
+    capsuleModelField ? capsuleModelField.value : '',
+    selectedOption ? selectedOption.textContent : ''
+  ].join(' ').toUpperCase().replace(/[^A-Z0-9]/g, '');
   // Each box contains 100 capsules. Enforce the published minimum for each model.
-  if (/LB\s*1300/i.test(selectedModel)) return 2;
-  if (/LB\s*2600/i.test(selectedModel)) return 3;
+  if (selectedModel.includes('LB1300')) return 2;
+  if (selectedModel.includes('LB2600')) return 3;
   return 0;
 }
 
@@ -524,6 +532,12 @@ document.querySelectorAll('.capsule-select').forEach(button => {
       return;
     }
     const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
+    // A model selected in the inquiry form is authoritative; keep the appliance
+    // order context in sync before deciding whether the visitor must go back.
+    const selectedModelValue = capsuleModelField ? String(capsuleModelField.value || '').trim() : '';
+    if (selectedModelValue && selectedModelValue !== 'Odaberite aparat' && topicField) {
+      topicField.value = 'Želim aparat uz mjesečnu kupnju kapsula';
+    }
     const minimum = isCapsuleOnlyOrder() ? 0 : capsulePackageLimit();
     const addingExtras = !isCapsuleOnlyOrder() && wantsAdditionalCapsules() && selectedBoxes >= minimum;
 
