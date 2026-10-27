@@ -1263,7 +1263,11 @@ function updateChangeCapsuleField(){
 
   function refreshButton(){
     refreshQueued = false;
-    const requiredFields = Array.from(form.querySelectorAll('[required]')).filter(isVisible);
+    // Only actual, visible required fields should control the visual state.
+    // Ignore readonly summary fields; they are checked separately for appliance orders.
+    const requiredFields = Array.from(form.querySelectorAll('[required]')).filter(field =>
+      isVisible(field) && !field.readOnly
+    );
     let ready = requiredFields.length > 0 && requiredFields.every(field => {
       if (field.type === 'checkbox') return field.checked && field.checkValidity();
       if (field.tagName === 'TEXTAREA' || field.tagName === 'INPUT' || field.tagName === 'SELECT') {
@@ -1275,8 +1279,8 @@ function updateChangeCapsuleField(){
 
     const applianceOrder = topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula';
     if (applianceOrder) {
-      if (!model || !model.value || !varieties || !varieties.value.trim() ||
-          varieties.value.trim() === 'Nijedna vrsta još nije odabrana') ready = false;
+      if (!model || !model.value || !model.checkValidity() || !varieties ||
+          !varieties.value.trim() || varieties.value.trim() === 'Nijedna vrsta još nije odabrana') ready = false;
     }
 
     if (button) {
