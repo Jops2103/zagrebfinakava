@@ -1244,7 +1244,7 @@ function updateChangeCapsuleField(){
 })();
 
 
-// Restore the previously working submit-button readiness logic.
+// Keep button readiness aligned with the actual capsule selection state and required fields.
 (function refreshOrderSubmitReadiness(){
   const form = document.getElementById('order-form');
   if (!form) return;
@@ -1252,7 +1252,7 @@ function updateChangeCapsuleField(){
   const topic = document.getElementById('topic');
   const model = document.getElementById('model');
   const consent = document.getElementById('consent');
-  const capsuleInput = document.getElementById('capsules');
+  const varieties = document.getElementById('capsule-varieties');
   let refreshQueued = false;
 
   function refreshButton(){
@@ -1263,17 +1263,20 @@ function updateChangeCapsuleField(){
       if (style.display === 'none' || style.visibility === 'hidden' || field.getClientRects().length === 0) return true;
       return field.checkValidity();
     });
+
+    // Consent is always mandatory, regardless of the type of inquiry.
     if (!consent || !consent.checked) ready = false;
 
+    // For an appliance order, verify the real selected-box count rather than
+    // parsing the display-only quantity text (e.g. "2 kutije").
     const applianceOrder = topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula';
     if (ready && applianceOrder) {
       const modelName = model ? model.value : '';
-      const minimum = /1300/i.test(modelName) ? 2 : /2600/i.test(modelName) ? 3 : 0;
-      const quantityText = capsuleInput ? capsuleInput.value : '';
-      const selectedCount = Number.parseInt(quantityText, 10) || 0;
-      const varieties = document.getElementById('capsule-varieties');
-      if (!modelName || !minimum || selectedCount < minimum || !varieties ||
-          !varieties.value.trim() || varieties.value.trim() === 'Nijedna vrsta još nije odabrana') {
+      const minimum = capsulePackageLimit();
+      const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
+      const varietyText = varieties ? varieties.value.trim() : '';
+      if (!modelName || !minimum || selectedCount < minimum || !varietyText ||
+          varietyText === 'Nijedna vrsta još nije odabrana') {
         ready = false;
       }
     }
