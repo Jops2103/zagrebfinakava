@@ -668,7 +668,8 @@ if (capsuleModelField) {
 // Do not revive a stale capsule quantity from an earlier visit. Keep saved choices
 // only when returning from a capsule detail page, where the query parameter records
 // the user's explicit add-to-order action.
-const capsuleFromDetail = params.get('odaberiKapsulu');
+const capsuleDetailParams = new URLSearchParams(window.location.search);
+const capsuleFromDetail = capsuleDetailParams.get('odaberiKapsulu');
 if (capsuleFromDetail) {
   restoreCapsuleSelections();
 } else {
@@ -687,8 +688,8 @@ if (capsuleFromDetail && capsuleField && topicField) {
     saveCapsuleSelections();
     updateSelectedCapsuleField();
     if (status) status.textContent = '';
-    params.delete('odaberiKapsulu');
-    const remainingQuery = params.toString();
+    capsuleDetailParams.delete('odaberiKapsulu');
+    const remainingQuery = capsuleDetailParams.toString();
     const cleanUrl = window.location.pathname + (remainingQuery ? '?' + remainingQuery : '') + window.location.hash;
     window.history.replaceState({}, document.title, cleanUrl);
   }
