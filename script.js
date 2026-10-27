@@ -1050,26 +1050,17 @@ function updateChangeCapsuleField(){
       ? requestedModel
       : currentModel;
   }
-  // Keep the native select's option nodes stable for mobile browsers.
-  // Only hide quantities below the selected appliance's minimum.
+  // Quantity choices are rendered in index.html, not rebuilt by JavaScript.
+  // This avoids mobile native-select bugs when options are dynamically replaced.
   function configure(){
     const targetModel = effectiveModel();
     const minimum = minimums[targetModel];
     const previousQuantity = quantity.value;
-    if (!quantity.dataset.optionsReady) {
-      quantity.replaceChildren();
-      quantity.add(new Option('Odaberite količinu', ''));
-      quantity.add(new Option('Bez promjene količine', 'same'));
-      for (let amount = 200; amount <= 2000; amount += 100) {
-        quantity.add(new Option(amount + ' kapsula (' + amount / 100 + ' kutije)', String(amount)));
-      }
-      quantity.dataset.optionsReady = 'true';
-    }
     Array.from(quantity.options).forEach(option => {
       const amount = Number(option.value);
       if (option.value && option.value !== 'same' && Number.isFinite(amount)) {
-        option.hidden = !!minimum && amount < minimum;
         option.disabled = !minimum || amount < minimum;
+        option.hidden = !!minimum && amount < minimum;
       }
     });
     quantity.disabled = !minimum;
