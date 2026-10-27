@@ -58,7 +58,7 @@ Deno.serve(async (req: Request) => {
       ? null
       : Number(payload.quantity);
     const capsuleSelection = Array.isArray(payload.capsule_selection)
-      ? payload.capsule_selection.filter((item: unknown) => typeof item === "string" && item.trim()).map((item: string) => item.trim())
+      ? payload.capsule_selection.flatMap((item: unknown) => typeof item === "string" && item.trim() ? [item.trim()] : [])
       : [];
     const note = typeof payload.note === "string" ? payload.note.trim().slice(0, 5000) : "";
 
