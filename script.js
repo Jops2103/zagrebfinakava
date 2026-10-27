@@ -1257,12 +1257,10 @@ function updateChangeCapsuleField(){
 
   function refreshButton(){
     refreshQueued = false;
-    let ready = Array.from(form.querySelectorAll('[required]')).every(field => {
-      if (field.disabled || field.closest('[hidden]')) return true;
-      const style = window.getComputedStyle(field);
-      if (style.display === 'none' || style.visibility === 'hidden' || field.getClientRects().length === 0) return true;
-      return field.checkValidity();
-    });
+    // Match the browser's actual form validity instead of maintaining a second,
+    // slightly different interpretation of required fields for the button color.
+    // The submit handler uses this same native validity check before sending.
+    let ready = form.checkValidity();
 
     // Consent is always mandatory, regardless of the type of inquiry.
     if (!consent || !consent.checked) ready = false;
