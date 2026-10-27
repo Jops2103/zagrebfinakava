@@ -1059,7 +1059,7 @@ function updateChangeCapsuleField(){
     if (!quantity.dataset.optionsReady) {
       quantity.replaceChildren();
       quantity.add(new Option('Odaberite količinu', ''));
-      quantity.add(new Option('Samo promjena vrste kapsula (količina ostaje ista)', 'same'));
+      quantity.add(new Option('Bez promjene količine', 'same'));
       for (let amount = 200; amount <= 2000; amount += 100) {
         quantity.add(new Option(amount + ' kapsula (' + amount / 100 + ' kutije)', String(amount)));
       }
