@@ -544,9 +544,16 @@ document.querySelectorAll('.capsule-select').forEach(button => {
       saveCapsuleSelections();
       updateChangeCapsuleField();
       if (changeStatus) changeStatus.textContent = '';
-      // Stay in the capsule gallery while the customer is selecting varieties.
-      // The completed selection is reflected in the existing-customer form without
-      // forcibly scrolling away from the gallery.
+
+      // Return existing customers to their inquiry as soon as the requested
+      // monthly quantity has been filled with capsule boxes.
+      const updatedSelectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
+      if (!sameQuantity && updatedSelectedCount === targetBoxes) {
+        const changeSection = document.getElementById('promjena-kolicine');
+        if (changeSection) {
+          window.setTimeout(() => changeSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
+        }
+      }
       return;
     }
     const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
