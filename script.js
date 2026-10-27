@@ -1160,8 +1160,8 @@ function updateChangeCapsuleField(){
 
   function refreshButton(){
     refreshQueued = false;
-    // Only validate required controls that are actually available to the user.
-    // Mobile layouts and conditional sections may hide required fields without disabling them.
+    // Only fields marked as required (*) should control the button color.
+    // Ignore disabled or hidden conditional controls.
     let ready = Array.from(form.querySelectorAll('[required]')).every(field => {
       if (field.disabled || field.closest('[hidden]')) return true;
       const style = window.getComputedStyle(field);
