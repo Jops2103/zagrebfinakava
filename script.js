@@ -667,16 +667,17 @@ if (capsuleFromDetail && capsuleField && topicField) {
   if (chooseCapsules) chooseCapsules.addEventListener('click', () => {
     const quantity = document.getElementById('change-quantity');
     const status = document.getElementById('customer-change-status');
-    if (!changeModel || !changeModel.value || !quantity || !quantity.value) {
-      if (status) status.textContent = 'Najprije odaberite aparat i novu mjesečnu količinu.';
-      if (changeModel && !changeModel.value) changeModel.focus();
-      else if (quantity) quantity.focus();
-      return;
-    }
+    // Always take existing customers to the gallery. If required choices are
+    // missing, the capsule cards will explain what to complete in the form.
     document.body.dataset.customerChangeMode = 'true';
     selectedCapsules.clear();
     saveCapsuleSelections();
     updateChangeCapsuleField();
+    if (!changeModel || !changeModel.value || !quantity || !quantity.value) {
+      if (status) status.textContent = 'Odaberite aparat i mjesečnu količinu u obrascu prije odabira kapsula.';
+    } else if (status) {
+      status.textContent = '';
+    }
     const gallery = document.getElementById('kapsule');
     if (gallery) gallery.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
