@@ -1518,10 +1518,12 @@ function updateChangeCapsuleField(){
           throw emailError;
         }
 
-        if (statusElement) statusElement.textContent = isExisting
-          ? 'Zahtjev je uspješno spremljen i poslan e-mailom. Promjena se ne primjenjuje dok je ne potvrdimo.'
-          : 'Upit je uspješno spremljen i e-mail je poslan!';
-        if (!isExisting && successElement) successElement.hidden = false;
+        if (statusElement) {
+          statusElement.textContent = isExisting
+            ? 'Zahtjev je uspješno spremljen i poslan e-mailom. Promjena se ne primjenjuje dok je ne potvrdimo.'
+            : '';
+        }
+        if (!isExisting && successElement) successElement.hidden = true;
         if (!isExisting) resetNewCustomerSelections();
         if (submitButton) {
           submitButton.innerHTML = isExisting ? 'Zahtjev poslan ✓' : 'Upit poslan ✓';
