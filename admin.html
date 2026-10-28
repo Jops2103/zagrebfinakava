@@ -183,7 +183,7 @@ function renderAllRequests(){
      const r=data.requests.find(item=>item.id===b.dataset.request); if(!r)return;
      const c=data.customers.find(item=>item.id===r.customer_id)||data.customers.find(item=>emailsFor(item).includes((r.customer_email||"").toLowerCase()));
      if(c){selected=c.id;renderCustomers();renderDetail(c.id);}
-     const detailNoteLines=String(r.customer_note||"").split(/\\r?\\n/).map(line=>line.trim()).filter(Boolean);
+     const detailNoteLines=String(r.customer_note||"").split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
      const detailCapsules=Array.isArray(r.capsule_selection)?r.capsule_selection.map(item=>typeof item==="string"?item:(item&&typeof item==="object"?(item.name||item.title||"")+(item.boxes?" × "+item.boxes:""):"")).filter(Boolean):[];
      const detailBoxes=Array.isArray(r.capsule_selection)?r.capsule_selection.reduce((sum,item)=>sum+(item&&typeof item==="object"&&Number.isFinite(Number(item.boxes))?Number(item.boxes):0),0):0;
      const capsuleLines=detailCapsules.length?detailCapsules.map(item=>'<p>'+esc(item)+'</p>').join(""):'<p>—</p>';
