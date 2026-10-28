@@ -459,6 +459,21 @@ function updateSelectedCapsuleField() {
   document.dispatchEvent(new Event('zfk:capsules-updated'));
 }
 
+
+function resetNewCustomerSelections() {
+  // Clear the machine and capsule choices only after the new-customer inquiry
+  // has been saved and Web3Forms has confirmed that the email was sent.
+  if (capsuleModelField) capsuleModelField.selectedIndex = 0;
+  finderPackageLimit = 0;
+  selectedCapsules.clear();
+  saveCapsuleSelections();
+
+  const noExtraCapsules = document.querySelector('input[name="Dodatne kapsule"][value="Ne"]');
+  if (noExtraCapsules) noExtraCapsules.checked = true;
+
+  updateSelectedCapsuleField();
+}
+
 document.querySelectorAll('.model-select').forEach(button => {
   button.addEventListener('click', () => {
     if (document.body.dataset.customerChangeMode === 'true') {
@@ -1507,6 +1522,7 @@ function updateChangeCapsuleField(){
           ? 'Zahtjev je uspješno spremljen i poslan e-mailom. Promjena se ne primjenjuje dok je ne potvrdimo.'
           : 'Upit je uspješno spremljen i e-mail je poslan!';
         if (!isExisting && successElement) successElement.hidden = false;
+        if (!isExisting) resetNewCustomerSelections();
         if (submitButton) {
           submitButton.innerHTML = isExisting ? 'Zahtjev poslan ✓' : 'Upit poslan ✓';
           submitButton.setAttribute('aria-label', isExisting ? 'Zahtjev uspješno poslan' : 'Upit uspješno poslan');
