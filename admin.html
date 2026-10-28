@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#eeeeec">
+<title>ZFK — Administracija</title>
+<style>
+:root{font-family:Arial,Helvetica,sans-serif;color:#202124;background:#eeeeec}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1180px;margin:auto;padding:24px 16px 60px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;border-bottom:3px solid #173d72;padding-bottom:16px}.brand{font-weight:800;letter-spacing:.04em;color:#173d72}.muted{color:#62666c}.panel{background:#fff;border:1px solid #ddd;border-radius:12px;padding:20px;margin-top:20px;box-shadow:0 2px 10px #00000008}h1{font-size:clamp(24px,4vw,34px);margin:14px 0 6px}h2{font-size:20px;margin:0 0 12px}input,button{font:inherit;border-radius:8px;padding:12px;border:1px solid #c7cbd1}input{width:100%;max-width:440px}button{cursor:pointer;background:#173d72;color:white;border:0;font-weight:700}button.secondary{background:#e9edf4;color:#173d72}button:disabled{opacity:.5;cursor:wait}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row input{flex:1}.status{margin-top:12px;white-space:pre-wrap}.error{color:#a12525}.ok{color:#17633b}.hidden{display:none!important}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:16px}.stat{background:#f5f6f8;border-radius:10px;padding:14px}.stat strong{font-size:24px;display:block;color:#173d72}.layout{display:grid;grid-template-columns:minmax(240px,340px) 1fr;gap:16px;margin-top:18px}.list{max-height:65vh;overflow:auto}.customer{display:block;width:100%;text-align:left;background:#fff;color:#222;border:1px solid #ddd;margin:0 0 8px;padding:12px}.customer.active{border:2px solid #173d72;background:#f2f6fc}.customer small{display:block;color:#666;margin-top:5px}.tag{display:inline-block;padding:4px 8px;border-radius:99px;font-size:12px;background:#eef0f2;margin:2px}.pending{background:#fff0c2}.confirmed{background:#dff4e5}.rejected{background:#f9dddd}.entry{border-left:3px solid #c7d2e4;padding:0 0 18px 14px;margin:16px 0}.entry h3{margin:0 0 6px;font-size:16px}.entry p{white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0}.field{margin:10px 0}.empty{padding:22px;color:#666;background:#f7f7f7;border-radius:8px}.small{font-size:13px}@media(max-width:720px){.layout{grid-template-columns:1fr}.list{max-height:40vh}.panel{padding:15px}}
+</style>
+</head>
+<body><main class="wrap">
+<header class="top"><div><div class="brand">ZAGREB FINA KAVA</div><div class="muted small">Zaštićeni administratorski pregled</div></div><button id="logout" class="secondary hidden">Odjava</button></header>
+<section id="login" class="panel"><h1>Administracija kupaca</h1><p class="muted">Prijava je dopuštena samo za odobrenu administratorsku adresu.</p><form id="loginForm"><div class="field"><label for="email">Administratorska e-mail adresa</label><br><input id="email" type="email" value="zagrebfinakava@proton.me" autocomplete="email" required></div><button id="sendLink" type="submit">Pošalji poveznicu za prijavu</button></form><div id="loginStatus" class="status" role="status"></div></section>
+<section id="app" class="hidden"><div class="panel"><h1>Pregled kupaca i upita</h1><p class="muted">Podaci se učitavaju samo nakon provjere administratorske prijave. Testni zapisi nisu prikazani.</p><div class="row"><input id="search" type="search" placeholder="Pretraži ime, tvrtku ili e-mail"><button id="refresh" class="secondary">Osvježi</button></div><div id="stats" class="stats"></div><div id="loadStatus" class="status"></div></div>
+<div class="layout"><section class="panel"><h2>Kupci</h2><div id="customerList" class="list"></div></section><section class="panel"><div id="detail"><div class="empty">Odaberi kupca s popisa da vidiš potvrđene uvjete, sve njegove upite i povijest promjena.</div></div></section></div>
+<section class="panel"><h2>Svi pristigli upiti</h2><p class="muted small">Najnoviji su na vrhu. Odaberi kupca za detaljan pregled.</p><div id="allRequests"></div></section></section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+ const SUPABASE_URL = "https://wbupmpqymavxjxatwzsh.supabase.co";
+ const SUPABASE_KEY = "sb_publishable_NTuAKW5Kd2e6cvDyahcLmw_PNRoB3-W";
+ const ADMIN_EMAIL = "zagrebfinakava@proton.me";
+ const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+ let data = {customers:[],requests:[],aliases:[],changes:[],quantities:[]}, selected = null;
+ const $ = id => document.getElementById(id);
+ const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ const date = value => value ? new Date(value).toLocaleString("hr-HR",{dateStyle:"medium",timeStyle:"short"}) : "—";
+ const list = value => Array.isArray(value) ? value.map(v => typeof v === "string" ? v : JSON.stringify(v)).join(", ") || "—" : value ? String(value) : "—";
+ const machine = value => value || "Nije navedeno";
+ const statusLabel = value => ({pending:"Čeka potvrdu",confirmed:"Potvrđeno",rejected:"Odbijeno"}[value] || value || "—");
+ function showStatus(id,msg,kind=""){ $(id).textContent=msg; $(id).className="status "+kind; }
+ async function sessionChanged(session) {
+   const logged = !!session;
+   $("login").classList.toggle("hidden",logged);
+   $("app").classList.toggle("hidden",!logged);
+   $("logout").classList.toggle("hidden",!logged);
+   if(logged) await loadData();
+ }
+ $("loginForm").addEventListener("submit", async e => {
+   e.preventDefault();
+   const email = $("email").value.trim().toLowerCase();
+   if(email !== ADMIN_EMAIL){ showStatus("loginStatus","Ova adresa nije odobrena za administratorski pristup.","error"); return; }
+   $("sendLink").disabled = true;
+   showStatus("loginStatus","Šaljem sigurnu poveznicu za prijavu…");
+   const {error} = await client.auth.signInWithOtp({email, options:{emailRedirectTo:location.href.split("#")[0], shouldCreateUser:true}});
+   $("sendLink").disabled = false;
+   showStatus("loginStatus",error ? "Slanje nije uspjelo: "+error.message : "Ako je Supabase Auth ispravno konfiguriran za ovu adresu, stići će e-mail s poveznicom za prijavu. Otvori poveznicu na ovom uređaju.",""+(error?"error":"ok"));
+ });
+ $("logout").addEventListener("click",async()=>{await client.auth.signOut();selected=null;});
+ $("refresh").addEventListener("click",loadData);
+ $("search").addEventListener("input",renderCustomers);
+ client.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>sessionChanged(session),0);});
+ async function loadData(){
+   showStatus("loadStatus","Provjeravam pristup i učitavam evidenciju…");
+   const {data:sessionData}=await client.auth.getSession();
+   if(!sessionData.session){showStatus("loadStatus","Prijava nije aktivna.","error");return;}
+   if((sessionData.session.user.email||"").toLowerCase()!==ADMIN_EMAIL){await client.auth.signOut();showStatus("loginStatus","Ova e-mail adresa nema administratorski pristup.","error");return;}
+   try{
+     const response=await fetch(SUPABASE_URL+"/functions/v1/zfk-admin",{headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+sessionData.session.access_token}});
+     const payload=await response.json();
+     if(!response.ok) throw new Error(payload.error||"Pristup evidenciji nije odobren.");
+     data=payload; showStatus("loadStatus","Evidencija je ažurirana.","ok"); renderStats();renderCustomers();renderAllRequests();
+     if(selected && data.customers.some(c=>c.id===selected)) renderDetail(selected);
+     else if(data.customers.length){selected=data.customers[0].id;renderCustomers();renderDetail(selected);}
+     else $("detail").innerHTML='<div class="empty">Još nema potvrđenih kupaca. Pristigli upiti prikazani su u odjeljku ispod.</div>';
+   }catch(err){showStatus("loadStatus",err.message,"error");}
+ }
+ function renderStats(){
+   $("stats").innerHTML=[["Kupci",data.customers.length],["Svi upiti",data.requests.length],["Čekaju potvrdu",data.requests.filter(r=>r.request_status==="pending").length],["Potvrđeni upiti",data.requests.filter(r=>r.request_status==="confirmed").length]].map(([label,n])=>'<div class="stat"><strong>'+n+'</strong><span>'+label+'</span></div>').join("");
+ }
+ function emailsFor(c){return [...new Set([c.email,...data.aliases.filter(a=>a.customer_id===c.id).map(a=>a.email_normalized),...data.requests.filter(r=>r.customer_id===c.id).map(r=>r.customer_email)].filter(Boolean).map(e=>e.toLowerCase()))];}
+ function renderCustomers(){
+   const q=$("search").value.trim().toLowerCase();
+   const customers=data.customers.filter(c=>([c.full_name,...emailsFor(c),c.current_machine].join(" ").toLowerCase()).includes(q));
+   $("customerList").innerHTML=customers.map(c=>'<button class="customer '+(c.id===selected?"active":"")+'" data-id="'+esc(c.id)+'"><strong>'+esc(c.full_name||"Bez imena")+'</strong><small>'+esc(emailsFor(c).join(" · "))+'</small><small>'+esc(c.current_machine||"Aparat nije potvrđen")+' · '+esc(c.confirmed_monthly_capsules??"—")+' kapsula/mj.</small></button>').join("")||'<div class="empty">Nema kupaca koji odgovaraju pretrazi.</div>';
+   $("customerList").querySelectorAll("[data-id]").forEach(b=>b.addEventListener("click",()=>{selected=b.dataset.id;renderCustomers();renderDetail(selected);}));
+ }
+ function renderDetail(id){
+   const c=data.customers.find(x=>x.id===id);if(!c)return;
+   const requests=data.requests.filter(r=>r.customer_id===id||emailsFor(c).includes((r.customer_email||"").toLowerCase())).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+   const changes=data.changes.filter(x=>x.customer_id===id);
+   const quantities=data.quantities.filter(x=>x.customer_id===id);
+   $("detail").innerHTML='<h2>'+esc(c.full_name||"Kupac")+'</h2><p class="muted">'+esc(emailsFor(c).join(" · "))+'</p><div class="stats"><div class="stat"><span>Potvrđeni aparat</span><strong style="font-size:16px">'+esc(machine(c.current_machine))+'</strong></div><div class="stat"><span>Mjesečna količina</span><strong>'+esc(c.confirmed_monthly_capsules??"—")+'</strong><span>kapsula</span></div></div><div class="field"><b>Potvrđene kapsule</b><p>'+esc(list(c.confirmed_capsule_selection))+'</p></div><div class="field"><b>Registriran od</b><p>'+esc(date(c.created_at))+'</p></div><hr><h2>Povijest promjena</h2>'+ (changes.length?changes.map(x=>'<div class="entry"><h3>'+esc(date(x.changed_at))+' · '+esc(x.change_type||"Promjena")+'</h3><p>Aparat: '+esc(x.previous_machine||"—")+' → '+esc(x.new_machine||"—")+'</p><p>Količina: '+esc(x.previous_quantity??"—")+' → '+esc(x.new_quantity??"—")+'</p><p>Kapsule: '+esc(list(x.previous_capsule_selection))+' → '+esc(list(x.new_capsule_selection))+'</p><p>'+esc(x.note||"")+'</p></div>').join(""):'<p class="muted">Nema zabilježenih promjena.</p>')+'<hr><h2>Svi upiti ovog kupca ('+requests.length+')</h2>'+ (requests.length?requests.map(requestCard).join(""):'<p class="muted">Nema povezanih upita.</p>')+'<h2>Povijest količina</h2>'+ (quantities.length?quantities.map(x=>'<div class="entry"><h3>'+esc(date(x.changed_at))+'</h3><p>'+esc(x.previous_quantity??"—")+' → '+esc(x.new_quantity)+' kapsula/mj.</p><p>'+esc(x.note||"")+'</p></div>').join(""):'<p class="muted">Nema zasebnih zapisa količine.</p>');
+ }
+ function requestCard(r){return '<article class="entry"><h3>'+esc(date(r.created_at))+' <span class="tag '+esc(r.request_status)+'">'+esc(statusLabel(r.request_status))+'</span></h3><p><b>Kontakt:</b> '+esc(r.customer_name||"—")+' · '+esc(r.customer_email||"—")+'</p><p><b>Traženi aparat:</b> '+esc(r.requested_machine||"Bez promjene / nije navedeno")+'</p><p><b>Tražena količina:</b> '+esc(r.requested_monthly_capsules??"—")+' kapsula/mj.</p><p><b>Kapsule:</b> '+esc(list(r.capsule_selection))+'</p><p><b>Poruka:</b> '+esc(r.customer_note||"—")+'</p>'+(r.confirmed_at?'<p><b>Potvrđeno:</b> '+esc(date(r.confirmed_at))+'</p>':'')+'</article>';}
+ function renderAllRequests(){
+   $("allRequests").innerHTML=data.requests.map(r=>'<div class="entry"><h3>'+esc(date(r.created_at))+' <span class="tag '+esc(r.request_status)+'">'+esc(statusLabel(r.request_status))+'</span></h3><p><b>'+esc(r.customer_name||"Bez imena")+'</b> · '+esc(r.customer_email||"—")+'</p><p>'+esc(r.requested_machine||"Aparat nije naveden")+' · '+esc(r.requested_monthly_capsules??"—")+' kapsula/mj.</p><button class="secondary" data-customer="'+esc(r.customer_id||"")+'" data-email="'+esc(r.customer_email||"")+'">Otvori povezane podatke</button></div>').join("")||'<div class="empty">Još nema pristiglih upita.</div>';
+   $("allRequests").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{const c=data.customers.find(c=>c.id===b.dataset.customer)||data.customers.find(c=>emailsFor(c).includes((b.dataset.email||"").toLowerCase()));if(c){selected=c.id;renderCustomers();renderDetail(c.id);window.scrollTo({top:document.querySelector(".layout").offsetTop,behavior:"smooth"});}else{showStatus("loadStatus","Ovaj upit još nije povezan s potvrđenim kupcem. Otvori ga u izvornom sustavu za ručno povezivanje.","");}}));
+ }
+ client.auth.getSession().then(({data:s})=>sessionChanged(s.session));
+})();
+</script></body></html>
