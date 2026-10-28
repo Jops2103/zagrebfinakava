@@ -15,7 +15,7 @@
 <section id="login" class="panel"><h1>Administracija kupaca</h1><p class="muted">Prijava je dopuštena samo za odobrenu administratorsku adresu.</p><form id="loginForm"><div class="field"><label for="email">Administratorska e-mail adresa</label><br><input id="email" type="email" value="zagrebfinakava@proton.me" autocomplete="email" required></div><button id="sendLink" type="submit">Pošalji poveznicu za prijavu</button></form><div id="loginStatus" class="status" role="status"></div></section>
 <section id="app" class="hidden"><div class="panel"><h1>Pregled kupaca i upita</h1><p class="muted">Podaci se učitavaju samo nakon provjere administratorske prijave. Testni zapisi nisu prikazani.</p><div class="row"><input id="search" type="search" placeholder="Pretraži ime, tvrtku ili e-mail"><button id="refresh" class="secondary">Osvježi</button></div><div id="stats" class="stats"></div><div id="loadStatus" class="status"></div></div>
 <div class="layout"><section class="panel"><h2>Kupci</h2><div id="customerList" class="list"></div></section><section class="panel"><div id="detail"><div class="empty">Odaberi kupca s popisa da vidiš potvrđene uvjete, sve njegove upite i povijest promjena.</div></div></section></div>
-<section class="panel"><h2>Svi pristigli upiti</h2><p class="muted small">Najnoviji su na vrhu. Odaberi kupca za detaljan pregled.</p><section class="panel"><h2>Ručno stanje zaliha</h2><p class="muted small">Unesi raspoložive komade aparata i količine kapsula. Artikli s količinom 0 smatraju se nedostupnima. Nazivi kapsula moraju odgovarati nazivima iz upita.</p><form id="inventoryForm"><div class="field"><label for="inventoryType">Vrsta artikla</label><br><select id="inventoryType"><option value="machine">Aparat za kavu</option><option value="capsule">Vrsta kapsula</option></select></div><div class="field"><label for="inventoryName">Naziv aparata ili kapsula</label><br><input id="inventoryName" required maxlength="180" placeholder="Npr. Lavazza LB2600"></div><div class="field"><label for="inventoryQuantity">Količina na zalihi</label><br><input id="inventoryQuantity" type="number" min="0" step="1" required value="0"></div><button type="submit">Spremi stanje zaliha</button><div id="inventoryStatus" class="status" role="status"></div></form><h3>Evidentirane zalihe</h3><div id="inventoryList" class="list"></div></section><div id="allRequests"></div></section></section>
+<section class="panel"><h2>Svi pristigli upiti</h2><p class="muted small">Najnoviji su na vrhu. Odaberi kupca za detaljan pregled.</p><section class="panel"><h2>Ručno stanje zaliha</h2><p class="muted small">Unesi raspoložive komade aparata i količine kapsula. Artikli s količinom 0 smatraju se nedostupnima. Nazivi kapsula moraju odgovarati nazivima iz upita.</p><form id="inventoryForm"><div class="field"><label for="inventoryType">Vrsta artikla</label><br><select id="inventoryType"><option value="machine">Aparat za kavu</option><option value="capsule">Vrsta kapsula</option></select></div><div class="field"><label for="inventoryName">Naziv aparata ili kapsula</label><br><input id="inventoryName" required maxlength="180" placeholder="Npr. Lavazza LB2600"></div><div class="field"><label for="inventoryQuantity">Količina na zalihi</label><br><input id="inventoryQuantity" type="number" min="0" step="1" required value="0"></div><button id="inventorySubmit" type="submit">Spremi stanje zaliha</button> <button id="inventoryCancelEdit" class="secondary hidden" type="button">Odustani od promjene naziva</button><div id="inventoryStatus" class="status" role="status"></div></form><h3>Evidentirane zalihe</h3><div id="inventoryList" class="list"></div></section><div id="allRequests"></div></section></section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -24,7 +24,7 @@
  const SUPABASE_KEY = "sb_publishable_NTuAKW5Kd2e6cvDyahcLmw_PNRoB3-W";
  const ADMIN_EMAIL = "zagrebfinakava@proton.me";
  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
- let data = {customers:[],requests:[],aliases:[],changes:[],quantities:[],inventory:[]}, selected = null;
+ let data = {customers:[],requests:[],aliases:[],changes:[],quantities:[],inventory:[]}, selected = null, editingInventory = null;
  const $ = id => document.getElementById(id);
  const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const date = value => value ? new Date(value).toLocaleString("hr-HR",{dateStyle:"medium",timeStyle:"short"}) : "—";
@@ -129,15 +129,47 @@
     '<p id="requestActionStatus" class="status" role="status"></p>';
  }
  function renderInventory(){
- $("inventoryList").innerHTML=(data.inventory||[]).map(i=>'<div class="entry"><b>'+esc(i.item_type==="machine"?"Aparat":"Kapsule")+': '+esc(i.item_name)+'</b><p>Količina na zalihi: <b>'+esc(i.quantity)+'</b></p><p class="muted small">Ažurirano: '+esc(date(i.updated_at))+'</p></div>').join("")||'<div class="empty">Još nema unesenih zaliha.</div>';
+ $("inventoryList").innerHTML=(data.inventory||[]).map(i=>'<div class="entry"><b>'+esc(i.item_type==="machine"?"Aparat":"Kapsule")+': '+esc(i.item_name)+'</b><p>Količina na zalihi: <b>'+esc(i.quantity)+'</b></p><p class="muted small">Ažurirano: '+esc(date(i.updated_at))+'</p><button type="button" class="secondary" data-edit-stock="1" data-type="'+esc(i.item_type)+'" data-name="'+esc(i.item_name)+'" data-quantity="'+esc(i.quantity)+'">Promijeni naziv</button></div>').join("")||'<div class="empty">Još nema unesenih zaliha.</div>';
+ $("inventoryList").querySelectorAll("button[data-edit-stock]").forEach(button=>button.addEventListener("click",()=>{
+   editingInventory={item_type:button.dataset.type,item_name:button.dataset.name,quantity:Number(button.dataset.quantity)};
+   $("inventoryType").value=editingInventory.item_type;
+   $("inventoryName").value=editingInventory.item_name;
+   $("inventoryQuantity").value=String(editingInventory.quantity);
+   $("inventoryName").focus();
+   $("inventorySubmit").textContent="Spremi promjenu naziva";
+   $("inventoryCancelEdit").classList.remove("hidden");
+   showStatus("inventoryStatus","Uređuješ naziv: "+editingInventory.item_name+". Količina će ostati nepromijenjena.");
+ }));
 }
+function cancelInventoryRename(){
+ editingInventory=null;
+ $("inventoryName").value="";
+ $("inventoryQuantity").value="0";
+ $("inventorySubmit").textContent="Spremi stanje zaliha";
+ $("inventoryCancelEdit").classList.add("hidden");
+ showStatus("inventoryStatus","Promjena naziva je otkazana.");
+}
+$("inventoryCancelEdit").addEventListener("click",cancelInventoryRename);
 $("inventoryForm").addEventListener("submit",async e=>{
  e.preventDefault(); const status=$("inventoryStatus"); status.textContent=""; status.className="status";
  try{
-  const quantity=Number($("inventoryQuantity").value);
-  if(!Number.isInteger(quantity)||quantity<0) throw new Error("Količina mora biti cijeli broj koji nije negativan.");
-  await performRequestAction({action:"inventory_upsert",item_type:$("inventoryType").value,item_name:$("inventoryName").value.trim(),quantity},"Stanje zaliha je spremljeno.");
-  $("inventoryName").value=""; $("inventoryQuantity").value="0"; status.textContent="Zaliha spremljena."; status.className="status ok";
+  const newName=$("inventoryName").value.trim();
+  if(editingInventory){
+   if(!newName) throw new Error("Unesi novi naziv artikla.");
+   if(newName.toLowerCase()===editingInventory.item_name.toLowerCase()) throw new Error("Novi naziv mora biti različit od postojećeg.");
+   if(!confirm("Promijeniti naziv stavke \""+editingInventory.item_name+"\" u \""+newName+"\"? Količina na zalihi ostat će "+editingInventory.quantity+".")) return;
+   const oldName=editingInventory.item_name, type=editingInventory.item_type;
+   await performRequestAction({action:"inventory_rename",item_type:type,old_item_name:oldName,item_name:newName},"Naziv artikla je promijenjen. Količina na zalihi ostala je nepromijenjena.");
+   editingInventory=null;
+   $("inventoryName").value=""; $("inventoryQuantity").value="0"; $("inventorySubmit").textContent="Spremi stanje zaliha"; $("inventoryCancelEdit").classList.add("hidden");
+   showStatus("inventoryStatus","Naziv je promijenjen, a količina sačuvana.","ok");
+  }else{
+   const quantity=Number($("inventoryQuantity").value);
+   if(!newName) throw new Error("Unesi naziv artikla.");
+   if(!Number.isInteger(quantity)||quantity<0) throw new Error("Količina mora biti cijeli broj koji nije negativan.");
+   await performRequestAction({action:"inventory_upsert",item_type:$("inventoryType").value,item_name:newName,quantity},"Stanje zaliha je spremljeno.");
+   $("inventoryName").value=""; $("inventoryQuantity").value="0"; status.textContent="Zaliha spremljena."; status.className="status ok";
+  }
  }catch(err){status.textContent=err.message||"Spremanje nije uspjelo.";status.className="status error";}
 });
 function renderAllRequests(){
