@@ -87,6 +87,25 @@
  }
  function requestCard(r){return '<article class="entry"><h3>'+esc(date(r.created_at))+' <span class="tag '+esc(r.request_status)+'">'+esc(statusLabel(r.request_status))+'</span></h3><p><b>Kontakt:</b> '+esc(r.customer_name||"—")+' · '+esc(r.customer_email||"—")+'</p><p><b>Traženi aparat:</b> '+esc(r.requested_machine||"Bez promjene / nije navedeno")+'</p><p><b>Tražena količina:</b> '+esc(r.requested_monthly_capsules??"—")+' kapsula/mj.</p><p><b>Kapsule:</b> '+esc(list(r.capsule_selection))+'</p><p><b>Poruka:</b> '+esc(r.customer_note||"—")+'</p>'+(r.confirmed_at?'<p><b>Potvrđeno:</b> '+esc(date(r.confirmed_at))+'</p>':'')+'</article>';}
 
+ function openCustomerEmailDraft(request, customer, type){
+   const to=String(request.customer_email||"").trim();
+   if(!to||!to.includes("@")){alert("Ovaj upit nema valjanu e-mail adresu kupca.");return;}
+   const customerName=String(request.customer_name||customer?.full_name||"").trim();
+   const greeting=customerName ? "Poštovani/a "+customerName+"," : "Poštovani,";
+   let subject="";
+   let body="";
+   if(type==="confirmed"){
+     const machine=String(customer?.current_machine||request.requested_machine||"dogovoreni aparat");
+     const qty=customer?.confirmed_monthly_capsules ?? request.requested_monthly_capsules ?? "dogovorena količina";
+     subject="Potvrda dogovora – Zagreb Fina Kava";
+     body=greeting+"\n\nPotvrđujemo dogovorene uvjete za Zagreb Fina Kava.\n\nAparat: "+machine+"\nMjesečna količina: "+qty+" kapsula\nCijena po kapsuli: 0,65 €\n\nAko imate pitanja ili želite izmijeniti dogovorene uvjete, slobodno odgovorite na ovu poruku.\n\nLijep pozdrav,\nZagreb Fina Kava\nzagrebfinakava@proton.me";
+   } else {
+     subject="Odgovor na vaš upit – Zagreb Fina Kava";
+     body=greeting+"\n\nHvala vam na upitu i interesu za Zagreb Fina Kava. Nažalost, trenutačno ne možemo prihvatiti zahtjev pod navedenim uvjetima. Ako želite, odgovorite na ovu poruku pa možemo provjeriti postoji li odgovarajuća alternativa.\n\nLijep pozdrav,\nZagreb Fina Kava\nzagrebfinakava@proton.me";
+   }
+   const url="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
+   window.location.href=url;
+ }
  async function performRequestAction(payload, successText){
    const {data:sessionData}=await client.auth.getSession();
    if(!sessionData.session){showStatus("loadStatus","Prijava nije aktivna.","error");return false;}
@@ -128,10 +147,14 @@ function renderAllRequests(){
      const r=data.requests.find(item=>item.id===b.dataset.request); if(!r)return;
      const c=data.customers.find(item=>item.id===r.customer_id)||data.customers.find(item=>emailsFor(item).includes((r.customer_email||"").toLowerCase()));
      if(c){selected=c.id;renderCustomers();renderDetail(c.id);}
-     $("detail").innerHTML='<h2>Detalji pristiglog upita</h2><p><span class="tag '+esc(r.request_status)+'">'+esc(statusLabel(r.request_status))+'</span></p><div class="field"><b>Datum primitka</b><p>'+esc(date(r.created_at))+'</p></div><div class="field"><b>Ime i prezime</b><p>'+esc(r.customer_name||"—")+'</p></div><div class="field"><b>E-mail</b><p>'+esc(r.customer_email||"—")+'</p></div><div class="field"><b>Traženi aparat</b><p>'+esc(r.requested_machine||"Nije navedeno")+'</p></div><div class="field"><b>Tražena mjesečna količina</b><p>'+esc(r.requested_monthly_capsules??"—")+' kapsula</p></div><div class="field"><b>Odabrane kapsule</b><p>'+esc(list(r.capsule_selection))+'</p></div><div class="field"><b>Poruka korisnika</b><p>'+esc(r.customer_note||"Nema dodatne poruke")+'</p></div><hr><p class="muted">'+(c?'Upit je povezan s evidencijom kupca.':'Ovaj upit još nije povezan s potvrđenim kupcem.')+'</p><p class="muted small">Pregled upita ne potvrđuje narudžbu niti mijenja potvrđene uvjete kupca.</p>'+(r.request_status==='pending'?renderRequestActions(r):r.request_status==='confirmed'?'<div class="field"><p class="muted">Ako potvrda još nije konačna, možeš vratiti upit na čekanje. To ne šalje poruku kupcu i ne mijenja zalihe.</p><button id="resetPending" class="secondary" type="button">Vrati na čekanje</button><p id="requestActionStatus" class="status" role="status"></p></div>':'<p class="muted">Ovaj upit je odbijen; radnje su zaključane.</p>'); 
+     $("detail").innerHTML='<h2>Detalji pristiglog upita</h2><p><span class="tag '+esc(r.request_status)+'">'+esc(statusLabel(r.request_status))+'</span></p><div class="field"><b>Datum primitka</b><p>'+esc(date(r.created_at))+'</p></div><div class="field"><b>Ime i prezime</b><p>'+esc(r.customer_name||"—")+'</p></div><div class="field"><b>E-mail</b><p>'+esc(r.customer_email||"—")+'</p></div><div class="field"><b>Traženi aparat</b><p>'+esc(r.requested_machine||"Nije navedeno")+'</p></div><div class="field"><b>Tražena mjesečna količina</b><p>'+esc(r.requested_monthly_capsules??"—")+' kapsula</p></div><div class="field"><b>Odabrane kapsule</b><p>'+esc(list(r.capsule_selection))+'</p></div><div class="field"><b>Poruka korisnika</b><p>'+esc(r.customer_note||"Nema dodatne poruke")+'</p></div><hr><p class="muted">'+(c?'Upit je povezan s evidencijom kupca.':'Ovaj upit još nije povezan s potvrđenim kupcem.')+'</p><p class="muted small">Pregled upita ne potvrđuje narudžbu niti mijenja potvrđene uvjete kupca.</p>'+(r.request_status==='pending'?renderRequestActions(r):r.request_status==='confirmed'?'<div class="field"><p class="muted">Ako potvrda još nije konačna, možeš vratiti upit na čekanje. To ne šalje poruku kupcu i ne mijenja zalihe.</p><button id="prepareConfirmedEmail" class="secondary" type="button">Pripremi e-mail kupcu</button> <button id="resetPending" class="secondary" type="button">Vrati na čekanje</button><p class="muted small">Nacrt se otvara u programu za e-poštu; prije slanja provjeri da šalješ s adrese zagrebfinakava@proton.me.</p><p id="requestActionStatus" class="status" role="status"></p></div>':'<p class="muted">Ovaj upit je odbijen; radnje su zaključane.</p><div class="field"><button id="prepareRejectedEmail" class="secondary" type="button">Pripremi e-mail kupcu</button><p class="muted small">Nacrt se otvara u programu za e-poštu; prije slanja provjeri da šalješ s adrese zagrebfinakava@proton.me.</p></div>'); 
      if(r.request_status==='confirmed'){
+       $("prepareConfirmedEmail").addEventListener("click",()=>openCustomerEmailDraft(r,c,"confirmed"));
        const resetButton=$("resetPending");
        resetButton.addEventListener("click",async()=>{try{if(!confirm("Vratiti ovaj upit iz statusa Potvrđeno na Čeka potvrdu? Kupac neće dobiti novu poruku, a zalihe se neće mijenjati."))return;resetButton.disabled=true;await performRequestAction({action:"reset_pending",request_id:r.id},"Upit je vraćen na čekanje. Nije poslana poruka kupcu i zalihe nisu promijenjene.");}catch(e){const s=$("requestActionStatus");s.textContent=e.message;s.className="status error";resetButton.disabled=false;}});
+     }
+     if(r.request_status==='rejected'){
+       $("prepareRejectedEmail").addEventListener("click",()=>openCustomerEmailDraft(r,c,"rejected"));
      }
      if(r.request_status==='pending'){
        const actionStatus=$("requestActionStatus");
