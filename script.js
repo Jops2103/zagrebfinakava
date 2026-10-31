@@ -361,7 +361,7 @@ function capsulePackageLimit() {
   ].join(' ').toUpperCase().replace(/[^A-Z0-9]/g, '');
   // Each box contains 100 capsules. Enforce the published minimum for each model.
   if (selectedModel.includes('LB1300')) return 2;
-  if (selectedModel.includes('LB2600')) return 3;
+  if (selectedModel.includes('LB2600')) return 4;
   return 0;
 }
 
@@ -836,18 +836,18 @@ if (capsuleFromDetail && capsuleField && topicField) {
     let key='',showBoth=false,tag='',copy='';
     if(drinks==='black'){key='mini';tag='Preporuka prema vašim željama';copy=`Budući da želite samo espresso i crnu kavu, preporučujemo LB 1300 Classy Soul ${useLabels[use]}. Veća potrošnja kapsula ne isključuje ovaj model ako ne trebate mliječne napitke.`;}
     else if(drinks==='milk'){key='milk';tag='Preporuka prema vašim željama';copy=`Budući da želite i mliječne napitke, preporučujemo LB2600 ${useLabels[use]}.`;}
-    else if(e.count>3||e.monthly>=300){key='milk';showBoth=true;tag='Naš savjet: LB2600';copy=`Uz ${e.count} osoba procijenjena je potrošnja ${e.monthly} kapsula mjesečno. Za više od 3 osobe praktičniji može biti LB2600 zbog većeg spremnika za vodu i kapaciteta za iskorištene kapsule. Od 300 kapsula mjesečno naviše posebno ga preporučujemo. Ipak, konačan izbor je vaš.`;}
+    else if(e.count>3||e.monthly>=400){key='milk';showBoth=true;tag='Naš savjet: LB2600';copy=`Uz ${e.count} osoba procijenjena je potrošnja ${e.monthly} kapsula mjesečno. Za više od 3 osobe praktičniji može biti LB2600 zbog većeg spremnika za vodu i kapaciteta za iskorištene kapsule. Od 400 kapsula mjesečno naviše posebno ga preporučujemo. Ipak, konačan izbor je vaš.`;}
     else {showBoth=true;tag='Usporedite oba modela';copy=`Uz ${e.count} osoba procijenjena je potrošnja ${e.monthly} kapsula mjesečno. Budući da još niste odlučili koje napitke želite, usporedite oba aparata i odaberite onaj koji vam više odgovara.`;}
     const model=key?models[key]:null;
     resultTag.textContent=tag;resultTitle.textContent=showBoth?'Koji aparat vam više odgovara?':`Lavazza ${model.name}`;resultCopy.textContent=copy;
-    const modelMinimum = key === 'mini' ? 200 : key === 'milk' ? 300 : 0;
+    const modelMinimum = key === 'mini' ? 200 : key === 'milk' ? 400 : 0;
     const recommendedTotal = Math.max(e.total, modelMinimum);
     const recommendedBoxes = recommendedTotal / 100;
     resultFacts.replaceChildren();
     [`Procijenjena potrošnja: ${e.monthly} kapsula mjesečno`,`Preporučena ugovorena količina: ${recommendedTotal} kapsula (${recommendedBoxes} kutije)`,`Broj osoba: ${e.count}`].concat(model?model.facts:[]).forEach(fact=>{const li=document.createElement('li');li.textContent=fact;resultFacts.append(li);});
     resultModels.hidden=!showBoth;resultButton.hidden=showBoth;
     if(model)setModelButton(resultButton,model,`${recommendedTotal} kapsula mjesečno (preporuka vodiča)`);
-    resultModels.querySelectorAll('.finder-model-button').forEach(button=>{const m=button.dataset.model.includes('2600')?models.milk:models.mini;const total=Math.max(e.total,m===models.milk?300:200);setModelButton(button,m,`${total} kapsula mjesečno (preporuka vodiča)`);});
+    resultModels.querySelectorAll('.finder-model-button').forEach(button=>{const m=button.dataset.model.includes('2600')?models.milk:models.mini;const total=Math.max(e.total,m===models.milk?400:200);setModelButton(button,m,`${total} kapsula mjesečno (preporuka vodiča)`);});
     steps.forEach(item=>{item.hidden=true;});result.hidden=false;statusMessage.textContent='';progressLabel.textContent='Preporuka je spremna';progressFill.style.width='100%';resultTitle.focus({preventScroll:true});
   }
   finder.querySelectorAll('[data-finder-next]').forEach(button=>button.addEventListener('click',()=>{const current=steps.find(item=>Number(item.dataset.finderStep)===activeStep);if(!current||!current.querySelector('input[type="radio"]:checked')){statusMessage.textContent='Odaberite jednu opciju za nastavak.';return;}showStep(Number(button.dataset.finderNext));}));
@@ -1151,7 +1151,7 @@ function updateChangeCapsuleField(){
 
   const minimums = {
     'Lavazza LB 1300 Classy Soul': 200,
-    'Lavazza LB2600': 300
+    'Lavazza LB2600': 400
   };
   function effectiveModel(){
     const currentModel = model.value;
@@ -1259,7 +1259,7 @@ function updateChangeCapsuleField(){
     if (quantity.value && quantity.value !== 'same' &&
         (!Number.isFinite(selectedAmount) || selectedAmount < minimum || selectedAmount % 100 !== 0)) {
       quantity.value = '';
-      if (status) status.textContent = 'Za LB2600 najmanja je količina 300 kapsula, a za LB 1300 Classy Soul 200 kapsula mjesečno. Odaberite dopuštenu količinu.';
+      if (status) status.textContent = 'Za LB2600 najmanja je količina 400 kapsula (4 kutije), a za LB 1300 Classy Soul 200 kapsula (2 kutije) mjesečno. Odaberite dopuštenu količinu.';
       configure();
     }
     clearCapsuleChoices();
@@ -1359,7 +1359,7 @@ function updateChangeCapsuleField(){
       // guide's model selector may not have been used.
       const selectedModel = String(model && model.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
       const minimum = selectedModel.includes('LB1300') ? 2
-        : selectedModel.includes('LB2600') ? 3 : 0;
+        : selectedModel.includes('LB2600') ? 4 : 0;
       const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
       if (!model || !model.value || !model.checkValidity() || minimum === 0) {
         missing.push('odabrati aparat');
