@@ -5044,3 +5044,43 @@ body {
   #kapsule .capsule-quantity-control{gap:9px;margin-top:7px;font-size:13px}
   #kapsule .capsule-quantity-control button{width:32px;min-width:32px;height:32px;min-height:32px}
 }
+
+
+/* Umjesto gumba za odabir prikazati uočljiv plavi broj odabranih kutija. */
+#kapsule .capsule-select-source {
+  display: none !important;
+}
+#kapsule .capsule-selected-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 42px;
+  margin: 9px auto 0;
+  padding: 9px 8px;
+  border: 1px solid #003da5;
+  border-radius: 6px;
+  background: #003da5;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+#kapsule .capsule-quantity-control {
+  gap: 14px;
+  margin-top: 8px;
+}
+@media (max-width: 700px) {
+  #kapsule .capsule-selected-count {
+    min-height: 42px;
+    margin-top: 8px;
+    padding: 8px 5px;
+    font-size: 13px;
+  }
+  #kapsule .capsule-quantity-control {
+    gap: 12px;
+    margin-top: 7px;
+  }
+}
