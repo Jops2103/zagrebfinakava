@@ -281,14 +281,25 @@ function updateCapsuleButtonFeedback() {
     button.textContent = button.dataset.originalLabel;
     button.setAttribute('aria-pressed', count > 0 ? 'true' : 'false');
     button.setAttribute('aria-label', variety + ': odabrano ' + count + ' kutija. Za promjenu koristite tipke minus i plus.');
+    button.classList.add('capsule-select-source');
 
-    // Add a dedicated quantity stepper below each capsule's selection button.
-    let control = button.nextElementSibling;
+    // Replace the visible “Odaberi kapsule” button with a blue selected-count banner.
+    let selectedDisplay = button.nextElementSibling;
+    if (!selectedDisplay || !selectedDisplay.classList.contains('capsule-selected-count')) {
+      selectedDisplay = document.createElement('div');
+      selectedDisplay.className = 'capsule-selected-count';
+      selectedDisplay.setAttribute('aria-live', 'polite');
+      button.insertAdjacentElement('afterend', selectedDisplay);
+    }
+    selectedDisplay.textContent = 'Odabrano: ' + count;
+
+    // Keep only the minus/plus controls below the blue count banner.
+    let control = selectedDisplay.nextElementSibling;
     if (!control || !control.classList.contains('capsule-quantity-control')) {
       control = document.createElement('div');
       control.className = 'capsule-quantity-control';
-      control.innerHTML = '<button type="button" class="capsule-quantity-minus" aria-label="Smanji količinu">−</button><span class="capsule-quantity-count" aria-live="polite"></span><button type="button" class="capsule-quantity-plus" aria-label="Povećaj količinu">+</button>';
-      button.insertAdjacentElement('afterend', control);
+      control.innerHTML = '<button type="button" class="capsule-quantity-minus" aria-label="Smanji količinu">−</button><button type="button" class="capsule-quantity-plus" aria-label="Povećaj količinu">+</button>';
+      selectedDisplay.insertAdjacentElement('afterend', control);
 
       control.querySelector('.capsule-quantity-plus').addEventListener('click', () => button.click());
       control.querySelector('.capsule-quantity-minus').addEventListener('click', () => {
