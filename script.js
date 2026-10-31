@@ -1413,6 +1413,7 @@ function updateChangeCapsuleField(){
           'Telefon: ' + (document.getElementById('phone')?.value.trim() || ''),
           'Namjena ponude: ' + (document.getElementById('customer-type')?.value || ''),
           'Vrsta upita: ' + (document.getElementById('topic')?.value || ''),
+          'Odabrane kapsule: ' + (document.getElementById('capsule-varieties')?.value || 'Nije navedeno'),
           'Dodatne kapsule: ' + (document.querySelector('input[name="Dodatne kapsule"]:checked')?.value || 'Ne'),
           'Dodatne odabrane kapsule: ' + (document.getElementById('additional-capsule-varieties')?.value || ''),
           'Poruka: ' + (document.getElementById('message')?.value.trim() || '')
