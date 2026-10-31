@@ -275,17 +275,44 @@ const selectedCapsules = new Map();
 function updateCapsuleButtonFeedback() {
   document.querySelectorAll('.capsule-select').forEach(button => {
     if (!button.dataset.originalLabel) button.dataset.originalLabel = button.textContent.trim();
-    const count = selectedCapsules.get(button.dataset.capsule) || 0;
+    const variety = button.dataset.capsule;
+    const count = selectedCapsules.get(variety) || 0;
     button.classList.toggle('capsule-selected', count > 0);
+    button.textContent = button.dataset.originalLabel;
     button.setAttribute('aria-pressed', count > 0 ? 'true' : 'false');
-    if (count > 0) {
-      const word = count === 1 ? 'kutija' : (count >= 2 && count <= 4 ? 'kutije' : 'kutija');
-      button.textContent = '✓ Odabrano: ' + count + ' ' + word;
-      button.setAttribute('aria-label', button.dataset.capsule + ': odabrano ' + count + ' ' + word + '. Kliknite za dodavanje još jedne kutije.');
-    } else {
-      button.textContent = button.dataset.originalLabel;
-      button.setAttribute('aria-label', button.dataset.capsule + ': odaberite kapsule');
+    button.setAttribute('aria-label', variety + ': odabrano ' + count + ' kutija. Za promjenu koristite tipke minus i plus.');
+
+    // Add a dedicated quantity stepper below each capsule's selection button.
+    let control = button.nextElementSibling;
+    if (!control || !control.classList.contains('capsule-quantity-control')) {
+      control = document.createElement('div');
+      control.className = 'capsule-quantity-control';
+      control.innerHTML = '<button type="button" class="capsule-quantity-minus" aria-label="Smanji količinu">−</button><span class="capsule-quantity-count" aria-live="polite"></span><button type="button" class="capsule-quantity-plus" aria-label="Povećaj količinu">+</button>';
+      button.insertAdjacentElement('afterend', control);
+
+      control.querySelector('.capsule-quantity-plus').addEventListener('click', () => button.click());
+      control.querySelector('.capsule-quantity-minus').addEventListener('click', () => {
+        const current = selectedCapsules.get(variety) || 0;
+        if (current <= 0) return;
+        if (current === 1) selectedCapsules.delete(variety);
+        else selectedCapsules.set(variety, current - 1);
+        saveCapsuleSelections();
+        if (document.body.dataset.customerChangeMode === 'true') {
+          updateChangeCapsuleField();
+          const changeStatus = document.getElementById('customer-change-status');
+          if (changeStatus) changeStatus.textContent = '';
+        } else {
+          updateSelectedCapsuleField();
+          if (status) status.textContent = '';
+        }
+      });
     }
+
+    const minus = control.querySelector('.capsule-quantity-minus');
+    const countLabel = control.querySelector('.capsule-quantity-count');
+    if (countLabel) countLabel.textContent = 'Odabrano: ' + count;
+    if (minus) minus.disabled = count === 0;
+    control.setAttribute('aria-label', variety + ', odabrano ' + count + ' kutija');
   });
 }
 

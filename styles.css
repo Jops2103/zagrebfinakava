@@ -4993,3 +4993,54 @@ body {
   #order-form .form-actions .btn{min-height:50px;touch-action:manipulation}
   #success-message.success-message{font-size:clamp(19px,5vw,24px)!important;padding:15px 14px;overflow-wrap:anywhere}
 }
+
+
+/* Jednostavan brojač količine ispod svake vrste kapsula. */
+#kapsule .capsule-quantity-control{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  width:100%;
+  margin:8px auto 0;
+  color:#20242a;
+  font-size:14px;
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+#kapsule .capsule-quantity-control button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:34px;
+  min-width:34px;
+  height:34px;
+  min-height:34px;
+  padding:0;
+  border:1px solid #003da5;
+  border-radius:50%;
+  background:#fff;
+  color:#003da5;
+  font-size:22px;
+  line-height:1;
+  font-weight:600;
+  cursor:pointer;
+  transition:background .15s ease,color .15s ease,opacity .15s ease;
+}
+#kapsule .capsule-quantity-control button:hover:not(:disabled){
+  background:#003da5;
+  color:#fff;
+}
+#kapsule .capsule-quantity-control button:disabled{
+  opacity:.35;
+  cursor:not-allowed;
+}
+#kapsule .capsule-quantity-count{
+  min-width:104px;
+  text-align:center;
+  white-space:nowrap;
+}
+@media(max-width:700px){
+  #kapsule .capsule-quantity-control{gap:9px;margin-top:7px;font-size:13px}
+  #kapsule .capsule-quantity-control button{width:32px;min-width:32px;height:32px;min-height:32px}
+}
