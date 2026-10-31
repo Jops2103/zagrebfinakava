@@ -1259,7 +1259,7 @@ function updateChangeCapsuleField(){
     if (quantity.value && quantity.value !== 'same' &&
         (!Number.isFinite(selectedAmount) || selectedAmount < minimum || selectedAmount % 100 !== 0)) {
       quantity.value = '';
-      if (status) status.textContent = 'Za LB2600 najmanja je količina 300 kapsula, a za LB 1300 Classy Soul 200 kapsula mjesečno. Odaberite dopuštenu količinu.';
+      if (status) status.textContent = 'Za LB2600 najmanja je količina 400 kapsula (4 kutije), a za LB 1300 Classy Soul 200 kapsula (2 kutije) mjesečno. Odaberite dopuštenu količinu.';
       configure();
     }
     clearCapsuleChoices();
@@ -1359,7 +1359,7 @@ function updateChangeCapsuleField(){
       // guide's model selector may not have been used.
       const selectedModel = String(model && model.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
       const minimum = selectedModel.includes('LB1300') ? 2
-        : selectedModel.includes('LB2600') ? 3 : 0;
+        : selectedModel.includes('LB2600') ? 4 : 0;
       const selectedCount = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
       if (!model || !model.value || !model.checkValidity() || minimum === 0) {
         missing.push('odabrati aparat');
