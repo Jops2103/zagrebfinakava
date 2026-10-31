@@ -1521,16 +1521,46 @@ function updateChangeCapsuleField(){
         }
 
         if (statusElement) {
+          statusElement.hidden = false;
           statusElement.textContent = isExisting
-            ? 'Zahtjev je uspješno spremljen i poslan e-mailom. Promjena se ne primjenjuje dok je ne potvrdimo.'
-            : '';
+            ? 'Zahtjev je uspješno spremljen i poslan e-mailom. Promjena se ne primjenjuje dok je ne potvrdimo. Obrazac će se resetirati za 15 sekundi.'
+            : 'Upit je uspješno spremljen i poslan e-mailom. Obrazac će se resetirati za 15 sekundi.';
         }
         if (!isExisting && successElement) successElement.hidden = true;
-        if (!isExisting) resetNewCustomerSelections();
         if (submitButton) {
           submitButton.innerHTML = isExisting ? 'Zahtjev poslan ✓' : 'Upit poslan ✓';
           submitButton.setAttribute('aria-label', isExisting ? 'Zahtjev uspješno poslan' : 'Upit uspješno poslan');
         }
+
+        // Keep the success confirmation visible for 15 seconds, then clear the
+        // submitted form and every custom capsule/machine selection.
+        window.setTimeout(() => {
+          form.reset();
+          selectedCapsules.clear();
+          saveCapsuleSelections();
+          updateCapsuleButtonFeedback();
+          if (isExisting) {
+            const currentModel = document.getElementById('change-model');
+            if (currentModel) currentModel.dispatchEvent(new Event('change', { bubbles: true }));
+            updateChangeCapsuleField();
+            refreshCustomerChangeButtons();
+          } else {
+            resetNewCustomerSelections();
+            syncOrderConditionalRequirements();
+            if (typeof updateSelectedCapsuleField === 'function') updateSelectedCapsuleField();
+            document.dispatchEvent(new Event('zfk:capsules-updated'));
+          }
+          if (statusElement) {
+            statusElement.textContent = '';
+            statusElement.hidden = true;
+          }
+          if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.removeAttribute('aria-busy');
+            submitButton.innerHTML = originalButtonText;
+            submitButton.removeAttribute('aria-label');
+          }
+        }, 15000);
       } catch (error) {
         if (statusElement) {
           if (savedInSupabase || error.savedInSupabase) {
