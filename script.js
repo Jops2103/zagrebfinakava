@@ -1437,6 +1437,7 @@ function updateChangeCapsuleField(){
         'Postojeći aparat: ' + currentMachine,
         'Željeni aparat: ' + (desiredMachineValue === 'same' ? 'Bez promjene aparata' : desiredMachine),
         'Promjena količine: ' + (quantityValue === 'same' ? 'Bez promjene količine' : quantityValue + ' kapsula mjesečno'),
+        'Odabrane kapsule: ' + (document.getElementById('change-capsule-varieties')?.value || 'Nije navedeno'),
         'Broj postojeće narudžbe: ' + (document.getElementById('change-reference')?.value.trim() || 'nije naveden'),
         'Dodatna napomena: ' + (document.getElementById('change-message')?.value.trim() || '')
       ].join('\n')
