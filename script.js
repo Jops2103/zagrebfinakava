@@ -133,7 +133,7 @@ window.matchMedia('(min-width: 701px)').addEventListener('change', event => {
 
 // Enlarge product and hero photos on click; close with Escape or backdrop.
 (function setupImageLightbox(){
-  const images = Array.from(document.querySelectorAll('.product-gallery img, .hero-product-image'));
+  const images = Array.from(document.querySelectorAll('.product-gallery img, .model-image-gallery img, .hero-product-image'));
   if (!images.length) return;
   const overlay = document.createElement('div');
   overlay.className = 'image-lightbox';
