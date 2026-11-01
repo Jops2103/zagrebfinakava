@@ -827,7 +827,7 @@ if (capsuleFromDetail && capsuleField && topicField) {
   function answer(name){const chosen=finder.querySelector(`input[name="${name}"]:checked`);return chosen?chosen.value:'';}
   function people(){const n=Number.parseInt(peopleInput.value,10);return Number.isFinite(n)?Math.min(500,Math.max(1,n)):1;}
   function estimate(){const count=people();const monthly=count*40;const boxes=Math.floor(monthly/100)+1;monthlyEstimate.textContent=`${monthly} kapsula mjesečno`;boxEstimate.textContent=`${boxes*100} kapsula (${boxes} ${boxes===1?'kutija':'kutija'})`;return {count,monthly,boxes,total:boxes*100};}
-  function showStep(step){activeStep=step;steps.forEach(item=>{item.hidden=Number(item.dataset.finderStep)!==step;});result.hidden=true;statusMessage.textContent='';progressLabel.textContent=`Korak ${step} od ${steps.length}`;progressFill.style.width=`${(step/steps.length)*100}%`;const fieldset=steps.find(item=>Number(item.dataset.finderStep)===step)?.querySelector('fieldset');if(fieldset)fieldset.focus({preventScroll:true});}
+  function showStep(step){activeStep=step;steps.forEach(item=>{item.hidden=Number(item.dataset.finderStep)!==step;});result.hidden=true;statusMessage.textContent='';progressLabel.textContent=`Korak ${step} od ${steps.length}`;progressFill.style.width=`${(step/steps.length)*100}%`;// Ne fokusiramo fieldset automatski: preglednik bi oko cijelog pitanja prikazao tamni fokusni pravokutnik.}
   function setModelButton(button,model,quantity){button.dataset.model=model.modelValue;button.dataset.quantity=quantity;button.setAttribute('aria-label',`Odaberi aparat ${model.name}`);}
   function showRecommendation(){
     const use=answer('finder-use'),drinks=answer('finder-drinks');
