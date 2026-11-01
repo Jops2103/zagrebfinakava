@@ -300,32 +300,95 @@ function updateCapsuleButtonFeedback() {
     control.hidden = !canChooseCapsules;
     control.setAttribute('aria-label', variety + ', odabrano ' + count + ' kutija');
 
-    // Veži kontrole i kada su već prisutne u HTML-u.
-    if (control.dataset.quantityListenersBound !== 'true') {
-      if (plus) plus.addEventListener('click', event => {
-        event.preventDefault();
-        button.click();
-      });
-      if (minus) minus.addEventListener('click', event => {
-        event.preventDefault();
-        const current = selectedCapsules.get(variety) || 0;
-        if (current <= 0) return;
-        if (current === 1) selectedCapsules.delete(variety);
-        else selectedCapsules.set(variety, current - 1);
-        saveCapsuleSelections();
-        if (document.body.dataset.customerChangeMode === 'true') {
-          updateChangeCapsuleField();
-          const changeStatus = document.getElementById('customer-change-status');
-          if (changeStatus) changeStatus.textContent = '';
-        } else {
-          updateSelectedCapsuleField();
-          if (status) status.textContent = '';
-        }
-      });
-      control.dataset.quantityListenersBound = 'true';
-    }
   });
 }
+
+// Direct quantity handling: do not route + through the hidden legacy selection button.
+function changeCapsuleQuantity(variety, delta) {
+  const current = selectedCapsules.get(variety) || 0;
+  if (delta < 0) {
+    if (current <= 0) return;
+    if (current === 1) selectedCapsules.delete(variety);
+    else selectedCapsules.set(variety, current - 1);
+    saveCapsuleSelections();
+    if (document.body.dataset.customerChangeMode === 'true') {
+      updateChangeCapsuleField();
+      const changeStatus = document.getElementById('customer-change-status');
+      if (changeStatus) changeStatus.textContent = '';
+    } else {
+      updateSelectedCapsuleField();
+      if (status) status.textContent = '';
+    }
+    updateCapsuleButtonFeedback();
+    return;
+  }
+
+  const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
+  if (document.body.dataset.customerChangeMode === 'true') {
+    const quantityField = document.getElementById('change-quantity');
+    const changeStatus = document.getElementById('customer-change-status');
+    const sameQuantity = !!(quantityField && quantityField.value === 'same');
+    const targetBoxes = Number(quantityField && quantityField.value) / 100;
+    if (!sameQuantity && (!Number.isFinite(targetBoxes) || targetBoxes < 1)) {
+      if (changeStatus) changeStatus.textContent = 'Najprije odaberite aparat i novu mjesečnu količinu u obrascu.';
+      return;
+    }
+    if (!sameQuantity && selectedBoxes >= targetBoxes) {
+      if (changeStatus) changeStatus.textContent = 'Već ste odabrali vrste za svih ' + (targetBoxes * 100) + ' kapsula mjesečno.';
+      return;
+    }
+    selectedCapsules.set(variety, current + 1);
+    saveCapsuleSelections();
+    updateChangeCapsuleField();
+    if (changeStatus) changeStatus.textContent = '';
+    const updatedCount = selectedBoxes + 1;
+    if (!sameQuantity && updatedCount === targetBoxes) {
+      const section = document.getElementById('promjena-kolicine');
+      if (section) window.setTimeout(() => section.scrollIntoView({behavior:'smooth',block:'start'}), 250);
+    }
+    updateCapsuleButtonFeedback();
+    return;
+  }
+
+  const selectedModelValue = capsuleModelField ? String(capsuleModelField.value || '').trim() : '';
+  if (selectedModelValue && selectedModelValue !== 'Odaberite aparat' && topicField) {
+    topicField.value = 'Želim aparat uz mjesečnu kupnju kapsula';
+  }
+  const minimum = capsulePackageLimit();
+  const addingExtras = wantsAdditionalCapsules() && selectedBoxes >= minimum;
+  if (!minimum) {
+    if (status) status.textContent = 'Najprije odaberite aparat u odjeljku „ODABERITE SVOJ MODEL”, a zatim odaberite kapsule.';
+    document.getElementById('ponuda')?.scrollIntoView({behavior:'smooth',block:'start'});
+    return;
+  }
+  if (!isCapsuleOnlyOrder() && selectedBoxes >= minimum && !addingExtras) {
+    if (status) status.textContent = '';
+    return;
+  }
+  selectedCapsules.set(variety, current + 1);
+  saveCapsuleSelections();
+  updateSelectedCapsuleField();
+  if (status) status.textContent = '';
+  if (!isCapsuleOnlyOrder() && selectedBoxes + 1 === minimum) {
+    const enquirySection = document.getElementById('narudzba');
+    if (enquirySection) window.setTimeout(() => enquirySection.scrollIntoView({behavior:'smooth',block:'start'}), 250);
+  }
+  updateCapsuleButtonFeedback();
+}
+
+// Capture clicks at the document level so the controls work even if the gallery
+// is re-rendered or the legacy hidden buttons are not initialized.
+document.addEventListener('click', event => {
+  const controlButton = event.target.closest('#kapsule .capsule-quantity-control button');
+  if (!controlButton) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  const gallery = controlButton.closest('.blue-capsule-gallery');
+  const sourceButton = gallery && gallery.querySelector('.capsule-select');
+  const variety = sourceButton && sourceButton.dataset.capsule;
+  if (!variety) return;
+  changeCapsuleQuantity(variety, controlButton.classList.contains('capsule-quantity-plus') ? 1 : -1);
+}, true);
 
 const capsuleSelectionStorageKey = 'zfk-selected-capsules-v1';
 
