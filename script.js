@@ -822,7 +822,7 @@ if (capsuleFromDetail && capsuleField && topicField) {
   const useLabels = {home:'za dom', apartment:'za apartman', office:'za ured ili poslovni prostor'};
   const models = {
     mini:{name:'LB 1300 Classy Soul',modelValue:'Lavazza LB 1300 Classy Soul',quantity:'Preporučena količina prema vodiču',tag:'Za espresso i crnu kavu',facts:['Kompaktan format','Za espresso i crnu kavu','Bez sustava za mliječne napitke']},
-    milk:{name:'2600 Magystra',modelValue:'Lavazza LB2600',quantity:'Preporučena količina prema vodiču',tag:'Za mliječne napitke i veće potrebe',facts:['Za espresso i mliječne napitke','Spremnik za vodu od 3,6 l','Spremnik za iskorištene kapsule do 25 kapsula']}
+    milk:{name:'LB 2600 Magystra',modelValue:'Lavazza LB2600',quantity:'Preporučena količina prema vodiču',tag:'Za mliječne napitke i veće potrebe',facts:['Za espresso i mliječne napitke','Spremnik za vodu od 3,6 l','Spremnik za iskorištene kapsule do 25 kapsula']}
   };
   function answer(name){const chosen=finder.querySelector(`input[name="${name}"]:checked`);return chosen?chosen.value:'';}
   function people(){const n=Number.parseInt(peopleInput.value,10);return Number.isFinite(n)?Math.min(500,Math.max(1,n)):1;}
@@ -835,8 +835,8 @@ if (capsuleFromDetail && capsuleField && topicField) {
     const e=estimate();
     let key='',showBoth=false,tag='',copy='';
     if(drinks==='black'){key='mini';tag='Preporuka prema vašim željama';copy=`Budući da želite samo espresso i crnu kavu, preporučujemo LB 1300 Classy Soul ${useLabels[use]}. Veća potrošnja kapsula ne isključuje ovaj model ako ne trebate mliječne napitke.`;}
-    else if(drinks==='milk'){key='milk';tag='Preporuka prema vašim željama';copy=`Budući da želite i mliječne napitke, preporučujemo Lavazza 2600 Magystra ${useLabels[use]}.`;}
-    else if(e.count>3||e.monthly>=400){key='milk';showBoth=true;tag='Naš savjet: Lavazza 2600 Magystra';copy=`Uz ${e.count} osoba procijenjena je potrošnja ${e.monthly} kapsula mjesečno. Za više od 3 osobe praktičniji može biti Lavazza 2600 Magystra zbog većeg spremnika za vodu i kapaciteta za iskorištene kapsule. Od 400 kapsula mjesečno naviše posebno preporučujemo ovaj model. Ipak, konačan izbor je vaš.`;}
+    else if(drinks==='milk'){key='milk';tag='Preporuka prema vašim željama';copy=`Budući da želite i mliječne napitke, preporučujemo Lavazza LB 2600 Magystra ${useLabels[use]}.`;}
+    else if(e.count>3||e.monthly>=400){key='milk';showBoth=true;tag='Naš savjet: Lavazza LB 2600 Magystra';copy=`Uz ${e.count} osoba procijenjena je potrošnja ${e.monthly} kapsula mjesečno. Za više od 3 osobe praktičniji može biti Lavazza LB 2600 Magystra zbog većeg spremnika za vodu i kapaciteta za iskorištene kapsule. Od 400 kapsula mjesečno naviše posebno preporučujemo ovaj model. Ipak, konačan izbor je vaš.`;}
     else {showBoth=true;tag='Usporedite oba modela';copy=`Uz ${e.count} osoba procijenjena je potrošnja ${e.monthly} kapsula mjesečno. Budući da još niste odlučili koje napitke želite, usporedite oba aparata i odaberite onaj koji vam više odgovara.`;}
     const model=key?models[key]:null;
     resultTag.textContent=tag;resultTitle.textContent=showBoth?'Koji aparat vam više odgovara?':`Lavazza ${model.name}`;resultCopy.textContent=copy;
