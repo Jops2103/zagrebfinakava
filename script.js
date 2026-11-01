@@ -626,7 +626,14 @@ document.querySelectorAll('.model-select').forEach(button => {
     const quantityMatch = (button.dataset.quantity || '').match(/(\d+)\s*kapsula/i);
     // A finder recommendation like "300 kapsula mjesečno" means three 100-capsule
     // boxes in the inquiry. Regular machine-card selections keep their usual minimum.
-    finderPackageLimit = quantityMatch ? Math.max(1, Math.ceil(Number(quantityMatch[1]) / 100)) : 0;
+    // Keep the selected machine's minimum available to the quantity controls,
+    // even if another form listener clears the model select during the same click.
+    // Finder recommendations with an explicit quantity still take precedence.
+    finderPackageLimit = quantityMatch
+      ? Math.max(1, Math.ceil(Number(quantityMatch[1]) / 100))
+      : /LB\s*1300/i.test(modelName) ? 2
+        : /LB\s*2600/i.test(modelName) ? 4
+          : 0;
     const modelPattern = /LB\s*1300/i.test(modelName)
       ? /LB\s*1300/i
       : /LB\s*2600/i.test(modelName)
