@@ -276,36 +276,38 @@ function updateCapsuleButtonFeedback() {
   const selectedModel = capsuleModelField ? String(capsuleModelField.value || '').trim() : '';
   const canChooseCapsules = !!selectedModel && selectedModel !== 'Odaberite aparat';
 
-  document.querySelectorAll('.capsule-select').forEach(button => {
-    if (!button.dataset.originalLabel) button.dataset.originalLabel = button.textContent.trim();
+  document.querySelectorAll('#kapsule .blue-capsule-gallery .capsule-select').forEach(button => {
     const variety = button.dataset.capsule;
     const count = selectedCapsules.get(variety) || 0;
     button.classList.toggle('capsule-selected', count > 0);
-    button.textContent = button.dataset.originalLabel;
     button.setAttribute('aria-pressed', count > 0 ? 'true' : 'false');
-    button.setAttribute('aria-label', variety + ': odabrano ' + count + ' kutija. Za promjenu koristite tipke minus i plus.');
+    button.setAttribute('aria-label', variety + ': odabrano ' + count + ' kutija.');
     button.classList.add('capsule-select-source');
 
-    // Plava oznaka "Odabrano" i zaseban brojač za svaku vrstu kapsula.
-    let selectedDisplay = button.nextElementSibling;
-    if (!selectedDisplay || !selectedDisplay.classList.contains('capsule-selected-count')) {
-      selectedDisplay = document.createElement('div');
-      selectedDisplay.className = 'capsule-selected-count';
-      selectedDisplay.setAttribute('aria-live', 'polite');
-      button.insertAdjacentElement('afterend', selectedDisplay);
-    }
+    const selectedDisplay = button.nextElementSibling;
+    const control = selectedDisplay && selectedDisplay.nextElementSibling;
+    if (!selectedDisplay || !selectedDisplay.classList.contains('capsule-selected-count') ||
+        !control || !control.classList.contains('capsule-quantity-control')) return;
+
     selectedDisplay.textContent = 'Odabrano';
     selectedDisplay.hidden = !canChooseCapsules;
+    const minus = control.querySelector('.capsule-quantity-minus');
+    const countLabel = control.querySelector('.capsule-quantity-count');
+    const plus = control.querySelector('.capsule-quantity-plus');
+    if (countLabel) countLabel.textContent = String(count);
+    if (minus) minus.disabled = count === 0;
+    if (plus) plus.disabled = !canChooseCapsules;
+    control.hidden = !canChooseCapsules;
+    control.setAttribute('aria-label', variety + ', odabrano ' + count + ' kutija');
 
-    let control = selectedDisplay.nextElementSibling;
-    if (!control || !control.classList.contains('capsule-quantity-control')) {
-      control = document.createElement('div');
-      control.className = 'capsule-quantity-control';
-      control.innerHTML = '<button type="button" class="capsule-quantity-minus" aria-label="Smanji količinu">−</button><span class="capsule-quantity-count" aria-live="polite">0</span><button type="button" class="capsule-quantity-plus" aria-label="Povećaj količinu">+</button>';
-      selectedDisplay.insertAdjacentElement('afterend', control);
-
-      control.querySelector('.capsule-quantity-plus').addEventListener('click', () => button.click());
-      control.querySelector('.capsule-quantity-minus').addEventListener('click', () => {
+    // Veži kontrole i kada su već prisutne u HTML-u.
+    if (control.dataset.quantityListenersBound !== 'true') {
+      if (plus) plus.addEventListener('click', event => {
+        event.preventDefault();
+        button.click();
+      });
+      if (minus) minus.addEventListener('click', event => {
+        event.preventDefault();
         const current = selectedCapsules.get(variety) || 0;
         if (current <= 0) return;
         if (current === 1) selectedCapsules.delete(variety);
@@ -320,16 +322,11 @@ function updateCapsuleButtonFeedback() {
           if (status) status.textContent = '';
         }
       });
+      control.dataset.quantityListenersBound = 'true';
     }
-
-    const minus = control.querySelector('.capsule-quantity-minus');
-    const countLabel = control.querySelector('.capsule-quantity-count');
-    if (countLabel) countLabel.textContent = String(count);
-    if (minus) minus.disabled = count === 0;
-    control.hidden = !canChooseCapsules;
-    control.setAttribute('aria-label', variety + ', odabrano ' + count + ' kutija');
   });
 }
+
 const capsuleSelectionStorageKey = 'zfk-selected-capsules-v1';
 
 function saveCapsuleSelections() {
