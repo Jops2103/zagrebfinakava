@@ -5107,3 +5107,8 @@ body {
   max-width: none;
   margin: 0;
 }
+
+
+/* Ukupan broj odabranih kutija kapsula prikazan ispod galerije. */
+#kapsule .capsule-total-selected{max-width:1120px;margin:22px auto 18px;padding:13px 18px;background:#003da5;color:#fff;border-radius:4px;text-align:center;font-size:16px;font-weight:800;letter-spacing:.2px;}
+#kapsule .capsule-total-selected[hidden]{display:none;}
