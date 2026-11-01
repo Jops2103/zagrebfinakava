@@ -4191,6 +4191,8 @@ body {
 
 
 /* Welcome prompt: distinguish new visitors from existing customers. */
+/* Match the soft grey background used by the Dom / Apartman / Uredski prostor choices in the finder. */
+.customer-gateway{background-color:rgba(224,228,232,.86)}
 .customer-gateway{display:inline-block;width:fit-content;max-width:100%;box-sizing:border-box;margin:25px 0 14px;padding:18px 20px;border:1px solid #c9c7c1;border-radius:4px;background:rgba(255,255,255,.48)}
 .customer-gateway-question{margin:0 0 13px;font-size:14px;font-weight:800;color:#222}
 .customer-gateway-actions{display:flex;gap:10px;flex-wrap:wrap}
