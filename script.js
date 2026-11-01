@@ -610,16 +610,17 @@ document.querySelectorAll('.capsule-select').forEach(button => {
       return;
     }
     const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
-    // A model selected in the inquiry form is authoritative; keep the appliance
-    // order context in sync before deciding whether the visitor must go back.
+    // New customers must select an appliance before choosing capsules. A capsule-only
+    // topic must never bypass the appliance requirement; existing customers use the
+    // dedicated customer-change flow handled above.
     const selectedModelValue = capsuleModelField ? String(capsuleModelField.value || '').trim() : '';
     if (selectedModelValue && selectedModelValue !== 'Odaberite aparat' && topicField) {
       topicField.value = 'Želim aparat uz mjesečnu kupnju kapsula';
     }
-    const minimum = isCapsuleOnlyOrder() ? 0 : capsulePackageLimit();
-    const addingExtras = !isCapsuleOnlyOrder() && wantsAdditionalCapsules() && selectedBoxes >= minimum;
+    const minimum = capsulePackageLimit();
+    const addingExtras = wantsAdditionalCapsules() && selectedBoxes >= minimum;
 
-    if (!isCapsuleOnlyOrder() && !minimum) {
+    if (!minimum) {
       if (status) status.textContent = 'Najprije odaberite aparat u odjeljku „ODABERITE SVOJ MODEL”, a zatim odaberite kapsule.';
       const modelSection = document.getElementById('ponuda');
       if (modelSection) {
@@ -738,21 +739,19 @@ if (capsuleFromDetail) {
 }
 updateSelectedCapsuleField();
 
-// A capsule chosen on its detail page adds one box without clearing earlier choices.
+// A capsule detail-page action must also respect the appliance-first rule.
+// Do not add a capsule automatically: return visitors to appliance selection first.
 if (capsuleFromDetail && capsuleField && topicField) {
-  const matchingCapsuleButton = Array.from(document.querySelectorAll('.capsule-select'))
-    .find(button => button.dataset.capsule === capsuleFromDetail);
-  if (matchingCapsuleButton) {
-    topicField.value = 'Želim naručiti kapsule';
-    selectedCapsules.set(capsuleFromDetail, (selectedCapsules.get(capsuleFromDetail) || 0) + 1);
-    saveCapsuleSelections();
-    updateSelectedCapsuleField();
-    if (status) status.textContent = '';
-    capsuleDetailParams.delete('odaberiKapsulu');
-    const remainingQuery = capsuleDetailParams.toString();
-    const cleanUrl = window.location.pathname + (remainingQuery ? '?' + remainingQuery : '') + window.location.hash;
-    window.history.replaceState({}, document.title, cleanUrl);
-  }
+  selectedCapsules.clear();
+  saveCapsuleSelections();
+  updateSelectedCapsuleField();
+  if (status) status.textContent = 'Kapsule se naručuju uz odabrani aparat. Najprije odaberite aparat; postojeći korisnici mogu kapsule naručiti zasebno.';
+  const modelSection = document.getElementById('ponuda');
+  if (modelSection) window.setTimeout(() => modelSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
+  capsuleDetailParams.delete('odaberiKapsulu');
+  const remainingQuery = capsuleDetailParams.toString();
+  const cleanUrl = window.location.pathname + (remainingQuery ? '?' + remainingQuery : '') + window.location.hash;
+  window.history.replaceState({}, document.title, cleanUrl);
 }
 
 
