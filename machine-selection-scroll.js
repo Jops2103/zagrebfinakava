@@ -12,15 +12,15 @@
   function syncChosenMachine(button) {
     if (document.body.dataset.customerChangeMode === 'true') return false;
     const rawModel = String(button.dataset.model || '');
-    const family = /LB\\s*1300/i.test(rawModel) ? 'LB1300'
-      : /LB\\s*2600/i.test(rawModel) ? 'LB2600' : '';
+    const family = /LB\s*1300/i.test(rawModel) ? 'LB1300'
+      : /LB\s*2600/i.test(rawModel) ? 'LB2600' : '';
     if (!family) return false;
 
     const modelField = document.getElementById('model');
     const topicField = document.getElementById('topic');
     if (!modelField) return false;
     const option = Array.from(modelField.options).find(item =>
-      family === 'LB1300' ? /LB\\s*1300/i.test(item.textContent) : /LB\\s*2600/i.test(item.textContent)
+      family === 'LB1300' ? /LB\s*1300/i.test(item.textContent) : /LB\s*2600/i.test(item.textContent)
     );
     if (!option) return false;
 
