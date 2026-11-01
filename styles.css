@@ -5086,3 +5086,7 @@ body {
     margin-top: 7px;
   }
 }
+
+
+/* Ensure the customer selector keeps the same soft grey background as the finder options. */
+.customer-gateway { background: rgba(224,228,232,.86) !important; }
