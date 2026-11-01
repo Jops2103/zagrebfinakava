@@ -4237,14 +4237,14 @@ body {
 
 /* Customer-status links: red for new users, Lavazza blue for existing users. */
 .customer-gateway-actions a[data-customer-route="new"] {
-  background: #c62828;
-  border-color: #c62828;
+  background: #79502b;
+  border-color: #79502b;
   color: #fff;
 }
 .customer-gateway-actions a[data-customer-route="new"]:hover,
 .customer-gateway-actions a[data-customer-route="new"]:focus-visible {
-  background: #a91f1f;
-  border-color: #a91f1f;
+  background: #5f3d20;
+  border-color: #5f3d20;
   color: #fff;
 }
 .customer-gateway-actions a[data-customer-route="existing"] {
