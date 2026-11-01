@@ -274,7 +274,13 @@ const selectedCapsules = new Map();
 
 function updateCapsuleButtonFeedback() {
   const selectedModel = capsuleModelField ? String(capsuleModelField.value || '').trim() : '';
-  const canChooseCapsules = !!selectedModel && selectedModel !== 'Odaberite aparat';
+  const existingMode = document.body.dataset.customerChangeMode === 'true';
+  const existingQuantity = document.getElementById('change-quantity');
+  const existingModel = document.getElementById('change-model');
+  const canChooseCapsules = existingMode
+    ? !!(existingQuantity && (existingQuantity.value === 'same' || Number(existingQuantity.value) >= 100) &&
+         existingModel && existingModel.value)
+    : !!selectedModel && selectedModel !== 'Odaberite aparat';
 
   document.querySelectorAll('#kapsule .blue-capsule-gallery .capsule-select').forEach(button => {
     const variety = button.dataset.capsule;
@@ -376,19 +382,26 @@ function changeCapsuleQuantity(variety, delta) {
   updateCapsuleButtonFeedback();
 }
 
-// Capture clicks at the document level so the controls work even if the gallery
-// is re-rendered or the legacy hidden buttons are not initialized.
-document.addEventListener('click', event => {
-  const controlButton = event.target.closest('#kapsule .capsule-quantity-control button');
-  if (!controlButton) return;
-  event.preventDefault();
-  event.stopImmediatePropagation();
-  const gallery = controlButton.closest('.blue-capsule-gallery');
+// Bind directly to each visible control. This avoids relying on delegated
+// document clicks, which can be intercepted by other page-level handlers.
+document.querySelectorAll('#kapsule .capsule-quantity-control').forEach(control => {
+  if (control.dataset.directQuantityBound === 'true') return;
+  const gallery = control.closest('.blue-capsule-gallery');
   const sourceButton = gallery && gallery.querySelector('.capsule-select');
   const variety = sourceButton && sourceButton.dataset.capsule;
   if (!variety) return;
-  changeCapsuleQuantity(variety, controlButton.classList.contains('capsule-quantity-plus') ? 1 : -1);
-}, true);
+  const plus = control.querySelector('.capsule-quantity-plus');
+  const minus = control.querySelector('.capsule-quantity-minus');
+  if (plus) plus.addEventListener('click', event => {
+    event.preventDefault();
+    changeCapsuleQuantity(variety, 1);
+  });
+  if (minus) minus.addEventListener('click', event => {
+    event.preventDefault();
+    changeCapsuleQuantity(variety, -1);
+  });
+  control.dataset.directQuantityBound = 'true';
+});
 
 const capsuleSelectionStorageKey = 'zfk-selected-capsules-v1';
 
