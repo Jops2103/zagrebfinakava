@@ -19,6 +19,24 @@
   }, { once: true });
 })();
 
+// Capture quantity-button clicks at the document level before any other page
+// handler can swallow them. This remains effective even if a later initializer
+// in the main script encounters an unrelated runtime error.
+document.addEventListener('click', function(event) {
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  const button = target.closest('#kapsule .capsule-quantity-plus, #kapsule .capsule-quantity-minus');
+  if (!button || button.disabled) return;
+  const control = button.closest('.capsule-quantity-control');
+  const gallery = control && control.closest('.blue-capsule-gallery');
+  const source = gallery && gallery.querySelector('.capsule-select');
+  const variety = source && source.dataset.capsule;
+  if (!variety || typeof changeCapsuleQuantity !== 'function') return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  changeCapsuleQuantity(variety, button.classList.contains('capsule-quantity-plus') ? 1 : -1);
+}, true);
+
 const form = document.getElementById('order-form');
 // Keep the new-customer form configured for Web3Forms.
 if (form) {
