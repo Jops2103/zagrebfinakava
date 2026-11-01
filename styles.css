@@ -5090,3 +5090,20 @@ body {
 
 /* Ensure the customer selector keeps the same soft grey background as the finder options. */
 .customer-gateway { background: rgba(224,228,232,.86) !important; }
+
+
+/* Keep the capsule notes together, one below the other, across the full gallery width. */
+#kapsule .capsule-section-notes {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: 100%;
+  margin: 8px 0 0;
+}
+#kapsule .capsule-section-notes .capsule-section-note {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
