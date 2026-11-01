@@ -273,13 +273,8 @@ const additionalCapsulesChoices = document.querySelectorAll('input[name="Dodatne
 const selectedCapsules = new Map();
 
 function updateCapsuleButtonFeedback() {
-  const totalSelected = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
-  const totalDisplay = document.getElementById('capsule-total-selected');
   const selectedModel = capsuleModelField ? String(capsuleModelField.value || '').trim() : '';
-  if (totalDisplay) {
-    totalDisplay.textContent = 'Odabrano: ' + totalSelected;
-    totalDisplay.hidden = !selectedModel || selectedModel === 'Odaberite aparat';
-  }
+  const canChooseCapsules = !!selectedModel && selectedModel !== 'Odaberite aparat';
   document.querySelectorAll('.capsule-select').forEach(button => {
     if (!button.dataset.originalLabel) button.dataset.originalLabel = button.textContent.trim();
     const variety = button.dataset.capsule;
@@ -305,7 +300,7 @@ function updateCapsuleButtonFeedback() {
     if (!control || !control.classList.contains('capsule-quantity-control')) {
       control = document.createElement('div');
       control.className = 'capsule-quantity-control';
-      control.innerHTML = '<button type="button" class="capsule-quantity-minus" aria-label="Smanji količinu">−</button><button type="button" class="capsule-quantity-plus" aria-label="Povećaj količinu">+</button>';
+      control.innerHTML = '<button type="button" class="capsule-quantity-minus" aria-label="Smanji količinu">−</button><span class="capsule-quantity-count" aria-live="polite">0</span><button type="button" class="capsule-quantity-plus" aria-label="Povećaj količinu">+</button>';
       selectedDisplay.insertAdjacentElement('afterend', control);
 
       control.querySelector('.capsule-quantity-plus').addEventListener('click', () => button.click());
@@ -328,8 +323,9 @@ function updateCapsuleButtonFeedback() {
 
     const minus = control.querySelector('.capsule-quantity-minus');
     const countLabel = control.querySelector('.capsule-quantity-count');
-    if (countLabel) countLabel.textContent = 'Odabrano: ' + count;
+    if (countLabel) countLabel.textContent = String(count);
     if (minus) minus.disabled = count === 0;
+    control.hidden = !canChooseCapsules;
     control.setAttribute('aria-label', variety + ', odabrano ' + count + ' kutija');
   });
 }
