@@ -273,6 +273,13 @@ const additionalCapsulesChoices = document.querySelectorAll('input[name="Dodatne
 const selectedCapsules = new Map();
 
 function updateCapsuleButtonFeedback() {
+  const totalSelected = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
+  const totalDisplay = document.getElementById('capsule-total-selected');
+  const selectedModel = capsuleModelField ? String(capsuleModelField.value || '').trim() : '';
+  if (totalDisplay) {
+    totalDisplay.textContent = 'Odabrano: ' + totalSelected;
+    totalDisplay.hidden = !selectedModel || selectedModel === 'Odaberite aparat';
+  }
   document.querySelectorAll('.capsule-select').forEach(button => {
     if (!button.dataset.originalLabel) button.dataset.originalLabel = button.textContent.trim();
     const variety = button.dataset.capsule;
