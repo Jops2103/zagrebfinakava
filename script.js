@@ -275,6 +275,7 @@ const selectedCapsules = new Map();
 function updateCapsuleButtonFeedback() {
   const selectedModel = capsuleModelField ? String(capsuleModelField.value || '').trim() : '';
   const canChooseCapsules = !!selectedModel && selectedModel !== 'Odaberite aparat';
+
   document.querySelectorAll('.capsule-select').forEach(button => {
     if (!button.dataset.originalLabel) button.dataset.originalLabel = button.textContent.trim();
     const variety = button.dataset.capsule;
@@ -285,7 +286,7 @@ function updateCapsuleButtonFeedback() {
     button.setAttribute('aria-label', variety + ': odabrano ' + count + ' kutija. Za promjenu koristite tipke minus i plus.');
     button.classList.add('capsule-select-source');
 
-    // Replace the visible “Odaberi kapsule” button with a blue selected-count banner.
+    // Plava oznaka "Odabrano" i zaseban brojač za svaku vrstu kapsula.
     let selectedDisplay = button.nextElementSibling;
     if (!selectedDisplay || !selectedDisplay.classList.contains('capsule-selected-count')) {
       selectedDisplay = document.createElement('div');
@@ -293,9 +294,9 @@ function updateCapsuleButtonFeedback() {
       selectedDisplay.setAttribute('aria-live', 'polite');
       button.insertAdjacentElement('afterend', selectedDisplay);
     }
-    selectedDisplay.textContent = 'Odabrano: ' + count;
+    selectedDisplay.textContent = 'Odabrano';
+    selectedDisplay.hidden = !canChooseCapsules;
 
-    // Keep only the minus/plus controls below the blue count banner.
     let control = selectedDisplay.nextElementSibling;
     if (!control || !control.classList.contains('capsule-quantity-control')) {
       control = document.createElement('div');
@@ -329,7 +330,6 @@ function updateCapsuleButtonFeedback() {
     control.setAttribute('aria-label', variety + ', odabrano ' + count + ' kutija');
   });
 }
-
 const capsuleSelectionStorageKey = 'zfk-selected-capsules-v1';
 
 function saveCapsuleSelections() {
