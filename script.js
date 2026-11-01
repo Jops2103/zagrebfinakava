@@ -548,11 +548,23 @@ document.querySelectorAll('.model-select').forEach(button => {
     const noExtra = document.querySelector('input[name="Dodatne kapsule"][value="Ne"]');
     if (noExtra) noExtra.checked = true;
     if (status) status.textContent = '';
-    updateSelectedCapsuleField();
+
+    // Navigate immediately after a machine is selected. Do this before refreshing
+    // capsule/form state so a validation or UI update cannot prevent the scroll.
     const capsuleSection = document.getElementById('kapsule');
-    if (capsuleSection) capsuleSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    const note = document.getElementById('capsule-selection-note');
-    if (note) note.focus?.({ preventScroll: true });
+    const scrollToCapsules = () => {
+      if (!capsuleSection) return;
+      const header = document.querySelector('header');
+      const headerOffset = header ? header.getBoundingClientRect().height : 0;
+      const top = window.scrollY + capsuleSection.getBoundingClientRect().top - headerOffset - 12;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    };
+    scrollToCapsules();
+    window.requestAnimationFrame(() => {
+      updateSelectedCapsuleField();
+      scrollToCapsules();
+      window.setTimeout(scrollToCapsules, 180);
+    });
   });
 });
 
