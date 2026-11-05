@@ -1515,6 +1515,40 @@ function updateChangeCapsuleField(){
   queueRefresh();
 })();
 
+/* Croatian validation messages for required fields and consent checkboxes. */
+(function setCroatianRequiredFieldMessages(){
+  const message = 'Molim Vas, ispunite ovo polje ili stavite kvačicu za nastavak.';
+  const emailMessage = 'Molim Vas, unesite ispravnu e-mail adresu za nastavak.';
+  const forms = [
+    document.getElementById('order-form'),
+    document.getElementById('customer-change-form')
+  ].filter(Boolean);
+
+  forms.forEach(form => {
+    function updateMessage(field) {
+      if (!(field instanceof HTMLElement) || !('setCustomValidity' in field)) return;
+      if (field.type === 'checkbox') {
+        field.setCustomValidity(field.required && !field.checked ? message : '');
+        return;
+      }
+      if (field.required && !String(field.value || '').trim()) {
+        field.setCustomValidity(message);
+      } else if (field.type === 'email' && field.value && field.validity.typeMismatch) {
+        field.setCustomValidity(emailMessage);
+      } else {
+        field.setCustomValidity('');
+      }
+    }
+
+    form.querySelectorAll('input, select, textarea').forEach(field => {
+      updateMessage(field);
+      field.addEventListener('input', () => updateMessage(field));
+      field.addEventListener('change', () => updateMessage(field));
+    });
+    form.addEventListener('invalid', event => updateMessage(event.target), true);
+  });
+})();
+
 /* Submit both ZFK forms through Web3Forms without leaving the page. */
 (function setupWeb3FormsSubmission(){
   const forms = [document.getElementById('order-form'), document.getElementById('customer-change-form')].filter(Boolean);
