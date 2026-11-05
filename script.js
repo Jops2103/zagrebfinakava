@@ -1739,7 +1739,7 @@ function updateChangeCapsuleField(){
         if (databaseResult.test_mode === true) {
           if (statusElement) {
             statusElement.hidden = false;
-            statusElement.textContent = 'Sigurnosna provjera uspješna. Ovo je testna verzija — upit nije spremljen niti je poslan e-mail.';
+            statusElement.textContent = 'Sigurnosna provjera uspješna. Probni upit je spremljen u evidenciju; e-mail nije poslan.';
           }
           if (submitButton) {
             submitButton.disabled = false;
