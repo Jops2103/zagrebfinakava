@@ -47,7 +47,7 @@
    if(email !== ADMIN_EMAIL){ showStatus("loginStatus","Ova adresa nije odobrena za administratorski pristup.","error"); return; }
    $("sendLink").disabled = true;
    showStatus("loginStatus","Šaljem sigurnu poveznicu za prijavu…");
-   const {error} = await client.auth.signInWithOtp({email, options:{emailRedirectTo:location.href.split("#")[0], shouldCreateUser:false}});
+   const {error} = await client.auth.signInWithOtp({email, options:{emailRedirectTo:"https://zagrebfinakava.pages.dev/admin.html", shouldCreateUser:false}});
    $("sendLink").disabled = false;
    showStatus("loginStatus",error ? "Slanje nije uspjelo: "+error.message : "Ako je Supabase Auth ispravno konfiguriran za ovu adresu, stići će e-mail s poveznicom za prijavu. Otvori poveznicu na ovom uređaju.",""+(error?"error":"ok"));
  });
