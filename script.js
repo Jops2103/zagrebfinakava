@@ -1519,6 +1519,63 @@ function updateChangeCapsuleField(){
 (function setupWeb3FormsSubmission(){
   const forms = [document.getElementById('order-form'), document.getElementById('customer-change-form')].filter(Boolean);
   const supabaseFunctionUrl = 'https://wbupmpqymavxjxatwzsh.supabase.co/functions/v1/zfk-customer-requests';
+  const turnstileSitekey = '0x4AAAAAAF1Eb1ddCsGIbIWn';
+  const turnstileWidgetIds = new WeakMap();
+  let turnstileScriptPromise;
+
+  function loadTurnstileScript() {
+    if (window.turnstile) return Promise.resolve();
+    if (!turnstileScriptPromise) {
+      turnstileScriptPromise = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+        script.async = true;
+        script.defer = true;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Sigurnosna provjera trenutačno nije dostupna.'));
+        document.head.appendChild(script);
+      });
+    }
+    return turnstileScriptPromise;
+  }
+
+  async function ensureTurnstileWidget(form) {
+    const container = form.querySelector('.cf-turnstile');
+    if (!container) throw new Error('Nedostaje sigurnosna provjera u obrascu.');
+    await loadTurnstileScript();
+    let widgetId = turnstileWidgetIds.get(form);
+    if (widgetId === undefined) {
+      widgetId = window.turnstile.render(container, {
+        sitekey: turnstileSitekey,
+        theme: 'auto',
+        'error-callback': () => {
+          const statusElement = document.getElementById(form.id === 'customer-change-form' ? 'customer-change-status' : 'status');
+          if (statusElement) statusElement.textContent = 'Sigurnosna provjera nije uspjela. Osvježite provjeru i pokušajte ponovno.';
+        }
+      });
+      turnstileWidgetIds.set(form, widgetId);
+    }
+    return widgetId;
+  }
+
+  function resetTurnstileWidget(form) {
+    const widgetId = turnstileWidgetIds.get(form);
+    if (widgetId !== undefined && window.turnstile) {
+      try { window.turnstile.reset(widgetId); } catch (error) { console.warn('Turnstile reset failed', error); }
+    }
+  }
+
+  // Render the new-customer widget immediately. The existing-customer form is
+  // initially hidden, so render it only after that section has been opened.
+  const newCustomerForm = forms.find(form => form.id === 'order-form');
+  if (newCustomerForm) ensureTurnstileWidget(newCustomerForm).catch(error => console.warn(error));
+  const existingRoute = document.querySelector('[data-customer-route="existing"]');
+  const existingCustomerForm = forms.find(form => form.id === 'customer-change-form');
+  if (existingRoute && existingCustomerForm) {
+    existingRoute.addEventListener('click', () => {
+      window.setTimeout(() => ensureTurnstileWidget(existingCustomerForm).catch(error => console.warn(error)), 0);
+    });
+  }
 
   function canonicalMachine(value) {
     const normalized = String(value || '').trim();
@@ -1609,6 +1666,28 @@ function updateChangeCapsuleField(){
 
       const isExisting = form.id === 'customer-change-form';
       const statusElement = document.getElementById(isExisting ? 'customer-change-status' : 'status');
+      let turnstileWidgetId;
+      let turnstileToken = '';
+      try {
+        turnstileWidgetId = await ensureTurnstileWidget(form);
+        turnstileToken = window.turnstile.getResponse(turnstileWidgetId) || '';
+      } catch (error) {
+        if (statusElement) {
+          statusElement.hidden = false;
+          statusElement.textContent = error.message || 'Sigurnosna provjera nije dostupna. Pokušajte ponovno.';
+        }
+        return;
+      }
+      if (!turnstileToken) {
+        if (statusElement) {
+          statusElement.hidden = false;
+          statusElement.textContent = 'Molimo dovršite sigurnosnu provjeru prije slanja obrasca.';
+        }
+        const widgetContainer = form.querySelector('.turnstile-field');
+        if (widgetContainer) widgetContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      const statusElement = document.getElementById(isExisting ? 'customer-change-status' : 'status');
       const successElement = isExisting ? statusElement : document.getElementById('success-message');
       const submitButton = form.querySelector('button[type="submit"]');
       const originalButtonText = submitButton ? submitButton.innerHTML : '';
@@ -1631,6 +1710,7 @@ function updateChangeCapsuleField(){
       let savedInSupabase = false;
       try {
         const payload = makeSupabasePayload(form, isExisting);
+        payload.turnstile_token = turnstileToken;
         const isGeneralInquiry = !isExisting &&
           payload.request_topic === 'Imam pitanje o ponudi';
         const isCapsuleOrder = !isExisting &&
@@ -1642,14 +1722,31 @@ function updateChangeCapsuleField(){
           throw new Error('Nedostaju obavezni podaci za spremanje zahtjeva.');
         }
 
-        const databaseResponse = await fetch(supabaseFunctionUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify(payload)
-        });
+        let databaseResponse;
+        try {
+          databaseResponse = await fetch(supabaseFunctionUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } finally {
+          // Turnstile tokens are single-use, so always reset after a server attempt.
+          resetTurnstileWidget(form);
+        }
         const databaseResult = await databaseResponse.json().catch(() => ({}));
         if (!databaseResponse.ok || databaseResult.success !== true) {
           throw new Error(databaseResult.message || 'Spremanje zahtjeva u evidenciju nije uspjelo.');
+        }
+        if (databaseResult.test_mode === true) {
+          if (statusElement) {
+            statusElement.hidden = false;
+            statusElement.textContent = 'Sigurnosna provjera uspješna. Ovo je testna verzija — upit nije spremljen niti je poslan e-mail.';
+          }
+          if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.removeAttribute('aria-busy');
+          }
+          return;
         }
         savedInSupabase = true;
 
