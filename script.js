@@ -1517,7 +1517,8 @@ function updateChangeCapsuleField(){
 
 /* Croatian validation messages for required fields and consent checkboxes. */
 (function setCroatianRequiredFieldMessages(){
-  const message = 'Molim Vas, ispunite ovo polje ili stavite kvačicu za nastavak.';
+  const message = 'Molim Vas, ispunite ovo polje za nastavak.';
+  const checkboxMessage = 'Molim Vas, stavite kvačicu za nastavak.';
   const emailMessage = 'Molim Vas, unesite ispravnu e-mail adresu za nastavak.';
   const forms = [
     document.getElementById('order-form'),
@@ -1528,7 +1529,7 @@ function updateChangeCapsuleField(){
     function updateMessage(field) {
       if (!(field instanceof HTMLElement) || !('setCustomValidity' in field)) return;
       if (field.type === 'checkbox') {
-        field.setCustomValidity(field.required && !field.checked ? message : '');
+        field.setCustomValidity(field.required && !field.checked ? checkboxMessage : '');
         return;
       }
       if (field.required && !String(field.value || '').trim()) {
