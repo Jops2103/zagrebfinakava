@@ -27,7 +27,6 @@
       <h2>Promijenite mjesečnu <span>količinu kapsula ili vrstu aparata za kavu</span></h2>
       <p>Želite li povećati ili smanjiti svoju redovitu mjesečnu narudžbu ili promijeniti vrstu aparata za kavu? Promjena stupa na snagu nakon što potvrdimo nove uvjete s vama.</p>
     </div>
-    <p id="customer-change-status" class="success-message" role="status" aria-live="polite" hidden></p>
     <form id="customer-change-form" action="https://api.web3forms.com/submit" method="POST" class="customer-change-form">
       <input type="hidden" name="access_key" value="2151c9a7-37e9-467d-8846-8c0bbacb9889">
       <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" class="honeypot" style="display:none">
@@ -44,6 +43,7 @@
       <label class="consent full"><input id="change-consent" type="checkbox" name="Obavijest o privatnosti" value="Pročitao/la sam obavijest o obradi osobnih podataka" required> Pročitao/la sam <a href="privatnost.html">Izjavu o privatnosti i korištenju osobnih podataka ZFK-a</a> te razumijem da će se podaci koristiti za obradu ovog zahtjeva. *</label>
       <p class="form-note full">Slanje zahtjeva ne mijenja automatski postojeći dogovor. Potvrdit ćemo vam novu količinu i datum početka promjene.</p>
       <div class="field full turnstile-field"><div class="cf-turnstile" data-turnstile-form="existing"></div><p class="form-note">Sigurnosna provjera prije slanja zahtjeva.</p></div>
+      <p id="customer-change-status" class="success-message" role="status" aria-live="polite" hidden></p>
       <div class="full form-actions"><button class="btn primary" type="submit">Zatraži promjenu količine <span aria-hidden="true">↗</span></button></div>
     </form>
   </section>
