@@ -1553,6 +1553,7 @@ function updateChangeCapsuleField(){
       const quantity = isApplianceOrder || isCapsuleOrder ? selectedQuantity : 0;
       return {
         request_type: 'new',
+        honeypot: !!form.querySelector('input[name="botcheck"]')?.checked,
         request_topic: topic,
         name: document.getElementById('name')?.value.trim(),
         email: document.getElementById('email')?.value.trim(),
@@ -1577,6 +1578,7 @@ function updateChangeCapsuleField(){
     const quantityValue = document.getElementById('change-quantity')?.value || 'same';
     return {
       request_type: 'existing',
+      honeypot: !!form.querySelector('input[name="botcheck"]')?.checked,
       name: document.getElementById('change-name')?.value.trim(),
       email: document.getElementById('change-email')?.value.trim(),
       machine: desiredMachine,
