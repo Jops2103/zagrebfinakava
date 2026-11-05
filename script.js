@@ -1518,7 +1518,7 @@ function updateChangeCapsuleField(){
 /* Submit both ZFK forms through Web3Forms without leaving the page. */
 (function setupWeb3FormsSubmission(){
   const forms = [document.getElementById('order-form'), document.getElementById('customer-change-form')].filter(Boolean);
-  const supabaseFunctionUrl = 'https://wbupmpqymavxjxatwzsh.supabase.co/functions/v1/zfk-customer-requests';
+  const supabaseFunctionUrl = 'https://wbupmpqymavxjxatwzsh.supabase.co/functions/v1/zfk-turnstile-check';
   const turnstileSitekey = '0x4AAAAAAF1Eb1ddCsGIbIWn';
   const turnstileWidgetIds = new WeakMap();
   let turnstileScriptPromise;
