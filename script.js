@@ -1687,7 +1687,6 @@ function updateChangeCapsuleField(){
         if (widgetContainer) widgetContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
-      const statusElement = document.getElementById(isExisting ? 'customer-change-status' : 'status');
       const successElement = isExisting ? statusElement : document.getElementById('success-message');
       const submitButton = form.querySelector('button[type="submit"]');
       const originalButtonText = submitButton ? submitButton.innerHTML : '';
