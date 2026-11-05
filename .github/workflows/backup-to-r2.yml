@@ -1,0 +1,51 @@
+name: Backup website to Cloudflare R2
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Create website backup archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p backup
+          ARCHIVE="backup/zagrebfinakava-${GITHUB_SHA}.tar.gz"
+          tar -czf "$ARCHIVE" \
+            --exclude='./.git' \
+            --exclude='./node_modules' \
+            --exclude='./.env' \
+            --exclude='./.env.*' \
+            --exclude='./backup' \
+            .
+          echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
+          echo "OBJECT_KEY=backups/$(date -u +%Y/%m/%d)/zagrebfinakava-${GITHUB_SHA}.tar.gz" >> "$GITHUB_ENV"
+
+      - name: Upload backup to Cloudflare R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: "true"
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          set -euo pipefail
+          aws s3 cp "$ARCHIVE" "s3://${R2_BUCKET}/${OBJECT_KEY}" \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
+            --region auto \
+            --only-show-errors
+          echo "Backup uploaded: ${OBJECT_KEY}"
