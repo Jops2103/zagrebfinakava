@@ -43,6 +43,7 @@
       <div class="field full"><label for="change-message">Poruka</label><textarea id="change-message" name="Poruka" rows="3" placeholder="Primjerice, od kojeg mjeseca želite promjenu? Trebate li i koliko mlijeka i čokolade u prahu te dodataka poput čaša, žličica i šećera?"></textarea></div>
       <label class="consent full"><input id="change-consent" type="checkbox" name="Obavijest o privatnosti" value="Pročitao/la sam obavijest o obradi osobnih podataka" required> Pročitao/la sam <a href="privatnost.html">Izjavu o privatnosti i korištenju osobnih podataka ZFK-a</a> te razumijem da će se podaci koristiti za obradu ovog zahtjeva. *</label>
       <p class="form-note full">Slanje zahtjeva ne mijenja automatski postojeći dogovor. Potvrdit ćemo vam novu količinu i datum početka promjene.</p>
+      <div class="field full turnstile-field"><div class="cf-turnstile" data-turnstile-form="existing"></div><p class="form-note">Sigurnosna provjera prije slanja zahtjeva.</p></div>
       <div class="full form-actions"><button class="btn primary" type="submit">Zatraži promjenu količine <span aria-hidden="true">↗</span></button></div>
     </form>
   </section>
@@ -328,6 +329,7 @@
       <label class="consent full"><input id="consent" type="checkbox" name="Suglasnost za obradu osobnih podataka" value="Pročitana obavijest i prihvaćena obrada osobnih podataka" required> Pročitao/la sam informacije koje su mi pružene u skladu s člancima 13. i 14. Uredbe (EU) 2016/679 te pristajem na obradu svojih osobnih podataka. <strong>(Obavezno označiti)</strong> *</label>
       <p class="form-note full privacy-reference">Pročitajte <a href="privatnost.html">Izjavu o privatnosti i korištenju osobnih podataka ZFK-a</a>.</p>
       <p class="form-note full">Podaci se šalju sigurnom vezom radi obrade vašeg upita.</p>
+      <div class="field full turnstile-field"><div class="cf-turnstile" data-turnstile-form="new"></div><p class="form-note">Sigurnosna provjera prije slanja upita.</p></div>
       <div class="full form-actions"><button class="btn primary" type="submit" aria-disabled="true">Pošalji upit <span>↗</span></button><p id="status" class="status" role="status"></p></div>
     </form>
     <div class="email-order-note">
