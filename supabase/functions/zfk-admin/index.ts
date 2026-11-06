@@ -6,18 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, OPTIONS",
   "Vary": "Origin",
 };
-function tokenAal(token: string): string {
-  const parts = token.split(".");
-  if (parts.length !== 3) return "aal1";
-  const encoded = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-  const padded = encoded.padEnd(Math.ceil(encoded.length / 4) * 4, "=");
-  try {
-    const claims = JSON.parse(atob(padded));
-    return typeof claims.aal === "string" ? claims.aal : "aal1";
-  } catch {
-    return "aal1";
-  }
-}
 function respond(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" } });
 }
@@ -38,7 +26,6 @@ Deno.serve(async (req: Request) => {
   if (!userResponse.ok) return respond({ error: "Prijava nije valjana. Prijavite se ponovno." }, 401);
   const user = await userResponse.json();
   if (String(user.email ?? "").trim().toLowerCase() !== adminEmail) return respond({ error: "Ova e-mail adresa nema administratorski pristup." }, 403);
-  if (tokenAal(match[1]) !== "aal2") return respond({ error: "Za pristup administraciji potrebna je dodatna potvrda putem aplikacije za autentifikaciju." }, 403);
   async function readTable(path: string) {
     const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } });
     if (!response.ok) throw new Error(`Čitanje evidencije nije uspjelo (${response.status}).`);
