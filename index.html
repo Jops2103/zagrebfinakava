@@ -12,6 +12,7 @@
   <link rel="preconnect" href="https://www.lavazza.it">
   <link rel="preconnect" href="https://store.lavazza.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <link rel="stylesheet" href="styles.css?v=20261101-capsule-controls-1">
 </head>
 <body>
@@ -43,6 +44,7 @@
       <div class="field full"><label for="change-message">Poruka</label><textarea id="change-message" name="Poruka" rows="3" placeholder="Primjerice, od kojeg mjeseca želite promjenu? Trebate li i koliko mlijeka i čokolade u prahu te dodataka poput čaša, žličica i šećera?"></textarea></div>
       <label class="consent full"><input id="change-consent" type="checkbox" name="Obavijest o privatnosti" value="Pročitao/la sam obavijest o obradi osobnih podataka" required> Pročitao/la sam <a href="privatnost.html">Izjavu o privatnosti i korištenju osobnih podataka ZFK-a</a> te razumijem da će se podaci koristiti za obradu ovog zahtjeva. *</label>
       <p class="form-note full">Slanje zahtjeva ne mijenja automatski postojeći dogovor. Potvrdit ćemo vam novu količinu i datum početka promjene.</p>
+      <div class="full turnstile-field"><div class="cf-turnstile" data-sitekey="0x4AAAAAAF1Eb1ddCsGIbIWn"></div><p class="form-note">Dovršite sigurnosnu provjeru prije slanja upita.</p></div>
       <div class="full form-actions"><button class="btn primary" type="submit">Zatraži promjenu količine <span aria-hidden="true">↗</span></button></div>
     </form>
   </section>
@@ -328,6 +330,7 @@
       <label class="consent full"><input id="consent" type="checkbox" name="Suglasnost za obradu osobnih podataka" value="Pročitana obavijest i prihvaćena obrada osobnih podataka" required> Pročitao/la sam informacije koje su mi pružene u skladu s člancima 13. i 14. Uredbe (EU) 2016/679 te pristajem na obradu svojih osobnih podataka. <strong>(Obavezno označiti)</strong> *</label>
       <p class="form-note full privacy-reference">Pročitajte <a href="privatnost.html">Izjavu o privatnosti i korištenju osobnih podataka ZFK-a</a>.</p>
       <p class="form-note full">Podaci se šalju sigurnom vezom radi obrade vašeg upita.</p>
+      <div class="full turnstile-field"><div class="cf-turnstile" data-sitekey="0x4AAAAAAF1Eb1ddCsGIbIWn"></div><p class="form-note">Dovršite sigurnosnu provjeru prije slanja upita.</p></div>
       <div class="full form-actions"><button class="btn primary" type="submit" aria-disabled="true">Pošalji upit <span>↗</span></button><p id="status" class="status" role="status"></p></div>
     </form>
     <div class="email-order-note">
