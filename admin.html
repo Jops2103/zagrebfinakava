@@ -105,10 +105,10 @@
    let subject="";
    let body="";
    if(type==="confirmed"){
-     const machine=String(machine(customer?.current_machine||request.requested_machine||"dogovoreni aparat"));
+     const machineName=machine(customer?.current_machine||request.requested_machine||"dogovoreni aparat");
      const qty=customer?.confirmed_monthly_capsules ?? request.requested_monthly_capsules ?? "dogovorena količina";
      subject="Potvrda dogovora – Zagreb Fina Kava";
-     body=greeting+"\n\nPotvrđujemo dogovorene uvjete za Zagreb Fina Kava.\n\nAparat: "+machine+"\nMjesečna količina: "+qty+" kapsula\nCijena po kapsuli: 0,55 €\n\nAko imate pitanja ili želite izmijeniti dogovorene uvjete, slobodno odgovorite na ovu poruku.\n\nLijep pozdrav,\nZagreb Fina Kava\nzagrebfinakava@proton.me";
+     body=greeting+"\n\nPotvrđujemo dogovorene uvjete za Zagreb Fina Kava.\n\nAparat: "+machineName+"\nMjesečna količina: "+qty+" kapsula\nCijena po kapsuli: 0,55 €\n\nAko imate pitanja ili želite izmijeniti dogovorene uvjete, slobodno odgovorite na ovu poruku.\n\nLijep pozdrav,\nZagreb Fina Kava\nzagrebfinakava@proton.me";
    } else {
      subject="Odgovor na vaš upit – Zagreb Fina Kava";
      body=greeting+"\n\nHvala vam na upitu i interesu za Zagreb Fina Kava. Nažalost, trenutačno ne možemo prihvatiti zahtjev pod navedenim uvjetima. Ako želite, odgovorite na ovu poruku pa možemo provjeriti postoji li odgovarajuća alternativa.\n\nLijep pozdrav,\nZagreb Fina Kava\nzagrebfinakava@proton.me";
