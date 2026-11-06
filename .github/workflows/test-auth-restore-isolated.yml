@@ -36,7 +36,7 @@ jobs:
           sudo apt-get install -y postgresql-client-17 gnupg unzip
           curl -fsSL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o /tmp/awscliv2.zip
           unzip -q /tmp/awscliv2.zip -d /tmp
-          sudo /tmp/aws/install
+          sudo /tmp/aws/install --update
           rm -rf /tmp/aws /tmp/awscliv2.zip
           /usr/lib/postgresql/17/bin/pg_restore --version
           gpg --version | head -n 1
