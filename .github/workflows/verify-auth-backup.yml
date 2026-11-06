@@ -75,13 +75,13 @@ jobs:
 
           test -s "$ENCRYPTED_FILE"
           gpg --batch --yes --quiet --pinentry-mode loopback \
-            --passphrase-file <(printf '%s\\n' "$AUTH_BACKUP_PASSPHRASE") \
+            --passphrase-file <(printf '%s\n' "$AUTH_BACKUP_PASSPHRASE") \
             --decrypt --output "$PLAINTEXT_FILE" "$ENCRYPTED_FILE"
 
           test -s "$PLAINTEXT_FILE"
           TOC="$(/usr/lib/postgresql/17/bin/pg_restore --list "$PLAINTEXT_FILE")"
           for table in users identities mfa_factors refresh_tokens; do
-            if ! printf '%s\\n' "$TOC" | grep -Fq "TABLE DATA auth $table "; then
+            if ! printf '%s\n' "$TOC" | grep -Fq "TABLE DATA auth $table "; then
               echo "::error::Decrypted archive is missing expected Auth table data: $table"
               exit 1
             fi
