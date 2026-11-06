@@ -1,0 +1,176 @@
+name: Test isolated Supabase Auth data restore
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  restore-auth-in-temporary-postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: local-temporary-only
+          POSTGRES_DB: auth_restore_validation
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d auth_restore_validation"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - name: Install PostgreSQL 17 client, GnuPG and AWS CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc >/dev/null
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo "$VERSION_CODENAME")-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17 gnupg awscli
+          /usr/lib/postgresql/17/bin/pg_restore --version
+          gpg --version | head -n 1
+          aws --version
+
+      - name: Download and decrypt newest Auth backup
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: "true"
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          AUTH_BACKUP_PASSPHRASE: ${{ secrets.AUTH_BACKUP_PASSPHRASE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          umask 077
+          for name in AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY R2_ACCOUNT_ID R2_BUCKET AUTH_BACKUP_PASSPHRASE; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::A required GitHub Actions secret is missing: $name"
+              exit 1
+            fi
+          done
+
+          WORK_DIR="$(mktemp -d)"
+          echo "AUTH_RESTORE_WORK_DIR=$WORK_DIR" >> "$GITHUB_ENV"
+          ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          aws s3api list-objects-v2 --bucket "$R2_BUCKET" --prefix "backups/auth/" --endpoint-url "$ENDPOINT" --region auto --output json > "$WORK_DIR/list.json"
+
+          OBJECT_KEY="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); xs=[x for x in d.get("Contents",[]) if x.get("Key","").endswith(".dump.gpg")]; xs.sort(key=lambda x:x.get("LastModified","")); print(xs[-1]["Key"] if xs else "")' "$WORK_DIR/list.json")"
+          rm -f "$WORK_DIR/list.json"
+          if [ -z "$OBJECT_KEY" ]; then
+            echo "::error::No encrypted Auth backup was found in R2."
+            exit 1
+          fi
+
+          aws s3 cp "s3://${R2_BUCKET}/${OBJECT_KEY}" "$WORK_DIR/auth.dump.gpg" --endpoint-url "$ENDPOINT" --region auto --only-show-errors
+          gpg --batch --yes --quiet --pinentry-mode loopback --passphrase-file <(printf '%s\n' "$AUTH_BACKUP_PASSPHRASE") --decrypt --output "$WORK_DIR/auth.dump" "$WORK_DIR/auth.dump.gpg"
+          test -s "$WORK_DIR/auth.dump"
+          echo "Encrypted backup downloaded and decrypted in the temporary runner."
+          echo "Archive selected: $OBJECT_KEY"
+
+      - name: Prepare matching table definitions from isolated Supabase test project
+        env:
+          SUPABASE_RESTORE_TEST_DB_URL: ${{ secrets.SUPABASE_RESTORE_TEST_DB_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          if [ -z "${SUPABASE_RESTORE_TEST_DB_URL:-}" ]; then
+            echo "::error::Missing GitHub Actions secret SUPABASE_RESTORE_TEST_DB_URL."
+            exit 1
+          fi
+
+          WORK_DIR="$AUTH_RESTORE_WORK_DIR"
+          SCHEMA_DUMP="$WORK_DIR/auth-table-schema.dump"
+          ENUM_SQL="$WORK_DIR/auth-enums.sql"
+          LOCAL_DB_URL="postgresql://postgres:local-temporary-only@localhost:5432/auth_restore_validation"
+
+          /usr/lib/postgresql/17/bin/pg_dump --schema-only --format=custom --no-owner --no-acl \
+            --table=auth.users --table=auth.identities --table=auth.mfa_factors --table=auth.refresh_tokens \
+            --file="$SCHEMA_DUMP" "$SUPABASE_RESTORE_TEST_DB_URL"
+
+          psql "$SUPABASE_RESTORE_TEST_DB_URL" -X -A -t -v ON_ERROR_STOP=1 -c "
+            SELECT format('CREATE TYPE auth.%I AS ENUM (%s);',
+              t.typname,
+              string_agg(quote_literal(e.enumlabel), ', ' ORDER BY e.enumsortorder))
+            FROM pg_type t
+            JOIN pg_enum e ON e.enumtypid = t.oid
+            JOIN pg_namespace n ON n.oid = t.typnamespace
+            WHERE n.nspname = 'auth'
+              AND t.oid IN (
+                SELECT a.atttypid
+                FROM pg_attribute a
+                WHERE a.attrelid IN (
+                  'auth.users'::regclass,
+                  'auth.identities'::regclass,
+                  'auth.mfa_factors'::regclass,
+                  'auth.refresh_tokens'::regclass
+                )
+                AND a.attnum > 0 AND NOT a.attisdropped
+              )
+            GROUP BY t.typname
+            ORDER BY t.typname;
+          " > "$ENUM_SQL"
+
+          psql "$LOCAL_DB_URL" -X -v ON_ERROR_STOP=1 -c "CREATE SCHEMA auth;"
+          if [ -s "$ENUM_SQL" ]; then
+            psql "$LOCAL_DB_URL" -X -v ON_ERROR_STOP=1 -f "$ENUM_SQL"
+          fi
+
+          /usr/lib/postgresql/17/bin/pg_restore --list "$SCHEMA_DUMP" \
+            | grep -vE ' SCHEMA - auth | TYPE - auth ' > "$WORK_DIR/schema.list"
+
+          /usr/lib/postgresql/17/bin/pg_restore --use-list="$WORK_DIR/schema.list" \
+            --section=pre-data --no-owner --no-acl --exit-on-error \
+            --dbname="$LOCAL_DB_URL" "$SCHEMA_DUMP"
+
+          echo "Selected Auth table structures and enum types prepared in temporary PostgreSQL."
+
+      - name: Restore selected Auth records into temporary PostgreSQL and verify counts
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          WORK_DIR="$AUTH_RESTORE_WORK_DIR"
+          LOCAL_DB_URL="postgresql://postgres:local-temporary-only@localhost:5432/auth_restore_validation"
+
+          TOC="$(/usr/lib/postgresql/17/bin/pg_restore --list "$WORK_DIR/auth.dump")"
+          for table in users identities mfa_factors refresh_tokens; do
+            if ! printf '%s\n' "$TOC" | grep -Fq "TABLE DATA auth $table "; then
+              echo "::error::The Auth archive is missing data for $table."
+              exit 1
+            fi
+          done
+
+          /usr/lib/postgresql/17/bin/pg_restore --data-only --schema=auth \
+            --table=users --table=identities --table=mfa_factors --table=refresh_tokens \
+            --no-owner --no-acl --exit-on-error --dbname="$LOCAL_DB_URL" "$WORK_DIR/auth.dump"
+
+          psql "$LOCAL_DB_URL" -X -A -t -v ON_ERROR_STOP=1 -c "
+            SELECT 'users=' || count(*) FROM auth.users
+            UNION ALL SELECT 'identities=' || count(*) FROM auth.identities
+            UNION ALL SELECT 'mfa_factors=' || count(*) FROM auth.mfa_factors
+            UNION ALL SELECT 'refresh_tokens=' || count(*) FROM auth.refresh_tokens
+            ORDER BY 1;
+          "
+
+          echo "SUCCESS: selected Auth records were restored into a disposable local PostgreSQL service."
+          echo "No production or hosted test database was modified."
+          echo "The temporary PostgreSQL service and decrypted files are discarded with this GitHub Actions job."
+
+      - name: Remove temporary decrypted files
+        if: always()
+        shell: bash
+        run: |
+          if [ -n "${AUTH_RESTORE_WORK_DIR:-}" ] && [ -d "$AUTH_RESTORE_WORK_DIR" ]; then
+            rm -rf "$AUTH_RESTORE_WORK_DIR"
+          fi
