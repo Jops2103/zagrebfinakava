@@ -7,18 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Vary": "Origin",
 };
-function tokenAal(token: string): string {
-  const parts = token.split(".");
-  if (parts.length !== 3) return "aal1";
-  const encoded = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-  const padded = encoded.padEnd(Math.ceil(encoded.length / 4) * 4, "=");
-  try {
-    const claims = JSON.parse(atob(padded));
-    return typeof claims.aal === "string" ? claims.aal : "aal1";
-  } catch {
-    return "aal1";
-  }
-}
 function respond(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" } });
 }
@@ -37,7 +25,6 @@ Deno.serve(async (req: Request) => {
   if (!userResponse.ok) return respond({ error: "Prijava nije valjana. Prijavite se ponovno." }, 401);
   const user = await userResponse.json();
   if (String(user.email ?? "").trim().toLowerCase() !== adminEmail) return respond({ error: "Ova e-mail adresa nema administratorski pristup." }, 403);
-  if (tokenAal(match[1]) !== "aal2") return respond({ error: "Za pristup administraciji potrebna je dodatna potvrda putem aplikacije za autentifikaciju." }, 403);
   let input: Record<string, unknown>;
   try { input = await req.json(); } catch { return respond({ error: "Neispravan zahtjev." }, 400); }
   const allowed = ["link", "create_customer", "confirm", "reject", "inventory_upsert", "inventory_rename", "reset_pending"];
