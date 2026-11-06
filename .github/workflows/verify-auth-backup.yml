@@ -1,0 +1,93 @@
+name: Verify encrypted Supabase Auth backup
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-auth-backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Install PostgreSQL 17 client and GnuPG
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc >/dev/null
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo "$VERSION_CODENAME")-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17 gnupg
+          /usr/lib/postgresql/17/bin/pg_restore --version
+          gpg --version | head -n 1
+          aws --version
+
+      - name: Download newest encrypted Auth archive and verify it
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: "true"
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          AUTH_BACKUP_PASSPHRASE: ${{ secrets.AUTH_BACKUP_PASSPHRASE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          umask 077
+
+          for name in AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY R2_ACCOUNT_ID R2_BUCKET AUTH_BACKUP_PASSPHRASE; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::A required GitHub Actions secret is missing: $name"
+              exit 1
+            fi
+          done
+
+          WORK_DIR="$(mktemp -d)"
+          trap 'rm -rf "$WORK_DIR"' EXIT
+          ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+
+          aws s3api list-objects-v2 \
+            --bucket "$R2_BUCKET" \
+            --prefix "backups/auth/" \
+            --endpoint-url "$ENDPOINT" \
+            --region auto \
+            --output json > "$WORK_DIR/list.json"
+
+          OBJECT_KEY="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); xs=[x for x in d.get("Contents",[]) if x.get("Key","").endswith(".dump.gpg")]; xs.sort(key=lambda x:x.get("LastModified","")); print(xs[-1]["Key"] if xs else "")' "$WORK_DIR/list.json")"
+          rm -f "$WORK_DIR/list.json"
+
+          if [ -z "$OBJECT_KEY" ]; then
+            echo "::error::No encrypted Auth backup archive was found in the R2 backups/auth/ folder."
+            exit 1
+          fi
+
+          ENCRYPTED_FILE="$WORK_DIR/auth.dump.gpg"
+          PLAINTEXT_FILE="$WORK_DIR/auth.dump"
+
+          aws s3 cp "s3://${R2_BUCKET}/${OBJECT_KEY}" "$ENCRYPTED_FILE" \
+            --endpoint-url "$ENDPOINT" \
+            --region auto \
+            --only-show-errors
+
+          test -s "$ENCRYPTED_FILE"
+          gpg --batch --yes --quiet --pinentry-mode loopback \
+            --passphrase-file <(printf '%s\\n' "$AUTH_BACKUP_PASSPHRASE") \
+            --decrypt --output "$PLAINTEXT_FILE" "$ENCRYPTED_FILE"
+
+          test -s "$PLAINTEXT_FILE"
+          TOC="$(/usr/lib/postgresql/17/bin/pg_restore --list "$PLAINTEXT_FILE")"
+          for table in users identities mfa_factors refresh_tokens; do
+            if ! printf '%s\\n' "$TOC" | grep -Fq "TABLE DATA auth $table "; then
+              echo "::error::Decrypted archive is missing expected Auth table data: $table"
+              exit 1
+            fi
+          done
+
+          echo "SUCCESS: newest encrypted Auth backup downloaded, decrypted, and structurally verified."
+          echo "Verified archive: $OBJECT_KEY"
+          echo "Verified required Auth table entries: users, identities, mfa_factors, refresh_tokens."
+          echo "No database restore was performed. Temporary plaintext was removed when the job ended."
