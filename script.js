@@ -612,7 +612,7 @@ document.querySelectorAll('.model-select').forEach(button => {
       const target = document.getElementById('change-model');
       const modelName = button.dataset.model || '';
       if (target) {
-        target.value = /LB\\s*2600/i.test(modelName) ? 'Lavazza LB 2600 Magystra' : /LB\\s*1300/i.test(modelName) ? 'Lavazza LB 1300C Soul' : '';
+        target.value = /LB\s*2600/i.test(modelName) ? 'Lavazza LB 2600 Magystra' : /LB\s*1300/i.test(modelName) ? 'Lavazza LB 1300C Soul' : '';
         target.dispatchEvent(new Event('change', {bubbles:true}));
       }
       document.getElementById('promjena-kolicine')?.scrollIntoView({behavior:'smooth',block:'start'});
