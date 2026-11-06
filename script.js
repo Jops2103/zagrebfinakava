@@ -612,7 +612,7 @@ document.querySelectorAll('.model-select').forEach(button => {
       const target = document.getElementById('change-model');
       const modelName = button.dataset.model || '';
       if (target) {
-        target.value = /LB\s*2600/i.test(modelName) ? 'Lavazza LB2600' : /LB\\s*300/i.test(modelName) ? 'Lavazza LB 1300 Classy Soul' : '';
+        target.value = /LB\s*2600/i.test(modelName) ? 'Lavazza LB 2600 Magystra' : /LB\\s*300/i.test(modelName) ? 'Lavazza LB 1300C Soul' : '';
         target.dispatchEvent(new Event('change', {bubbles:true}));
       }
       document.getElementById('promjena-kolicine')?.scrollIntoView({behavior:'smooth',block:'start'});
@@ -933,8 +933,8 @@ if (capsuleFromDetail && capsuleField && topicField) {
   let activeStep = 1;
   const useLabels = {home:'za dom', apartment:'za apartman', office:'za ured ili poslovni prostor'};
   const models = {
-    mini:{name:'LB 1300 Classy Soul',modelValue:'Lavazza LB 1300 Classy Soul',quantity:'Preporučena količina prema vodiču',tag:'Za espresso i crnu kavu',facts:['Kompaktan format','Za espresso i crnu kavu','Bez sustava za mliječne napitke']},
-    milk:{name:'LB 2600 Magystra',modelValue:'Lavazza LB2600',quantity:'Preporučena količina prema vodiču',tag:'Za mliječne napitke i veće potrebe',facts:['Za espresso i mliječne napitke','Spremnik za vodu od 3,6 l','Spremnik za iskorištene kapsule do 25 kapsula']}
+    mini:{name:'LB 1300C Soul',modelValue:'Lavazza LB 1300C Soul',quantity:'Preporučena količina prema vodiču',tag:'Za espresso i crnu kavu',facts:['Kompaktan format','Za espresso i crnu kavu','Bez sustava za mliječne napitke']},
+    milk:{name:'LB 2600 Magystra',modelValue:'Lavazza LB 2600 Magystra',quantity:'Preporučena količina prema vodiču',tag:'Za mliječne napitke i veće potrebe',facts:['Za espresso i mliječne napitke','Spremnik za vodu od 3,6 l','Spremnik za iskorištene kapsule do 25 kapsula']}
   };
   function answer(name){const chosen=finder.querySelector(`input[name="${name}"]:checked`);return chosen?chosen.value:'';}
   function people(){const n=Number.parseInt(peopleInput.value,10);return Number.isFinite(n)?Math.min(500,Math.max(1,n)):1;}
@@ -946,7 +946,7 @@ if (capsuleFromDetail && capsuleField && topicField) {
     if(!use||!drinks){statusMessage.textContent='Odaberite odgovor prije prikaza preporuke.';return;}
     const e=estimate();
     let key='',showBoth=false,tag='',copy='';
-    if(drinks==='black'){key='mini';tag='Preporuka prema vašim željama';copy=`Budući da želite samo espresso i crnu kavu, preporučujemo LB 1300 Classy Soul ${useLabels[use]}. Veća potrošnja kapsula ne isključuje ovaj model ako ne trebate mliječne napitke.`;}
+    if(drinks==='black'){key='mini';tag='Preporuka prema vašim željama';copy=`Budući da želite samo espresso i crnu kavu, preporučujemo LB 1300C Soul ${useLabels[use]}. Veća potrošnja kapsula ne isključuje ovaj model ako ne trebate mliječne napitke.`;}
     else if(drinks==='milk'){key='milk';tag='Preporuka prema vašim željama';copy=`Budući da želite i mliječne napitke, preporučujemo Lavazza LB 2600 Magystra ${useLabels[use]}.`;}
     else if(e.count>3||e.monthly>=400){key='milk';showBoth=true;tag='Naš savjet: Lavazza LB 2600 Magystra';copy=`Uz ${e.count} osoba procijenjena je potrošnja ${e.monthly} kapsula mjesečno. Za više od 3 osobe praktičniji može biti Lavazza LB 2600 Magystra zbog većeg spremnika za vodu i kapaciteta za iskorištene kapsule. Od 400 kapsula mjesečno naviše posebno preporučujemo ovaj model. Ipak, konačan izbor je vaš.`;}
     else {showBoth=true;tag='Usporedite oba modela';copy=`Uz ${e.count} osoba procijenjena je potrošnja ${e.monthly} kapsula mjesečno. Budući da još niste odlučili koje napitke želite, usporedite oba aparata i odaberite onaj koji vam više odgovara.`;}
@@ -1262,8 +1262,8 @@ function updateChangeCapsuleField(){
   if (!form || !model || !quantity) return;
 
   const minimums = {
-    'Lavazza LB 1300 Classy Soul': 200,
-    'Lavazza LB2600': 400
+    'Lavazza LB 1300C Soul': 200,
+    'Lavazza LB 2600 Magystra': 400
   };
   function effectiveModel(){
     const currentModel = model.value;
@@ -1315,19 +1315,19 @@ function updateChangeCapsuleField(){
     const options = Array.from(newModel.options);
     const placeholder = options.find(option => option.value === '');
     const same = options.find(option => option.value === 'same');
-    const soul = options.find(option => option.value === 'Lavazza LB 1300 Classy Soul');
-    const lb2600 = options.find(option => option.value === 'Lavazza LB2600');
+    const soul = options.find(option => option.value === 'Lavazza LB 1300C Soul');
+    const lb2600 = options.find(option => option.value === 'Lavazza LB 2600 Magystra');
     const current = model.value;
     if (placeholder) placeholder.textContent = current
       ? 'Odaberite ostanak ili novi aparat'
       : 'Najprije odaberite svoj aparat';
     if (same) same.textContent = 'Bez promjene aparata';
     if (soul) soul.textContent = current === soul.value
-      ? 'Trenutačni aparat: Lavazza LB 1300 Classy Soul'
-      : 'Novi aparat: Lavazza LB 1300 Classy Soul';
+      ? 'Trenutačni aparat: Lavazza LB 1300C Soul'
+      : 'Novi aparat: Lavazza LB 1300C Soul';
     if (lb2600) lb2600.textContent = current === lb2600.value
-      ? 'Trenutačni aparat: Lavazza LB2600'
-      : 'Novi aparat: Lavazza LB2600';
+      ? 'Trenutačni aparat: Lavazza LB 2600 Magystra'
+      : 'Novi aparat: Lavazza LB 2600 Magystra';
     newModel.disabled = false;
     // Do not silently select a model. Preserve a user's explicit choice.
     if (newModel.value === current && current) newModel.value = 'same';
@@ -1371,7 +1371,7 @@ function updateChangeCapsuleField(){
     if (quantity.value && quantity.value !== 'same' &&
         (!Number.isFinite(selectedAmount) || selectedAmount < minimum || selectedAmount % 100 !== 0)) {
       quantity.value = '';
-      if (status) status.textContent = 'Za LB2600 najmanja je količina 400 kapsula (4 kutije), a za LB 1300 Classy Soul 200 kapsula (2 kutije) mjesečno. Odaberite dopuštenu količinu.';
+      if (status) status.textContent = 'Za LB2600 najmanja je količina 400 kapsula (4 kutije), a za LB 1300C Soul 200 kapsula (2 kutije) mjesečno. Odaberite dopuštenu količinu.';
       configure();
     }
     clearCapsuleChoices();
@@ -1524,8 +1524,8 @@ function updateChangeCapsuleField(){
 
   function canonicalMachine(value) {
     const normalized = String(value || '').trim();
-    if (/1300/i.test(normalized)) return 'Lavazza LB 1300 Classy Soul';
-    if (/2600/i.test(normalized)) return 'Lavazza LB2600';
+    if (/1300/i.test(normalized)) return 'Lavazza LB 1300C Soul';
+    if (/2600/i.test(normalized)) return 'Lavazza LB 2600 Magystra';
     return normalized;
   }
 
