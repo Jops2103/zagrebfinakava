@@ -51,7 +51,7 @@ jobs:
           ENCRYPTED_ARCHIVE="zfk-supabase-auth-$STAMP.dump.gpg"
 
           cleanup() {
-            rm -rf "$BACKUP_DIR" "$ENCRYPTED_ARCHIVE"
+            rm -rf "$BACKUP_DIR"
           }
           trap cleanup EXIT
 
