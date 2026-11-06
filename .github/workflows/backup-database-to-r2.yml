@@ -1,0 +1,68 @@
+name: Daily Supabase database backup to Cloudflare R2
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup-database:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install Supabase CLI v2
+        uses: supabase/setup-cli@v3
+        with:
+          version: v2.stable
+
+      - name: Create logical database backup
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_DB_URL:-}" ]; then
+            echo "::error::Missing GitHub Actions secret SUPABASE_DB_URL."
+            exit 1
+          fi
+
+          BACKUP_DIR="database-backup"
+          mkdir -p "$BACKUP_DIR"
+
+          supabase db dump --db-url "$SUPABASE_DB_URL" --file "$BACKUP_DIR/schema.sql"
+          supabase db dump --db-url "$SUPABASE_DB_URL" --role-only --file "$BACKUP_DIR/roles.sql"
+          supabase db dump --db-url "$SUPABASE_DB_URL" --data-only --use-copy --file "$BACKUP_DIR/data.sql"
+
+          test -s "$BACKUP_DIR/schema.sql"
+          test -s "$BACKUP_DIR/roles.sql"
+          test -s "$BACKUP_DIR/data.sql"
+
+          STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+          ARCHIVE="zfk-supabase-database-$STAMP.tar.gz"
+          tar -czf "$ARCHIVE" "$BACKUP_DIR"
+          echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
+          echo "OBJECT_KEY=backups/database/$(date -u +%Y/%m/%d)/$ARCHIVE" >> "$GITHUB_ENV"
+
+      - name: Upload database backup to Cloudflare R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: "true"
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws s3 cp "$ARCHIVE" "s3://${R2_BUCKET}/${OBJECT_KEY}" \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
+            --region auto \
+            --only-show-errors
+          echo "Database backup uploaded: ${OBJECT_KEY}"
