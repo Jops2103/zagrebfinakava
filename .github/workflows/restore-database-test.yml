@@ -1,0 +1,95 @@
+name: Restore Supabase backup to test project
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_target:
+        description: "Type RESTORE-TEST-ONLY to confirm the isolated test restore"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  restore-test-database:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm this is the isolated Frankfurt test project
+        env:
+          CONFIRM_TARGET: ${{ inputs.confirm_target }}
+          RESTORE_DB_URL: ${{ secrets.SUPABASE_RESTORE_TEST_DB_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$CONFIRM_TARGET" != "RESTORE-TEST-ONLY" ]; then
+            echo "::error::Confirmation text did not match. No restore was performed."
+            exit 1
+          fi
+          if [ -z "${RESTORE_DB_URL:-}" ]; then
+            echo "::error::Missing SUPABASE_RESTORE_TEST_DB_URL secret."
+            exit 1
+          fi
+          python3 - <<'PY'
+          import os
+          from urllib.parse import urlparse
+          u = urlparse(os.environ["RESTORE_DB_URL"])
+          if (u.hostname != "aws-1-eu-central-1.pooler.supabase.com"
+              or u.username != "postgres.zfzkgetuuxduwsdcydus"
+              or u.port != 5432
+              or u.path != "/postgres"):
+              raise SystemExit("Target connection is not the approved Frankfurt restore-test database. Stopping.")
+          print("Target verified: isolated zagrebfinakava-restore-test project.")
+          PY
+
+      - name: Download the known-good database archive from R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: "true"
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          OBJECT_KEY="backups/database/2026/11/06/zfk-supabase-database-20261106T113440Z.tar.gz"
+          aws s3 cp "s3://${R2_BUCKET}/${OBJECT_KEY}" restore-backup.tar.gz \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
+            --region auto \
+            --only-show-errors
+          tar -tzf restore-backup.tar.gz
+          mkdir restore-files
+          tar -xzf restore-backup.tar.gz -C restore-files
+          test -s restore-files/database-backup/roles.sql
+          test -s restore-files/database-backup/schema.sql
+          test -s restore-files/database-backup/data.sql
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Restore into the isolated test database
+        env:
+          RESTORE_DB_URL: ${{ secrets.SUPABASE_RESTORE_TEST_DB_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql \
+            --single-transaction \
+            --set ON_ERROR_STOP=1 \
+            --file restore-files/database-backup/roles.sql \
+            --file restore-files/database-backup/schema.sql \
+            --command 'SET session_replication_role = replica' \
+            --file restore-files/database-backup/data.sql \
+            --dbname "$RESTORE_DB_URL"
+
+      - name: Verify restored public tables
+        env:
+          RESTORE_DB_URL: ${{ secrets.SUPABASE_RESTORE_TEST_DB_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql "$RESTORE_DB_URL" --set ON_ERROR_STOP=1 --no-align --tuples-only \
+            --command "SELECT schemaname || '.' || tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;"
