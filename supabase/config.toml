@@ -1,0 +1,5 @@
+# Disabled legacy test endpoint. The production function was replaced with a
+# closed handler and JWT verification is enabled on the deployed endpoint.
+[functions.zfk-turnstile-check]
+enabled = false
+verify_jwt = true
