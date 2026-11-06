@@ -115,8 +115,8 @@
    } finally { $("startMfaEnrollment").disabled=false; }
  });
  $("verifyMfaEnrollment").addEventListener("click",async()=>{
-   const code=$("mfaEnrollCode").value.replace(/\\s/g,"");
-   if(!mfaEnrollmentFactorId||!/^\\d{6,8}$/.test(code)){showStatus("mfaStatus","Unesi važeći sigurnosni kod.","error");return;}
+   const code=$("mfaEnrollCode").value.replace(/\s/g,"");
+   if(!mfaEnrollmentFactorId||!/^\d{6,8}$/.test(code)){showStatus("mfaStatus","Unesi važeći sigurnosni kod.","error");return;}
    $("verifyMfaEnrollment").disabled=true;
    try {
      const challenge=await client.auth.mfa.challenge({factorId:mfaEnrollmentFactorId});
@@ -133,8 +133,8 @@
    } finally { $("verifyMfaEnrollment").disabled=false; }
  });
  $("verifyMfaLogin").addEventListener("click",async()=>{
-   const code=$("mfaLoginCode").value.replace(/\\s/g,"");
-   if(!mfaFactorId||!/^\\d{6,8}$/.test(code)){showStatus("mfaStatus","Unesi važeći sigurnosni kod.","error");return;}
+   const code=$("mfaLoginCode").value.replace(/\s/g,"");
+   if(!mfaFactorId||!/^\d{6,8}$/.test(code)){showStatus("mfaStatus","Unesi važeći sigurnosni kod.","error");return;}
    $("verifyMfaLogin").disabled=true;
    try {
      const challenge=await client.auth.mfa.challenge({factorId:mfaFactorId});
