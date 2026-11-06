@@ -79,7 +79,7 @@ jobs:
           import re
           path = Path("restore-files/database-backup/roles.sql")
           source = path.read_text()
-          statements = re.split(r"(?<=;)\\s*", source)
+          statements = re.split(r"(?<=;)\s*", source)
           kept = []
           removed = 0
           for statement in statements:
