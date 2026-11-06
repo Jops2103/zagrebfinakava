@@ -1631,6 +1631,10 @@ function updateChangeCapsuleField(){
       let savedInSupabase = false;
       try {
         const payload = makeSupabasePayload(form, isExisting);
+        payload.turnstile_token = form.querySelector('[name="cf-turnstile-response"]')?.value || '';
+        if (!payload.turnstile_token) {
+          throw new Error('Molimo dovršite Cloudflare sigurnosnu provjeru prije slanja.');
+        }
         const isGeneralInquiry = !isExisting &&
           payload.request_topic === 'Imam pitanje o ponudi';
         const isCapsuleOrder = !isExisting &&
@@ -1654,6 +1658,7 @@ function updateChangeCapsuleField(){
         savedInSupabase = true;
 
         const formData = new FormData(form);
+        formData.delete('cf-turnstile-response');
         if (isExisting) {
           const quantityField = document.getElementById('change-quantity');
           if (quantityField && quantityField.value === 'same') {
@@ -1688,6 +1693,10 @@ function updateChangeCapsuleField(){
         // submitted form and every custom capsule/machine selection.
         window.setTimeout(() => {
           form.reset();
+          if (window.turnstile) {
+            const widget = form.querySelector('.cf-turnstile');
+            if (widget) window.turnstile.reset(widget);
+          }
           selectedCapsules.clear();
           saveCapsuleSelections();
           updateCapsuleButtonFeedback();
@@ -1714,6 +1723,10 @@ function updateChangeCapsuleField(){
           }
         }, 15000);
       } catch (error) {
+        if (window.turnstile) {
+          const widget = form.querySelector('.cf-turnstile');
+          if (widget) window.turnstile.reset(widget);
+        }
         if (statusElement) {
           if (savedInSupabase || error.savedInSupabase) {
             statusElement.textContent = 'Zahtjev je spremljen u evidenciju, ali e-mail nije potvrđen. Nemojte slati obrazac ponovno; javite nam se na zagrebfinakava@proton.me kako bismo izbjegli duplikat.';
