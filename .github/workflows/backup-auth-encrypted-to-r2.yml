@@ -55,7 +55,7 @@ jobs:
           }
           trap cleanup EXIT
 
-          pg_dump --schema=auth --format=custom --no-owner --no-acl \
+          pg_dump --schema=auth --data-only --format=custom --no-owner --no-acl \
             --file="$AUTH_DUMP" "$SUPABASE_DB_URL"
 
           test -s "$AUTH_DUMP"
@@ -109,3 +109,4 @@ jobs:
             --region auto \
             --only-show-errors
           echo "Encrypted Auth backup uploaded: ${OBJECT_KEY}"
+          rm -f "$ENCRYPTED_ARCHIVE"
