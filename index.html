@@ -36,8 +36,8 @@
       <input type="hidden" name="from_name" value="Zagreb Fina Kava">
       <div class="field"><label for="change-name">Ime i prezime / naziv firme *</label><input id="change-name" name="Ime i prezime / naziv firme" required autocomplete="name" placeholder="Ime ili naziv firme"></div>
       <div class="field"><label for="change-email">E-mail povezan s postojećom narudžbom *</label><input id="change-email" name="email" type="email" required autocomplete="email" placeholder="ime@primjer.hr"></div>
-      <div class="field full"><label for="change-model">Vaš aparat *</label><select id="change-model" name="Postojeći aparat" required><option value="">Odaberite aparat</option><option value="Lavazza LB 1300 Classy Soul">Lavazza LB 1300 Classy Soul — minimum 200 kapsula mjesečno</option><option value="Lavazza LB2600">Lavazza LB2600 — minimum 400 kapsula mjesečno</option></select></div>
-      <div class="field full"><label for="change-new-model">Promjena aparata *</label><select id="change-new-model" name="Željeni novi aparat" required><option value="">Odaberite opciju</option><option value="same">Bez promjene aparata</option><option value="Lavazza LB 1300 Classy Soul">Lavazza LB 1300 Classy Soul</option><option value="Lavazza LB2600">Lavazza LB2600</option></select></div>
+      <div class="field full"><label for="change-model">Vaš aparat *</label><select id="change-model" name="Postojeći aparat" required><option value="">Odaberite aparat</option><option value="Lavazza LB 1300C Soul">Lavazza LB 1300C Soul — minimum 200 kapsula mjesečno</option><option value="Lavazza LB 2600 Magystra">Lavazza LB 2600 Magystra — minimum 400 kapsula mjesečno</option></select></div>
+      <div class="field full"><label for="change-new-model">Promjena aparata *</label><select id="change-new-model" name="Željeni novi aparat" required><option value="">Odaberite opciju</option><option value="same">Bez promjene aparata</option><option value="Lavazza LB 1300C Soul">Lavazza LB 1300C Soul</option><option value="Lavazza LB 2600 Magystra">Lavazza LB 2600 Magystra</option></select></div>
       <div class="field full"><label for="change-quantity">Promjena količine kapsula *</label><select id="change-quantity" name="Nova mjesečna količina ili samo promjena vrste kapsula" required><option value="">Odaberite količinu</option><option value="same">Bez promjene količine</option><option value="200">200 kapsula (2 kutije)</option><option value="300">300 kapsula (3 kutije)</option><option value="400">400 kapsula (4 kutije)</option><option value="500">500 kapsula (5 kutije)</option><option value="600">600 kapsula (6 kutije)</option><option value="700">700 kapsula (7 kutije)</option><option value="800">800 kapsula (8 kutije)</option><option value="900">900 kapsula (9 kutije)</option><option value="1000">1000 kapsula (10 kutije)</option><option value="1100">1100 kapsula (11 kutije)</option><option value="1200">1200 kapsula (12 kutije)</option><option value="1300">1300 kapsula (13 kutije)</option><option value="1400">1400 kapsula (14 kutije)</option><option value="1500">1500 kapsula (15 kutije)</option><option value="1600">1600 kapsula (16 kutije)</option><option value="1700">1700 kapsula (17 kutije)</option><option value="1800">1800 kapsula (18 kutije)</option><option value="1900">1900 kapsula (19 kutije)</option><option value="2000">2000 kapsula (20 kutije)</option></select><span id="change-quantity-note" class="form-note">Količine se biraju u koracima od 100 kapsula. Primjenjuje se minimalna količina za odabrani aparat.</span></div>
       <div class="field full"><label for="change-capsule-varieties"><strong>Odabir kapsula *</strong></label><textarea id="change-capsule-varieties" name="Izbor kapsula" rows="2" readonly required placeholder="Odaberite vrste kapsula u galeriji"></textarea><a class="btn primary" id="change-choose-capsules" href="#kapsule">Odabir kapsula ↓</a><span id="change-capsule-note" class="form-note">Pritisnite tipku za odlazak na galeriju. Svaki klik na kapsulu dodaje jednu kutiju od 100 kapsula.</span></div>
       <div class="field full"><label for="change-reference">Broj postojeće narudžbe (ako ga imate)</label><input id="change-reference" name="Broj postojeće narudžbe" placeholder="Nije obavezno"></div>
@@ -125,22 +125,22 @@
       <section class="finder-result" id="finder-result" hidden aria-live="polite" aria-labelledby="finder-result-title">
         <p class="eyebrow">PREPORUKA ZA VAS</p>
         <span class="finder-recommendation-tag" id="finder-result-tag">Preporučeni model</span>
-        <h3 id="finder-result-title" tabindex="-1">Lavazza LB 1300 Classy Soul</h3>
+        <h3 id="finder-result-title" tabindex="-1">Lavazza LB 1300C Soul</h3>
         <p id="finder-result-copy" class="finder-result-copy"></p>
         <ul class="finder-result-facts" id="finder-result-facts"></ul>
         <div class="finder-result-models" id="finder-result-models" hidden>
           <article class="finder-model-choice">
-            <h4>Lavazza LB 1300 Classy Soul</h4><p>Za espresso i crnu kavu; kompaktan format.</p>
-            <button class="btn secondary model-select finder-model-button" type="button" data-model="Lavazza LB 1300 Classy Soul" data-quantity="Preporučena količina prema vodiču">Odaberite LB 1300 Classy Soul</button>
+            <h4>Lavazza LB 1300C Soul</h4><p>Za espresso i crnu kavu; kompaktan format.</p>
+            <button class="btn secondary model-select finder-model-button" type="button" data-model="Lavazza LB 1300C Soul" data-quantity="Preporučena količina prema vodiču">Odaberite LB 1300 Classy Soul</button>
           </article>
           <article class="finder-model-choice">
             <h4>Lavazza LB 2600 Magystra</h4><p>Za crnu kavu i napitke s mlijekom; veći spremnici za vodu i iskorištene kapsule.</p>
-            <button class="btn primary model-select finder-model-button" type="button" data-model="Lavazza LB2600" data-quantity="Preporučena količina prema vodiču">Odaberite Lavazza LB 2600 Magystra</button>
+            <button class="btn primary model-select finder-model-button" type="button" data-model="Lavazza LB 2600 Magystra" data-quantity="Preporučena količina prema vodiču">Odaberite Lavazza LB 2600 Magystra</button>
           </article>
         </div>
         <p class="finder-disclaimer">Ovo je orijentacijska preporuka. Konačna količina, dostupnost i uvjeti potvrđuju se nakon slanja upita.</p>
         <div class="finder-result-actions">
-          <button class="btn primary model-select finder-result-button" type="button" data-model="Lavazza LB 1300 Classy Soul" data-quantity="Preporučena količina prema vodiču">Odaberi ovaj aparat <span aria-hidden="true">↗</span></button>
+          <button class="btn primary model-select finder-result-button" type="button" data-model="Lavazza LB 1300C Soul" data-quantity="Preporučena količina prema vodiču">Odaberi ovaj aparat <span aria-hidden="true">↗</span></button>
           <button class="btn secondary finder-restart" id="finder-restart" type="button">Ponovi vodič</button>
         </div>
       </section>
@@ -151,13 +151,13 @@
     <div class="section-heading"><p class="eyebrow">ODABERITE SVOJ MODEL</p><h2>Odaberite svoj <span>aparat</span></h2><p>U nastavku su opisi i tehnički podaci za usporedbu.</p></div>
     <div class="model-image-columns" aria-label="Fotografije aparata za usporedbu">
       <article class="model-image-column">
-        <h3>Lavazza LB 1300 Classy Soul</h3>
+        <h3>Lavazza LB 1300C Soul</h3>
         <p class="machine-minimum-capsules"><strong>min. 200 kapsula (2 kutije) mjesečno</strong></p>
-        <div class="model-image-gallery" aria-label="Fotografija aparata Lavazza LB 1300 Classy Soul">
-          <img class="model-image-main" src="LB1300 Classy Soul-1.webp?v=20261025" alt="Lavazza LB 1300 Classy Soul" width="1024" height="768" loading="lazy" decoding="async">
+        <div class="model-image-gallery" aria-label="Fotografija aparata Lavazza LB 1300C Soul">
+          <img class="model-image-main" src="LB1300 Classy Soul-1.webp?v=20261025" alt="Lavazza LB 1300C Soul" width="1024" height="768" loading="lazy" decoding="async">
         </div>
         <div class="machine-details">
-          <p class="machine-intro">Lavazza LB 1300C Classy Soul kompaktan je aparat za kapsule Lavazza BLUE, namijenjen uredima, recepcijama, apartmanima i drugim prostorima s umjerenom potrošnjom kave. Dodirno sučelje omogućuje jednostavan odabir napitka, a funkcija Temperature Boost i podesiva temperatura pomažu prilagoditi šalicu vlastitom ukusu. Elegantan dizajn i osvijetljeno područje za šalicu praktični su i u manjim prostorima.</p>
+          <p class="machine-intro">Lavazza LB 1300C Soul kompaktan je aparat za kapsule Lavazza BLUE, namijenjen uredima, recepcijama, apartmanima i drugim prostorima s umjerenom potrošnjom kave. Dodirno sučelje omogućuje jednostavan odabir napitka, a funkcija Temperature Boost i podesiva temperatura pomažu prilagoditi šalicu vlastitom ukusu. Elegantan dizajn i osvijetljeno područje za šalicu praktični su i u manjim prostorima.</p>
           <ul class="machine-highlights">
             <li><strong>6 odabira napitka:</strong> espresso 30 ml, espresso lungo 45 ml, lungo 90 ml, slobodna doza do 150 ml te dvije opcije za posebne napitke od 50 ml i 120 ml</li>
             <li><strong>Kompaktan format:</strong> širina samo 16,3 cm, uz spremnik za vodu od 1,6 l</li>
@@ -167,7 +167,7 @@
           <details class="machine-specs">
             <summary>Tehničke karakteristike</summary>
             <dl>
-              <div><dt>Model</dt><dd>Lavazza BLUE LB 1300C Classy Soul</dd></div>
+              <div><dt>Model</dt><dd>Lavazza BLUE LB 1300C Soul</dd></div>
               <div><dt>Sustav kapsula</dt><dd>Lavazza BLUE</dd></div>
               <div><dt>Odabiri napitaka</dt><dd>Espresso 30 ml, espresso lungo 45 ml, lungo 90 ml, slobodna doza do 150 ml te posebni napitci od 50 ml i 120 ml</dd></div>
               <div><dt>Upravljanje</dt><dd>Dodirni zaslon; programabilne doze</dd></div>
@@ -187,19 +187,19 @@
               <div><dt>Priprema mliječnih napitaka</dt><dd>Nema ugrađen spremnik ni sustav za mlijeko</dd></div>
             </dl>
           </details>
-          <button class="btn primary machine-select model-select" type="button" data-model="Lavazza LB 1300 Classy Soul">Odaberite ovaj aparat <span aria-hidden="true">↗</span></button>
+          <button class="btn primary machine-select model-select" type="button" data-model="Lavazza LB 1300C Soul">Odaberite ovaj aparat <span aria-hidden="true">↗</span></button>
           <p class="machine-note">Napomena: aparat je namijenjen kapsulama sustava Lavazza BLUE. Podaci se odnose na izvedbu LB 1300 Classy Soul; prije isporuke provjerava se oznaka na tipskoj pločici konkretnog uređaja.</p>
         </div>
       </article>
       <article class="model-image-column">
-        <h3>LB 2600 Magystra</h3>
+        <h3>Lavazza LB 2600 Magystra</h3>
         <p class="machine-minimum-capsules"><strong>min. 400 kapsula (4 kutije) mjesečno</strong></p>
         <div class="model-image-gallery" aria-label="Fotografija aparata LB 2600 Magystra">
-          <img class="model-image-main" src="LB 2600.webp" alt="LB 2600 Magystra" width="1024" height="768" loading="lazy" decoding="async">
+          <img class="model-image-main" src="LB 2600.webp" alt="Lavazza LB 2600 Magystra" width="1024" height="768" loading="lazy" decoding="async">
         </div>
         <div class="machine-details">
           <h4>Opis aparata</h4>
-          <p class="machine-intro">Lavazza LB2600 je profesionalni aparat namijenjen uredima, poslovnim prostorima i manjim zajednicama kojima treba veći izbor napitaka. Koristi kapsule sustava Lavazza BLUE i automatski izbacuje iskorištene kapsule. Veliki upravljački panel omogućuje jednostavan odabir unaprijed programiranih recepata, uključujući espresso, dužu kavu, cappuccino i latte macchiato. Spremnik za vodu od 3,6 litara pogodan je za učestalu svakodnevnu upotrebu.</p>
+          <p class="machine-intro">Lavazza LB 2600 Magystra je profesionalni aparat namijenjen uredima, poslovnim prostorima i manjim zajednicama kojima treba veći izbor napitaka. Koristi kapsule sustava Lavazza BLUE i automatski izbacuje iskorištene kapsule. Veliki upravljački panel omogućuje jednostavan odabir unaprijed programiranih recepata, uključujući espresso, dužu kavu, cappuccino i latte macchiato. Spremnik za vodu od 3,6 litara pogodan je za učestalu svakodnevnu upotrebu.</p>
           <ul class="machine-highlights">
             <li><strong>Širok izbor napitaka:</strong> espresso, produženi espresso, duga kava, cappuccino, veliki cappuccino, latte macchiato i čokoladni napitci</li>
             <li><strong>Veliki spremnik vode:</strong> 3,6 l; proizvođač navodi više od 100 espressa po punjenju, ovisno o dozi</li>
@@ -226,8 +226,8 @@
               <div><dt>Proizvedeno u</dt><dd>Italija</dd></div>
             </dl>
           </details>
-          <button class="btn primary machine-select model-select" type="button" data-model="Lavazza LB2600">Odaberite ovaj aparat <span aria-hidden="true">↗</span></button>
-          <p class="machine-note"><strong>Važno:</strong> LB2600 se prodaje u različitim konfiguracijama. Spremnici za topljive sastojke i modul za svježe mlijeko ovise o konkretnoj izvedbi i nisu nužno uključeni u svaki uređaj. Prije isporuke provjerava se tipska pločica i stvarna oprema aparata.</p>
+          <button class="btn primary machine-select model-select" type="button" data-model="Lavazza LB 2600 Magystra">Odaberite ovaj aparat <span aria-hidden="true">↗</span></button>
+          <p class="machine-note"><strong>Važno:</strong> LB 2600 Magystra se prodaje u različitim konfiguracijama. Spremnici za topljive sastojke i modul za svježe mlijeko ovise o konkretnoj izvedbi i nisu nužno uključeni u svaki uređaj. Prije isporuke provjerava se tipska pločica i stvarna oprema aparata.</p>
         </div>
       </article>
     </div>
