@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Probna Turnstile provjera | Zagreb Fina Kava</title>
+  <style>
+    :root { color-scheme: light; font-family: Arial, sans-serif; }
+    body { margin: 0; padding: 32px 16px; background: #f5f8fb; color: #17212b; }
+    main { max-width: 560px; margin: 0 auto; padding: 28px; background: #fff; border: 1px solid #dce5ee; border-radius: 12px; }
+    h1 { margin-top: 0; color: #07569b; font-size: 1.45rem; }
+    p { line-height: 1.55; }
+    button { margin-top: 18px; padding: 12px 20px; border: 0; border-radius: 7px; background: #07569b; color: #fff; font-size: 1rem; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: wait; }
+    #result { margin-top: 18px; padding: 13px; border-radius: 7px; background: #eaf3fb; white-space: pre-wrap; }
+    #result[hidden] { display: none; }
+    .widget { margin-top: 18px; }
+  </style>
+  <script>
+    let turnstileWidgetId = null;
+    let turnstileToken = "";
+    window.onTurnstileLoad = function () {
+      turnstileWidgetId = window.turnstile.render("#turnstile-widget", {
+        sitekey: "0x4AAAAAAF1Eb1ddCsGIbIWn",
+        callback: function (token) { turnstileToken = token; },
+        "expired-callback": function () { turnstileToken = ""; },
+        "error-callback": function () { turnstileToken = ""; }
+      });
+    };
+  </script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer></script>
+</head>
+<body>
+  <main>
+    <h1>Probna Turnstile provjera</h1>
+    <p>Ovo je odvojena testna stranica. Slanjem se provjerava Cloudflare Turnstile i sprema se samo probni zapis u Supabase. E-mail se ne šalje i ne mijenjaju se stvarni obrasci za narudžbe.</p>
+    <div id="turnstile-widget" class="widget"></div>
+    <button id="test-button" type="button" disabled>Pokreni probnu provjeru</button>
+    <div id="result" role="status" aria-live="polite" hidden></div>
+  </main>
+  <script>
+    const button = document.getElementById("test-button");
+    const result = document.getElementById("result");
+    const showResult = (message) => {
+      result.textContent = message;
+      result.hidden = false;
+    };
+    const enableWhenReady = window.setInterval(() => {
+      if (turnstileWidgetId !== null && window.turnstile) {
+        button.disabled = false;
+        window.clearInterval(enableWhenReady);
+      }
+    }, 250);
+    button.addEventListener("click", async () => {
+      if (!turnstileToken) {
+        showResult("Najprije dovršite sigurnosnu provjeru.");
+        return;
+      }
+      button.disabled = true;
+      showResult("Provjera je u tijeku…");
+      try {
+        const response = await fetch("https://wbupmpqymavxjxatwzsh.supabase.co/functions/v1/zfk-turnstile-check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            turnstile_token: turnstileToken,
+            request_type: "new",
+            request_topic: "Imam pitanje o ponudi",
+            name: "Turnstile test",
+            email: "turnstile-test@example.com",
+            machine: "",
+            current_machine: "",
+            quantity: 0,
+            capsule_selection: [],
+            note: "Automatski probni zapis za provjeru Turnstile veze.",
+            honeypot: false
+          })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data.success === true && data.test_mode === true) {
+          showResult("Uspjeh! Cloudflare Turnstile potvrđen je u Supabaseu. Probni zapis spremljen je u evidenciju; e-mail nije poslan.");
+        } else {
+          showResult("Provjera nije prošla. " + (data.message || "Supabase nije potvrdio sigurnosnu provjeru.") + " (HTTP " + response.status + ")");
+        }
+      } catch (error) {
+        showResult("Nije moguće povezati se sa Supabaseom. Provjerite internetsku vezu i pokušajte ponovno.");
+      } finally {
+        turnstileToken = "";
+        if (window.turnstile && turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId);
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
