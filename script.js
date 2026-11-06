@@ -1519,6 +1519,8 @@ function updateChangeCapsuleField(){
 (function setupWeb3FormsSubmission(){
   const forms = [document.getElementById('order-form'), document.getElementById('customer-change-form')].filter(Boolean);
   const supabaseFunctionUrl = 'https://wbupmpqymavxjxatwzsh.supabase.co/functions/v1/zfk-customer-requests';
+  // Safe end-to-end Turnstile check: validates the token but does not save a request or send email.
+  const turnstileTestMode = new URLSearchParams(window.location.search).get('zfk-turnstile-test') === '1';
 
   function canonicalMachine(value) {
     const normalized = String(value || '').trim();
@@ -1635,6 +1637,7 @@ function updateChangeCapsuleField(){
         if (!payload.turnstile_token) {
           throw new Error('Molimo dovršite Cloudflare sigurnosnu provjeru prije slanja.');
         }
+        if (turnstileTestMode) payload.test_only = true;
         const isGeneralInquiry = !isExisting &&
           payload.request_topic === 'Imam pitanje o ponudi';
         const isCapsuleOrder = !isExisting &&
@@ -1654,6 +1657,30 @@ function updateChangeCapsuleField(){
         const databaseResult = await databaseResponse.json().catch(() => ({}));
         if (!databaseResponse.ok || databaseResult.success !== true) {
           throw new Error(databaseResult.message || 'Spremanje zahtjeva u evidenciju nije uspjelo.');
+        }
+        if (turnstileTestMode) {
+          if (databaseResult.test_mode !== true) throw new Error('Testni način rada nije potvrđen. Zahtjev nije poslan.');
+          if (statusElement) {
+            statusElement.hidden = false;
+            statusElement.textContent = 'Sigurnosna provjera uspješna. Probni test nije spremljen i e-mail nije poslan.';
+          }
+          if (submitButton) {
+            submitButton.innerHTML = 'Sigurnosna provjera uspješna ✓';
+            submitButton.setAttribute('aria-label', 'Cloudflare sigurnosna provjera uspješna');
+          }
+          window.setTimeout(() => {
+            if (window.turnstile) {
+              const widget = form.querySelector('.cf-turnstile');
+              if (widget) window.turnstile.reset(widget);
+            }
+            if (submitButton) {
+              submitButton.disabled = false;
+              submitButton.removeAttribute('aria-busy');
+              submitButton.innerHTML = originalButtonText;
+              submitButton.removeAttribute('aria-label');
+            }
+          }, 5000);
+          return;
         }
         savedInSupabase = true;
 
