@@ -22,7 +22,7 @@ jobs:
           echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo "$VERSION_CODENAME")-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
           sudo apt-get update
           sudo apt-get install -y postgresql-client-17 gnupg
-          pg_dump --version
+          /usr/lib/postgresql/17/bin/pg_dump --version
           gpg --version | head -n 1
 
       - name: Dump Auth schema and encrypt it before upload
@@ -55,11 +55,11 @@ jobs:
           }
           trap cleanup EXIT
 
-          pg_dump --schema=auth --data-only --format=custom --no-owner --no-acl \
+          /usr/lib/postgresql/17/bin/pg_dump --schema=auth --data-only --format=custom --no-owner --no-acl \
             --file="$AUTH_DUMP" "$SUPABASE_DB_URL"
 
           test -s "$AUTH_DUMP"
-          TOC="$(pg_restore --list "$AUTH_DUMP")"
+          TOC="$(/usr/lib/postgresql/17/bin/pg_restore --list "$AUTH_DUMP")"
           for table in users identities mfa_factors refresh_tokens; do
             if ! printf '%s\n' "$TOC" | grep -Fq "TABLE DATA auth $table "; then
               echo "::error::Auth backup is missing expected table data: $table"
