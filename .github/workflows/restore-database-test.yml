@@ -82,11 +82,11 @@ jobs:
           # Supabase's hosted Postgres does not permit restoring role-level
           # log_min_messages settings. Remove only complete SQL statements
           # containing that parameter; preserve all other role statements.
-          statements = re.split(r"(?<=;)\\s*", source)
+          statements = re.split(r"(?<=;)\s*", source)
           kept = []
           removed = 0
           for statement in statements:
-              if re.search(r"\\blog_min_messages\\b", statement, flags=re.IGNORECASE):
+              if re.search(r"\blog_min_messages\b", statement, flags=re.IGNORECASE):
                   removed += 1
               else:
                   kept.append(statement)
