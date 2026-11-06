@@ -98,13 +98,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          psql \\
-            --single-transaction \\
-            --set ON_ERROR_STOP=1 \\
-            --file restore-files/database-backup/roles.sql \\
-            --file restore-files/database-backup/schema.sql \\
-            --command 'SET session_replication_role = replica' \\
-            --file restore-files/database-backup/data.sql \\
+          psql \
+            --single-transaction \
+            --set ON_ERROR_STOP=1 \
+            --file restore-files/database-backup/roles.sql \
+            --file restore-files/database-backup/schema.sql \
+            --command 'SET session_replication_role = replica' \
+            --file restore-files/database-backup/data.sql \
             --dbname "$RESTORE_DB_URL"
 
       - name: Verify restored public tables
@@ -113,5 +113,5 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          psql "$RESTORE_DB_URL" --set ON_ERROR_STOP=1 --no-align --tuples-only \\
+          psql "$RESTORE_DB_URL" --set ON_ERROR_STOP=1 --no-align --tuples-only \
             --command "SELECT schemaname || '.' || tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;"
