@@ -5137,3 +5137,22 @@ body {
   text-align: center !important;
 }
 #kapsule .capsule-selected-count[hidden] { display: none !important; }
+
+/* ZFK: poravnanje tehničkih karakteristika i tipki za odabir oba aparata na desktopu. */
+@media (min-width: 701px) {
+  #ponuda .model-image-column {
+    display: flex;
+    flex-direction: column;
+  }
+  #ponuda .machine-details {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+  #ponuda .machine-specs {
+    margin-top: auto;
+  }
+  #ponuda .machine-note {
+    min-height: 4.5em;
+  }
+}
