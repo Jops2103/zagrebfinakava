@@ -70,7 +70,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
-      - name: Prepare Supabase-managed role settings for hosted restore
+      - name: Prepare hosted restore role settings
         shell: bash
         run: |
           set -euo pipefail
@@ -79,19 +79,26 @@ jobs:
           import re
           path = Path("restore-files/database-backup/roles.sql")
           source = path.read_text()
-          statements = re.split(r"(?<=;)\s*", source)
+          # Supabase's hosted Postgres does not permit restoring role-level
+          # log_min_messages settings. Remove only complete SQL statements
+          # containing that parameter; preserve all other role statements.
+          statements = re.split(r"(?<=;)\\s*", source)
           kept = []
           removed = 0
           for statement in statements:
-              normalized = statement.lower()
-              if "log_min_messages" in normalized and "supabase_admin" in normalized:
+              if re.search(r"\\blog_min_messages\\b", statement, flags=re.IGNORECASE):
                   removed += 1
               else:
                   kept.append(statement)
           if removed == 0:
-              raise SystemExit("Expected Supabase-managed supabase_admin log_min_messages statement was not found; stopping for review.")
+              matches = [i for i, line in enumerate(source.splitlines(), 1)
+                         if "log_min_messages" in line.lower()]
+              raise SystemExit(
+                  "No complete log_min_messages statement found in roles.sql; "
+                  f"matching line numbers: {matches}. Stopping without restore."
+              )
           path.write_text("".join(kept))
-          print(f"Skipped {removed} platform-managed supabase_admin log_min_messages statement(s).")
+          print(f"Removed {removed} hosted-incompatible role setting statement(s).")
           PY
 
       - name: Restore into the isolated test database
