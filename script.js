@@ -71,7 +71,7 @@ if (form) {
     if (!form.checkValidity()) {
       event.preventDefault();
       form.reportValidity();
-      if (status) status.textContent = 'Ispunite sva obavezna polja označena zvjezdicom (*) i potvrdite suglasnost.';
+      if (status) status.textContent = 'Ispunite sva obavezna polja označena zvjezdicom (*).';
       return;
     }
 
@@ -1191,7 +1191,6 @@ function refreshCustomerChangeButtons(){
   const submitButton = form.querySelector('button[type="submit"]');
   const quantity = document.getElementById('change-quantity');
   const capsuleVarieties = document.getElementById('change-capsule-varieties');
-  const consent = document.getElementById('change-consent');
   const selectedBoxes = Array.from(selectedCapsules.values()).reduce((sum, qty) => sum + qty, 0);
   const sameQuantity = !!(quantity && quantity.value === 'same');
   const targetBoxes = Number(quantity && quantity.value) / 100;
@@ -1210,8 +1209,7 @@ function refreshCustomerChangeButtons(){
   const capsuleSelectionReady = sameQuantity
     ? selectedBoxes > 0
     : Number.isFinite(targetBoxes) && targetBoxes > 0 && selectedBoxes === targetBoxes;
-  const ready = fieldsReady && !!(consent && consent.checked) &&
-    capsuleSelectionReady &&
+  const ready = fieldsReady && capsuleSelectionReady &&
     !!(capsuleVarieties && capsuleVarieties.value.trim());
   if (submitButton) {
     submitButton.classList.toggle('is-ready', ready);
@@ -1446,7 +1444,6 @@ function updateChangeCapsuleField(){
   const customerType = document.getElementById('customer-type');
   const topic = document.getElementById('topic');
   const model = document.getElementById('model');
-  const consent = document.getElementById('consent');
   let refreshQueued = false;
 
   function refreshButton(){
@@ -1461,9 +1458,6 @@ function updateChangeCapsuleField(){
     const missing = contactFields
       .filter(([field]) => !field || !field.checkValidity())
       .map(([, label]) => label);
-    if (!consent || !consent.checked || !consent.checkValidity()) {
-      missing.push('prihvatiti suglasnost kvačicom');
-    }
 
     const applianceOrder = !!(topic && topic.value === 'Želim aparat uz mjesečnu kupnju kapsula');
     if (applianceOrder) {
@@ -1503,7 +1497,6 @@ function updateChangeCapsuleField(){
   }
 
   ['input','change','focusout'].forEach(type => form.addEventListener(type, queueRefresh, true));
-  if (consent) consent.addEventListener('change', refreshButton);
   document.addEventListener('zfk:capsules-updated', refreshButton);
   document.addEventListener('click', queueRefresh, true);
   document.addEventListener('pointerup', queueRefresh, true);
