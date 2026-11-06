@@ -1,0 +1,111 @@
+name: Encrypted Supabase Auth backup to Cloudflare R2
+
+on:
+  schedule:
+    - cron: "15 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup-auth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Install PostgreSQL 17 client and GnuPG
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc >/dev/null
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo "$VERSION_CODENAME")-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17 gnupg
+          pg_dump --version
+          gpg --version | head -n 1
+
+      - name: Dump Auth schema and encrypt it before upload
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          AUTH_BACKUP_PASSPHRASE: ${{ secrets.AUTH_BACKUP_PASSPHRASE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+
+          if [ -z "${SUPABASE_DB_URL:-}" ]; then
+            echo "::error::Missing GitHub Actions secret SUPABASE_DB_URL."
+            exit 1
+          fi
+          if [ -z "${AUTH_BACKUP_PASSPHRASE:-}" ] || [ "${#AUTH_BACKUP_PASSPHRASE}" -lt 32 ]; then
+            echo "::error::Add AUTH_BACKUP_PASSPHRASE in GitHub Actions Secrets (at least 32 characters)."
+            exit 1
+          fi
+
+          BACKUP_DIR="auth-backup"
+          mkdir -p "$BACKUP_DIR"
+          AUTH_DUMP="$BACKUP_DIR/auth-schema.dump"
+          VERIFY_DUMP="$BACKUP_DIR/auth-schema-verify.dump"
+          STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+          ENCRYPTED_ARCHIVE="zfk-supabase-auth-$STAMP.dump.gpg"
+
+          cleanup() {
+            rm -rf "$BACKUP_DIR" "$ENCRYPTED_ARCHIVE"
+          }
+          trap cleanup EXIT
+
+          pg_dump --schema=auth --format=custom --no-owner --no-acl \
+            --file="$AUTH_DUMP" "$SUPABASE_DB_URL"
+
+          test -s "$AUTH_DUMP"
+          TOC="$(pg_restore --list "$AUTH_DUMP")"
+          for table in users identities mfa_factors refresh_tokens; do
+            if ! printf '%s\n' "$TOC" | grep -Fq "TABLE DATA auth $table "; then
+              echo "::error::Auth backup is missing expected table data: $table"
+              exit 1
+            fi
+          done
+
+          ORIGINAL_SHA="$(sha256sum "$AUTH_DUMP" | awk '{print $1}')"
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file <(printf '%s\n' "$AUTH_BACKUP_PASSPHRASE") \
+            --symmetric --cipher-algo AES256 --s2k-mode 3 --s2k-digest-algo SHA256 \
+            --output "$ENCRYPTED_ARCHIVE" "$AUTH_DUMP"
+
+          test -s "$ENCRYPTED_ARCHIVE"
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file <(printf '%s\n' "$AUTH_BACKUP_PASSPHRASE") \
+            --decrypt --output "$VERIFY_DUMP" "$ENCRYPTED_ARCHIVE"
+          VERIFY_SHA="$(sha256sum "$VERIFY_DUMP" | awk '{print $1}')"
+          if [ "$ORIGINAL_SHA" != "$VERIFY_SHA" ]; then
+            echo "::error::Encrypted Auth backup integrity check failed."
+            exit 1
+          fi
+
+          rm -f "$AUTH_DUMP" "$VERIFY_DUMP"
+          echo "Encrypted Auth backup created and verified; plaintext dump removed."
+
+          echo "ENCRYPTED_ARCHIVE=$ENCRYPTED_ARCHIVE" >> "$GITHUB_ENV"
+          echo "OBJECT_KEY=backups/auth/$(date -u +%Y/%m/%d)/$ENCRYPTED_ARCHIVE" >> "$GITHUB_ENV"
+
+      - name: Upload encrypted Auth backup to Cloudflare R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: "true"
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${ENCRYPTED_ARCHIVE:-}" ] || [ ! -s "$ENCRYPTED_ARCHIVE" ]; then
+            echo "::error::Encrypted Auth backup file is missing."
+            exit 1
+          fi
+          aws s3 cp "$ENCRYPTED_ARCHIVE" "s3://${R2_BUCKET}/${OBJECT_KEY}" \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
+            --region auto \
+            --only-show-errors
+          echo "Encrypted Auth backup uploaded: ${OBJECT_KEY}"
