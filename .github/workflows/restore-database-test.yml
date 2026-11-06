@@ -70,19 +70,41 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
+      - name: Prepare Supabase-managed role grants for hosted restore
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("restore-files/database-backup/roles.sql")
+          lines = path.read_text().splitlines()
+          kept = []
+          removed = 0
+          for line in lines:
+              normalized = line.lower()
+              if "grant set on parameter" in normalized and "log_min_messages" in normalized and "supabase_admin" in normalized:
+                  removed += 1
+                  continue
+              kept.append(line)
+          if removed == 0:
+              raise SystemExit("Expected Supabase-managed log_min_messages grant was not found; stopping for review.")
+          path.write_text("\\n".join(kept) + "\\n")
+          print(f"Skipped {removed} grant(s) for the platform-managed supabase_admin role; the target project manages this role.")
+          PY
+
       - name: Restore into the isolated test database
         env:
           RESTORE_DB_URL: ${{ secrets.SUPABASE_RESTORE_TEST_DB_URL }}
         shell: bash
         run: |
           set -euo pipefail
-          psql \
-            --single-transaction \
-            --set ON_ERROR_STOP=1 \
-            --file restore-files/database-backup/roles.sql \
-            --file restore-files/database-backup/schema.sql \
-            --command 'SET session_replication_role = replica' \
-            --file restore-files/database-backup/data.sql \
+          psql \\
+            --single-transaction \\
+            --set ON_ERROR_STOP=1 \\
+            --file restore-files/database-backup/roles.sql \\
+            --file restore-files/database-backup/schema.sql \\
+            --command 'SET session_replication_role = replica' \\
+            --file restore-files/database-backup/data.sql \\
             --dbname "$RESTORE_DB_URL"
 
       - name: Verify restored public tables
@@ -91,5 +113,5 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          psql "$RESTORE_DB_URL" --set ON_ERROR_STOP=1 --no-align --tuples-only \
+          psql "$RESTORE_DB_URL" --set ON_ERROR_STOP=1 --no-align --tuples-only \\
             --command "SELECT schemaname || '.' || tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;"
