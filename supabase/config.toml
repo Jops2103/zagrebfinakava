@@ -3,3 +3,13 @@
 [functions.zfk-turnstile-check]
 enabled = false
 verify_jwt = true
+
+[functions.zfk-customer-requests]
+verify_jwt = false
+
+[functions.zfk-admin]
+verify_jwt = true
+
+[functions.zfk-admin-actions]
+verify_jwt = true
+
