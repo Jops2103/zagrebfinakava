@@ -5156,3 +5156,6 @@ body {
     min-height: 4.5em;
   }
 }
+
+/* Jasno označena poveznica na Izjavu o privatnosti u obrascima. */
+.privacy-reference a{color:#153b8b;text-decoration:underline;text-underline-offset:2px;font-weight:600}
