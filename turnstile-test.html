@@ -34,7 +34,7 @@
 <body>
   <main>
     <h1>Probna Turnstile provjera</h1>
-    <p>Ovo je odvojena testna stranica. Slanjem se provjerava Cloudflare Turnstile i sprema se samo probni zapis u Supabase. E-mail se ne šalje i ne mijenjaju se stvarni obrasci za narudžbe.</p>
+    <p>Ovo je sigurna testna stranica. Provjerava se stvarna produkcijska Supabase funkcija i Cloudflare Turnstile. Ne sprema se narudžba i ne šalje se e-mail.</p>
     <div id="turnstile-widget" class="widget"></div>
     <button id="test-button" type="button" disabled>Pokreni probnu provjeru</button>
     <div id="result" role="status" aria-live="polite" hidden></div>
@@ -60,26 +60,17 @@
       button.disabled = true;
       showResult("Provjera je u tijeku…");
       try {
-        const response = await fetch("https://wbupmpqymavxjxatwzsh.supabase.co/functions/v1/zfk-turnstile-check", {
+        const response = await fetch("https://wbupmpqymavxjxatwzsh.supabase.co/functions/v1/zfk-customer-requests", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             turnstile_token: turnstileToken,
-            request_type: "new",
-            request_topic: "Imam pitanje o ponudi",
-            name: "Turnstile test",
-            email: "turnstile-test@example.com",
-            machine: "",
-            current_machine: "",
-            quantity: 0,
-            capsule_selection: [],
-            note: "Automatski probni zapis za provjeru Turnstile veze.",
-            honeypot: false
+            test_only: true
           })
         });
         const data = await response.json().catch(() => ({}));
         if (response.ok && data.success === true && data.test_mode === true) {
-          showResult("Uspjeh! Cloudflare Turnstile potvrđen je u Supabaseu. Probni zapis spremljen je u evidenciju; e-mail nije poslan.");
+          showResult("Uspjeh! Cloudflare Turnstile potvrđen je u produkcijskoj Supabase funkciji. Narudžba nije spremljena i e-mail nije poslan.");
         } else {
           showResult("Provjera nije prošla. " + (data.message || "Supabase nije potvrdio sigurnosnu provjeru.") + " (HTTP " + response.status + ")");
         }
