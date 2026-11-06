@@ -70,26 +70,28 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
-      - name: Prepare Supabase-managed role grants for hosted restore
+      - name: Prepare Supabase-managed role settings for hosted restore
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
+          import re
           path = Path("restore-files/database-backup/roles.sql")
-          lines = path.read_text().splitlines()
+          source = path.read_text()
+          statements = re.split(r"(?<=;)\\s*", source)
           kept = []
           removed = 0
-          for line in lines:
-              normalized = line.lower()
-              if "grant set on parameter" in normalized and "log_min_messages" in normalized and "supabase_admin" in normalized:
+          for statement in statements:
+              normalized = statement.lower()
+              if "log_min_messages" in normalized and "supabase_admin" in normalized:
                   removed += 1
-                  continue
-              kept.append(line)
+              else:
+                  kept.append(statement)
           if removed == 0:
-              raise SystemExit("Expected Supabase-managed log_min_messages grant was not found; stopping for review.")
-          path.write_text("\\n".join(kept) + "\\n")
-          print(f"Skipped {removed} grant(s) for the platform-managed supabase_admin role; the target project manages this role.")
+              raise SystemExit("Expected Supabase-managed supabase_admin log_min_messages statement was not found; stopping for review.")
+          path.write_text("".join(kept))
+          print(f"Skipped {removed} platform-managed supabase_admin log_min_messages statement(s).")
           PY
 
       - name: Restore into the isolated test database
