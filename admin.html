@@ -163,7 +163,7 @@
 }
 function cancelInventoryRename(){
  editingInventory=null;
- $("inventoryMode").disabled=false; $("inventoryQuantity").disabled=false;
+ $("inventoryMode").disabled=false; $("inventoryQuantity").disabled=false; $("inventoryModeField").classList.remove("hidden");
  $("inventoryName").value="";
  $("inventoryQuantity").value="0";
  $("inventorySubmit").textContent=$("inventoryMode").value==="add"?"Dodaj na zalihu":"Postavi ukupno stanje";
