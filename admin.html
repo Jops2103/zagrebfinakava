@@ -180,7 +180,7 @@ function cancelInventoryRename(){
  editingInventory=null;
  $("inventoryQuantity").disabled=false;
  $("inventoryName").value="";
- $("inventoryQuantity").value="0";
+ $("inventoryQuantity").value="1";
  $("inventorySubmit").textContent="Dodaj novi artikl";
  $("inventoryCancelEdit").classList.add("hidden");
  showStatus("inventoryStatus","Promjena naziva je otkazana.");
@@ -198,7 +198,7 @@ $("inventoryForm").addEventListener("submit",async e=>{
    await performRequestAction({action:"inventory_rename",item_type:type,old_item_name:oldName,item_name:newName},"Naziv artikla je promijenjen. Količina na zalihi ostala je nepromijenjena.");
    editingInventory=null;
    $("inventoryQuantity").disabled=false;
-   $("inventoryName").value=""; $("inventoryQuantity").value="0";
+   $("inventoryName").value=""; $("inventoryQuantity").value="1";
    $("inventorySubmit").textContent="Dodaj novi artikl";
    $("inventoryCancelEdit").classList.add("hidden");
    showStatus("inventoryStatus","Naziv je promijenjen, a količina sačuvana.","ok");
