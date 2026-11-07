@@ -188,7 +188,7 @@ window.matchMedia('(min-width: 701px)').addEventListener('change', event => {
     const image = activeImages[activeIndex];
     enlarged.src = image.currentSrc || image.src;
     enlarged.alt = image.alt || 'Uvećana fotografija proizvoda';
-    caption.textContent = (image.classList.contains('hero-product-image') ? 'Lavazza Firma' : (image.alt || '')) +
+    caption.textContent = (image.classList.contains('hero-product-image') ? 'Lavazza BLUE' : (image.alt || '')) +
       (activeImages.length > 1 ? ` · ${activeIndex + 1} / ${activeImages.length}` : '');
     const hasNavigation = activeImages.length > 1;
     previous.hidden = !hasNavigation;
