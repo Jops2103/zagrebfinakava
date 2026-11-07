@@ -35,19 +35,18 @@
  const statusLabel = value => ({pending:"Čeka potvrdu",confirmed:"Potvrđeno",rejected:"Odbijeno"}[value] || value || "—");
   const noteField = (note, label) => { const prefix = label.toLowerCase()+":"; const line = String(note||"").split(/\r?\n/).map(value=>value.trim()).find(value=>value.toLowerCase().startsWith(prefix)); return line ? line.slice(line.indexOf(":")+1).trim() : ""; };
  function showStatus(id,msg,kind=""){ $(id).textContent=msg; $(id).className="status "+kind; }
- async function sessionChanged(session) {
+ async function sessionChanged(session,event) {
    const logged = !!session;
    $("login").classList.toggle("hidden",logged);
-   $("app").classList.add("hidden");
    $("logout").classList.toggle("hidden",!logged);
-   if(!logged) return;
+   if(!logged){$("app").classList.add("hidden");return;}
    if((session.user?.email||"").trim().toLowerCase()!==ADMIN_EMAIL) {
      await client.auth.signOut();
      showStatus("loginStatus","Ova e-mail adresa nema administratorski pristup.","error");
      return;
    }
    $("app").classList.remove("hidden");
-   await loadData();
+   if(event==="INITIAL_SESSION"||event==="SIGNED_IN") await loadData();
  }
  $("loginForm").addEventListener("submit", async e => {
    e.preventDefault();
@@ -62,13 +61,13 @@
  $("logout").addEventListener("click",async()=>{await client.auth.signOut();selected=null;});
  $("refresh").addEventListener("click",loadData);
  $("search").addEventListener("input",renderCustomers);
- client.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>sessionChanged(session),0);});
+ client.auth.onAuthStateChange((event,session)=>{setTimeout(()=>sessionChanged(session,event),0);});
  async function loadData(options={}){
    const quiet=!!options.quiet;
    if(!quiet) showStatus("loadStatus","Provjeravam pristup i učitavam evidenciju…");
    try{
-     const {data:sessionData,error:sessionError}=await client.auth.getSession();
-     if(sessionError) throw sessionError;
+     let sessionData=options.session?{session:options.session}:null;
+     if(!sessionData){const sessionResult=await client.auth.getSession();if(sessionResult.error)throw sessionResult.error;sessionData=sessionResult.data;}
      if(!sessionData?.session){if(!quiet)showStatus("loadStatus","Prijava nije aktivna.","error");return false;}
      if((sessionData.session.user.email||"").toLowerCase()!==ADMIN_EMAIL){await client.auth.signOut();if(!quiet)showStatus("loginStatus","Ova e-mail adresa nema administratorski pristup.","error");return false;}
      const response=await fetch(SUPABASE_URL+"/functions/v1/zfk-admin",{headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+sessionData.session.access_token}});
@@ -146,7 +145,7 @@
    let result={};try{result=responseText?JSON.parse(responseText):{};}catch(_){if(response.ok)throw new Error("Poslužitelj je spremio nečitljiv odgovor. Provjeri evidenciju prije ponavljanja radnje.");}
    if(!response.ok) throw new Error(result.error||"Radnja nije uspjela.");
    // Potvrda radnje je spremljena. Osvježavanje evidencije zasebno je i ne smije prikazati lažnu pogrešku spremanja.
-   const refreshed=await loadData({quiet:true});
+   const refreshed=await loadData({quiet:true,session:sessionData.session});
    showStatus("loadStatus",refreshed?successText+" Evidencija je osvježena.":successText+" Radnja je spremljena, ali prikaz nije osvježen. Klikni Osvježi.","ok");
    return true;
  }
@@ -308,6 +307,6 @@ function renderTrash(){
      window.scrollTo({top:document.querySelector(".layout").offsetTop,behavior:"smooth"});
    }));
  }
- client.auth.getSession().then(({data:s})=>sessionChanged(s.session));
+
 })();
 </script></body></html>
