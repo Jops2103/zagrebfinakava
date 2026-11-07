@@ -65,10 +65,10 @@
  client.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>sessionChanged(session),0);});
  async function loadData(){
    showStatus("loadStatus","Provjeravam pristup i učitavam evidenciju…");
-   const {data:sessionData}=await client.auth.getSession();
-   if(!sessionData.session){showStatus("loadStatus","Prijava nije aktivna.","error");return;}
-   if((sessionData.session.user.email||"").toLowerCase()!==ADMIN_EMAIL){await client.auth.signOut();showStatus("loginStatus","Ova e-mail adresa nema administratorski pristup.","error");return;}
    try{
+     const {data:sessionData}=await client.auth.getSession();
+     if(!sessionData.session){showStatus("loadStatus","Prijava nije aktivna.","error");return;}
+     if((sessionData.session.user.email||"").toLowerCase()!==ADMIN_EMAIL){await client.auth.signOut();showStatus("loginStatus","Ova e-mail adresa nema administratorski pristup.","error");return;}
      const response=await fetch(SUPABASE_URL+"/functions/v1/zfk-admin",{headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+sessionData.session.access_token}});
      const payload=await response.json();
      if(!response.ok) throw new Error(payload.error||"Pristup evidenciji nije odobren.");
@@ -76,7 +76,7 @@
      if(selected && data.customers.some(c=>c.id===selected)) renderDetail(selected);
      else if(data.customers.length){selected=data.customers[0].id;renderCustomers();renderDetail(selected);}
      else $("detail").innerHTML='<div class="empty">Još nema potvrđenih kupaca. Pristigli upiti prikazani su u odjeljku ispod.</div>';
-   }catch(err){showStatus("loadStatus",err.message,"error");}
+   }catch(err){showStatus("loadStatus","Osvježavanje evidencije nije uspjelo: "+(err?.message||"nepoznata pogreška")+". Ako je radnja već potvrđena, podaci su spremljeni; klikni Osvježi.","error");}
  }
  function renderStats(){
    $("stats").innerHTML=[["Aktivni kupci",data.customers.length],["Kupci u otpadu",data.archivedCustomers.length],["Aktivni upiti",data.requests.length],["Upiti u otpadu",data.archivedRequests.length],["Čekaju potvrdu",data.requests.filter(r=>r.request_status==="pending").length],["Potvrđeni upiti",data.requests.filter(r=>r.request_status==="confirmed").length]].map(([label,n])=>'<div class="stat"><strong>'+n+'</strong><span>'+label+'</span></div>').join("");
@@ -128,7 +128,9 @@
    const result=await response.json().catch(()=>({}));
    if(!response.ok) throw new Error(result.error||"Radnja nije uspjela.");
    showStatus("loadStatus",successText,"ok");
-   await loadData();
+   // The database action is already committed. A later session/data refresh must not make it look unsaved.
+   try { await loadData(); }
+   catch(refreshError) { showStatus("loadStatus",successText+" Prikaz nije osvježen: "+(refreshError?.message||"provjeri vezu")+". Klikni Osvježi.","error"); }
    return true;
  }
  function renderRequestActions(r){
