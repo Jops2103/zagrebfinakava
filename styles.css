@@ -5159,3 +5159,9 @@ body {
 
 /* Jasno označena poveznica na Izjavu o privatnosti u obrascima. */
 .privacy-reference a{color:#153b8b;text-decoration:underline;text-underline-offset:2px;font-weight:600}
+
+/* Customer gateway: contrasting flyer-inspired light and dark Lavazza blues. */
+.customer-gateway-actions a.btn[data-customer-route="new"]{background:#4d91d5!important;border-color:#4d91d5!important;color:#fff!important}
+.customer-gateway-actions a.btn[data-customer-route="new"]:hover,.customer-gateway-actions a.btn[data-customer-route="new"]:focus-visible{background:#347abf!important;border-color:#347abf!important;color:#fff!important}
+.customer-gateway-actions a.btn[data-customer-route="existing"]{background:#003da5!important;border-color:#003da5!important;color:#fff!important}
+.customer-gateway-actions a.btn[data-customer-route="existing"]:hover,.customer-gateway-actions a.btn[data-customer-route="existing"]:focus-visible{background:#002d7d!important;border-color:#002d7d!important;color:#fff!important}
