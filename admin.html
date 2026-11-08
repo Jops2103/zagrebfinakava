@@ -170,7 +170,7 @@
  $("inventoryList").innerHTML=(data.inventory||[]).map(i=>{
   const unit=i.item_type==="machine"?"kom.":"kutija";
   const label=i.item_type==="machine"?"Aparat":"Kapsule";
-  return '<div class="entry"><b>'+esc(label)+': '+esc(i.item_type==="machine"?machine(i.item_name):i.item_name)+'</b><p>Trenutno na zalihi: <b>'+esc(i.quantity)+' '+unit+'</b></p><p>Dosad izvađeno iz zalihe: <b>'+esc(i.withdrawn_quantity||0)+' '+unit+'</b></p><p class="muted small">Ažurirano: '+esc(date(i.updated_at))+'</p><button type="button" class="secondary" data-add-stock="1" data-type="'+esc(i.item_type)+'" data-name="'+esc(i.item_name)+'">Dodaj količinu</button> <button type="button" class="secondary" data-edit-stock="1" data-type="'+esc(i.item_type)+'" data-name="'+esc(i.item_name)+'" data-quantity="'+esc(i.quantity)+'">Promijeni naziv</button></div>';
+  return '<div class="entry"><b>'+esc(label)+': '+esc(i.item_type==="machine"?machine(i.item_name):i.item_name)+'</b><p>Trenutno na zalihi: <b>'+esc(i.quantity)+' '+unit+'</b></p><p>Dosad izvađeno iz zalihe: <b>'+esc(i.withdrawn_quantity||0)+' '+unit+'</b></p><p class="muted small">Ažurirano: '+esc(date(i.updated_at))+'</p><button type="button" class="secondary" data-add-stock="1" data-type="'+esc(i.item_type)+'" data-name="'+esc(i.item_name)+'">Dodaj količinu</button> <button type="button" class="secondary" data-subtract-stock="1" data-type="'+esc(i.item_type)+'" data-name="'+esc(i.item_name)+'" data-quantity="'+esc(i.quantity)+'">Oduzmi količinu</button> <button type="button" class="secondary" data-edit-stock="1" data-type="'+esc(i.item_type)+'" data-name="'+esc(i.item_name)+'" data-quantity="'+esc(i.quantity)+'">Promijeni naziv</button></div>';
  }).join("")||'<div class="empty">Još nema unesenih zaliha.</div>';
  $("inventoryList").querySelectorAll("button[data-add-stock]").forEach(button=>button.addEventListener("click",()=>{
   const entry=button.closest(".entry");
@@ -192,6 +192,37 @@
    catch(err){message.textContent=err.message||"Dodavanje nije uspjelo.";message.className="status error";save.disabled=false;}
   });
   input.focus();input.select();
+ }));
+ $("inventoryList").querySelectorAll("button[data-subtract-stock]").forEach(button=>button.addEventListener("click",()=>{
+  const entry=button.closest(".entry");
+  const existing=entry.querySelector(".stock-adjust");
+  if(existing){existing.remove();return;}
+  $("inventoryList").querySelectorAll(".stock-adjust").forEach(node=>node.remove());
+  const available=Number(button.dataset.quantity);
+  const unit=button.dataset.type==="machine"?"aparata":"kutija";
+  const panel=document.createElement("div");panel.className="stock-adjust";
+  panel.innerHTML='<label><b>Količina za oduzimanje ('+unit+')</b></label><p class="muted small">Dostupno: '+esc(available)+' '+unit+'. Ispravak ne može smanjiti zalihu ispod nule.</p><div class="stock-stepper"><button type="button" class="secondary" data-step="-1" aria-label="Smanji količinu">−</button><input type="number" min="1" max="'+esc(available)+'" step="1" value="1" aria-label="Količina za oduzimanje"><button type="button" class="secondary" data-step="1" aria-label="Povećaj količinu">+</button></div><div class="row"><button type="button" data-save-stock>Potvrdi oduzimanje</button><button type="button" class="secondary" data-cancel-stock>Odustani</button></div><div class="status" role="status"></div>';
+  entry.appendChild(panel);
+  const input=panel.querySelector("input"),message=panel.querySelector(".status");
+  panel.querySelectorAll("[data-step]").forEach(step=>step.addEventListener("click",()=>{input.value=String(Math.max(1,Math.min(available,(Number(input.value)||1)+Number(step.dataset.step))));}));
+  panel.querySelector("[data-cancel-stock]").addEventListener("click",()=>panel.remove());
+  panel.querySelector("[data-save-stock]").addEventListener("click",async()=>{
+   const quantity=Number(input.value);
+   if(!Number.isSafeInteger(quantity)||quantity<1||quantity>available){message.textContent="Unesi cijeli broj od 1 do "+available+".";message.className="status error";return;}
+   if(!confirm('Oduzeti '+quantity+' '+unit+' iz zalihe artikla "'+button.dataset.name+'"? Novo stanje bit će '+(available-quantity)+'.'))return;
+   const save=panel.querySelector("[data-save-stock]");save.disabled=true;
+   try{
+    // The existing backend supports setting a non-negative absolute quantity.
+    // Reload before applying the correction to avoid overwriting a stale displayed stock count.
+    const refreshed=await loadData({quiet:true});
+    if(!refreshed)throw new Error("Provjera trenutne zalihe nije uspjela. Osvježi stranicu.");
+    const current=(data.inventory||[]).find(i=>i.item_type===button.dataset.type&&i.item_name===button.dataset.name);
+    if(!current||Number(current.quantity)!==available)throw new Error("Zaliha se u međuvremenu promijenila. Ponovno otvori oduzimanje i provjeri novo stanje.");
+    await performRequestAction({action:"inventory_adjust",item_type:button.dataset.type,item_name:button.dataset.name,quantity:available-quantity,mode:"set"},"Oduzeto: "+quantity+" "+unit+". Novo stanje: "+(available-quantity)+".");
+   }catch(err){showStatus("loadStatus",err.message||"Oduzimanje nije uspjelo.","error");}
+  });
+  if(available<1){panel.querySelector("[data-save-stock]").disabled=true;input.disabled=true;message.textContent="Na zalihi nema artikala za oduzimanje.";message.className="status error";}
+  else{input.focus();input.select();}
  }));
  $("inventoryList").querySelectorAll("button[data-edit-stock]").forEach(button=>button.addEventListener("click",()=>{
    editingInventory={item_type:button.dataset.type,item_name:button.dataset.name,quantity:Number(button.dataset.quantity)};
