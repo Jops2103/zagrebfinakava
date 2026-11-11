@@ -142,7 +142,7 @@ button:disabled{cursor:not-allowed;opacity:.65}
 @media(max-width:600px){.image-lightbox{padding:58px 12px 52px}.image-lightbox-nav{width:38px;height:54px;font-size:36px}.image-lightbox-previous{left:8px}.image-lightbox-next{right:8px}.image-lightbox img{max-width:96vw;max-height:82vh}}
 body.lightbox-open{overflow:hidden}
 
-/* Lavazza Firma capsule selection */
+/* Lavazza BLUE capsule selection */
 .capsule-heading{max-width:1120px;margin:0 auto 28px}
 .capsule-heading h2{margin:0 0 12px;font-size:clamp(34px,4vw,49px);font-weight:800;letter-spacing:-2px;line-height:1.07}
 .capsule-heading h2 span{color:var(--brown)}
@@ -167,7 +167,7 @@ body.lightbox-open{overflow:hidden}
 .model-grid-specs .model-card{border:1px solid #92979d;box-shadow:0 10px 30px #4c505414}
 
 
-/* Red uppercase Lavazza Firma brand in the hero introduction. */
+/* Legacy hero brand emphasis rule (retained for compatibility). */
 .lavazza-firma-red{color:#c8102e;font-weight:800;text-transform:uppercase;letter-spacing:.025em}
 
 
@@ -637,7 +637,7 @@ body{
 }
 
 
-/* Mobile-specific framing for the Lavazza Firma capsule photograph. */
+/* Mobile-specific framing for the capsule photograph. */
 @media(max-width:700px){
   #lavazza-film.film-section{
     height:clamp(230px,68vw,330px);
@@ -697,7 +697,7 @@ body{
 @media(max-width:700px){.hero-photo.hero-visual-empty{height:300px;min-height:300px;margin-top:8px}}
 
 
-/* Homepage hero: use the uploaded Lavazza Firma product image. */
+/* Homepage hero: use the uploaded product image. */
 .hero-image-wrap{height:430px;min-width:0;display:flex;align-items:center;justify-content:center;overflow:visible;background:transparent;border:0;box-shadow:none}
 .hero-image-wrap:before{content:none!important;display:none!important}
 .hero-product-image{display:block;width:100%;height:100%;max-width:100%;object-fit:contain;object-position:center;filter:none;border:0;box-shadow:none}
@@ -755,7 +755,7 @@ body{
 }
 
 
-/* High-contrast LAVAZZA FIRMA label at the start of the hero introduction. */
+/* High-contrast label at the start of the hero introduction. */
 .lavazza-black-banner{display:inline-block;background:#000;color:#fff;padding:.16em .42em;margin:0 .12em .18em 0;font-weight:800;letter-spacing:.035em;line-height:1.2;box-decoration-break:clone;-webkit-box-decoration-break:clone}
 
 
@@ -1224,7 +1224,7 @@ body{
 }
 
 
-/* Mobile: place the existing video PLAY control over the first image with the three Firma machines. */
+/* Mobile: place the video PLAY control over the hero machine image. */
 @media (max-width:700px){
   .hero-image-wrap{position:relative}
   .hero-image-wrap .film-banner-play{
