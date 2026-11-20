@@ -1642,40 +1642,42 @@ function updateChangeCapsuleField(){
           throw new Error('Nedostaju obavezni podaci za spremanje zahtjeva.');
         }
 
-        const databaseResponse = await fetch(supabaseFunctionUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const databaseResult = await databaseResponse.json().catch(() => ({}));
-        if (!databaseResponse.ok || databaseResult.success !== true) {
-          throw new Error(databaseResult.message || 'Spremanje zahtjeva u evidenciju nije uspjelo.');
-        }
+        // Preserve the existing no-email/no-save Turnstile diagnostic mode.
         if (turnstileTestMode) {
-          if (databaseResult.test_mode !== true) throw new Error('Testni način rada nije potvrđen. Zahtjev nije poslan.');
-          if (statusElement) {
-            statusElement.hidden = false;
-            statusElement.textContent = 'Sigurnosna provjera uspješna. Probni test nije spremljen i e-mail nije poslan.';
+          const databaseResponse = await fetch(supabaseFunctionUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const databaseResult = await databaseResponse.json().catch(() => ({}));
+          if (!databaseResponse.ok || databaseResult.success !== true) {
+            throw new Error(databaseResult.message || 'Spremanje zahtjeva u evidenciju nije uspjelo.');
           }
-          if (submitButton) {
-            submitButton.innerHTML = 'Sigurnosna provjera uspješna ✓';
-            submitButton.setAttribute('aria-label', 'Cloudflare sigurnosna provjera uspješna');
-          }
-          window.setTimeout(() => {
-            if (window.turnstile) {
-              const widget = form.querySelector('.cf-turnstile');
-              if (widget) window.turnstile.reset(widget);
+          {
+            if (databaseResult.test_mode !== true) throw new Error('Testni način rada nije potvrđen. Zahtjev nije poslan.');
+            if (statusElement) {
+              statusElement.hidden = false;
+              statusElement.textContent = 'Sigurnosna provjera uspješna. Probni test nije spremljen i e-mail nije poslan.';
             }
             if (submitButton) {
-              submitButton.disabled = false;
-              submitButton.removeAttribute('aria-busy');
-              submitButton.innerHTML = originalButtonText;
-              submitButton.removeAttribute('aria-label');
+              submitButton.innerHTML = 'Sigurnosna provjera uspješna ✓';
+              submitButton.setAttribute('aria-label', 'Cloudflare sigurnosna provjera uspješna');
             }
-          }, 5000);
-          return;
+            window.setTimeout(() => {
+              if (window.turnstile) {
+                const widget = form.querySelector('.cf-turnstile');
+                if (widget) window.turnstile.reset(widget);
+              }
+              if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.removeAttribute('aria-busy');
+                submitButton.innerHTML = originalButtonText;
+                submitButton.removeAttribute('aria-label');
+              }
+            }, 5000);
+            return;
+          }
         }
-        savedInSupabase = true;
 
         const formData = new FormData(form);
         formData.delete('cf-turnstile-response');
@@ -1693,15 +1695,35 @@ function updateChangeCapsuleField(){
         const result = await response.json();
         if (!response.ok || result.success !== true) {
           const emailError = new Error(result.message || 'Slanje e-maila nije uspjelo.');
-          emailError.savedInSupabase = true;
+          emailError.emailNotConfirmed = true;
           throw emailError;
+        }
+
+
+        // Email acceptance is independent of the database. A database outage
+        // must never cause the visitor to resend an already accepted email.
+        let databaseWarning = false;
+        try {
+          const databaseResponse = await fetch(supabaseFunctionUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const databaseResult = await databaseResponse.json().catch(() => ({}));
+          if (!databaseResponse.ok || databaseResult.success !== true) {
+            throw new Error(databaseResult.message || 'Spremanje zahtjeva u evidenciju nije uspjelo.');
+          }
+            savedInSupabase = true;
+        } catch (databaseError) {
+          databaseWarning = true;
+          console.warn('ZFK: e-mail accepted; database recording failed:', databaseError);
         }
 
         if (statusElement) {
           statusElement.hidden = false;
           statusElement.textContent = isExisting
-            ? 'Zahtjev je uspješno spremljen i poslan e-mailom. Promjena se ne primjenjuje dok je ne potvrdimo. Obrazac će se resetirati za 15 sekundi.'
-            : 'Upit je uspješno spremljen i poslan e-mailom. Obrazac će se resetirati za 15 sekundi.';
+            ? 'Zahtjev je prihvaćen za slanje e-mailom. ' + (databaseWarning ? 'Spremanje u evidenciju nije uspjelo; ne šaljite ponovno. ' : 'Zahtjev je spremljen u evidenciju. ') + 'Promjena se ne primjenjuje dok je ne potvrdimo. Obrazac će se resetirati za 15 sekundi.'
+            : 'Upit je prihvaćen za slanje e-mailom. ' + (databaseWarning ? 'Spremanje u evidenciju nije uspjelo; ne šaljite ponovno. ' : 'Upit je spremljen u evidenciju. ') + 'Obrazac će se resetirati za 15 sekundi.';
         }
         if (!isExisting && successElement) successElement.hidden = true;
         if (submitButton) {
