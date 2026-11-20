@@ -1653,7 +1653,7 @@ function updateChangeCapsuleField(){
           if (!databaseResponse.ok || databaseResult.success !== true) {
             throw new Error(databaseResult.message || 'Spremanje zahtjeva u evidenciju nije uspjelo.');
           }
-            {
+          {
             if (databaseResult.test_mode !== true) throw new Error('Testni način rada nije potvrđen. Zahtjev nije poslan.');
             if (statusElement) {
               statusElement.hidden = false;
@@ -1677,7 +1677,7 @@ function updateChangeCapsuleField(){
             }, 5000);
             return;
           }
-          }
+        }
 
         const formData = new FormData(form);
         formData.delete('cf-turnstile-response');
